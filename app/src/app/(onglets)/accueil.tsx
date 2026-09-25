@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { FadeOutUp, SlideInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,12 +25,14 @@ import { COUT, ENERGIE_PAR_TACHE } from '@/config/energie';
 import { PLAFOND_PIECES_JOUR } from '@/config/taches';
 import { arrondis, couleurs, espace, ombre, polices } from '@/config/theme';
 import { villeParId } from '@/config/villes';
+import { useMaintenant } from '@/hooks/useMaintenant';
 import { imageVille } from '@/illustrations/registre';
 import { aventuresRestantes } from '@/logique/compagnon';
 import { jourDe } from '@/logique/dates';
+import { dureeLisible, energieDisponible, energieMax, tempsAvantRecharge } from '@/logique/energie';
 import { estEndormi, heureLisible } from '@/logique/rythme';
 import { emploiActuel } from '@/logique/tachesDuJour';
-import { rappelEssai } from '@/services/abonnement';
+import { jourEssai, rappelEssai, rappelEssaiDisponible } from '@/services/abonnement';
 import { gainPlafonne, useApp } from '@/store/etat';
 import type { Tache } from '@/store/types';
 
@@ -50,6 +52,19 @@ export default function Accueil() {
   const compteurGestes = useRef(0);
   const compteurGains = useRef(0);
   const minuterieMoment = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // Énergie en temps réel (le compte à rebours de la recharge avance tout seul)
+  const maintenant = useMaintenant();
+  const energie = energieDisponible(etat, maintenant);
+  const recharge = tempsAvantRecharge(etat, maintenant);
+
+  // Essai Premium : l'écran « Jour X / 7 » une fois par jour d'essai, puis le message de fin
+  const jourDEssai = jourEssai(etat);
+  const jourVu = etat.abonnement.jourEssaiVu ?? 0;
+  const finAVoir = !!etat.abonnement.finEssaiAVoir;
+  useEffect(() => {
+    if (jourDEssai !== null && jourVu < jourDEssai) router.push('/essai-jour');
+    else if (finAVoir) router.push({ pathname: '/essai-jour', params: { fin: '1' } });
+  }, [jourDEssai, jourVu, finAVoir]);
 
   const compagnon = etat.compagnon;
   if (!compagnon || !etat.villeId) return null;
@@ -110,11 +125,16 @@ export default function Accueil() {
   }
 
   function interagir(type: 'calin' | 'jeu') {
-    if (etat.energie < COUT[type])
-      return reagir('reconfort', `Je n’ai plus assez d’énergie… Chaque tâche terminée m’en redonne ${ENERGIE_PAR_TACHE} ⚡.`);
+    if (energie < COUT[type]) return manqueEnergie();
     dispatch({ type: 'INTERAGIR', moment: type });
     jouerGeste(type);
     reagir(type === 'calin' ? 'content' : 'excite', type === 'calin' ? 'Merci, ça fait du bien !' : 'Encore une partie ? 😄');
+  }
+
+  /** Action bloquée faute d'énergie : explication simple, jamais culpabilisante. */
+  function manqueEnergie() {
+    const attente = recharge != null ? ` Recharge complète dans ${dureeLisible(recharge)}.` : '';
+    reagir('reconfort', `${compagnon?.nom} n’a plus assez d’énergie pour faire ça.${attente} Chaque tâche terminée lui en redonne ${ENERGIE_PAR_TACHE} ⚡.`);
   }
 
   /** Lance le mouvement du compagnon et son effet (cœurs, ballon, zzz), qui s'efface tout seul. */
@@ -199,7 +219,7 @@ export default function Accueil() {
             ))}
           </View>
           <View style={styles.energie}>
-            <JaugeEnergie energie={etat.energie} compacte />
+            <JaugeEnergie energie={energie} max={energieMax(etat)} recharge={recharge} compacte />
           </View>
         </View>
 
@@ -207,9 +227,9 @@ export default function Accueil() {
         <View style={styles.moments}>
           {restantes > 0 ? (
             <Pressable
-              style={[styles.aventure, (dort || etat.energie < COUT.aventure) && { opacity: 0.5 }]}
-              disabled={dort || etat.energie < COUT.aventure}
-              onPress={() => router.push('/aventure')}
+              style={[styles.aventure, (dort || energie < COUT.aventure) && { opacity: 0.5 }]}
+              disabled={dort}
+              onPress={() => (energie < COUT.aventure ? manqueEnergie() : router.push('/aventure'))}
               accessibilityRole="button">
               <Ionicons name="map" size={20} color={couleurs.blanc} />
               <View style={{ flex: 1 }}>
@@ -242,6 +262,25 @@ export default function Accueil() {
             <Ionicons name="time-outline" size={18} color={couleurs.brun} />
             <Text style={styles.rappelTexte}>{rappel}</Text>
           </Pressable>
+        )}
+
+        {/* Rappel doux, au plus tous les 4 jours, tant que l'essai n'a pas servi */}
+        {rappelEssaiDisponible(etat, aujourdhui) && (
+          <View style={styles.rappel}>
+            <Pressable
+              style={{ flex: 1, flexDirection: 'row', gap: espace.s, alignItems: 'center' }}
+              onPress={() => {
+                dispatch({ type: 'VOIR_RAPPEL_ESSAI', jour: aujourdhui });
+                router.push('/premium');
+              }}
+              accessibilityRole="button">
+              <Ionicons name="sparkles-outline" size={18} color={couleurs.renardFonce} />
+              <Text style={styles.rappelTexte}>Tes 7 jours d’essai Premium t’attendent toujours ✨</Text>
+            </Pressable>
+            <Pressable onPress={() => dispatch({ type: 'VOIR_RAPPEL_ESSAI', jour: aujourdhui })} accessibilityLabel="Fermer le rappel" hitSlop={10}>
+              <Ionicons name="close" size={18} color={couleurs.brunDoux} />
+            </Pressable>
+          </View>
         )}
 
         {/* Nouveau chapitre professionnel */}

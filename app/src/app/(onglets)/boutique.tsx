@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bouton } from '@/components/base';
 import { Compagnon } from '@/components/Compagnon';
 import { CompteurPieces, IconePiece } from '@/components/Pieces';
-import { LIBELLES_TYPES, RAYONS, type ObjetBoutique, type TypeObjet } from '@/config/boutique';
+import { COLLECTIONS, LIBELLES_TYPES, RAYONS, estPremium, type ObjetBoutique, type TypeObjet } from '@/config/boutique';
 import { objetsPour } from '@/logique/garderobe';
 import { arrondis, couleurs, espace, polices } from '@/config/theme';
 import { imageObjet, imageTenue } from '@/illustrations/registre';
@@ -40,7 +40,7 @@ export default function Shop() {
 
   function toucher(o: ObjetBoutique) {
     if (etat.inventaire.includes(o.id)) return dispatch({ type: 'EQUIPER', objetId: o.id });
-    if (o.premium && !plus) return router.push('/premium');
+    if (estPremium(o) && !plus) return router.push('/premium');
     setAchat(o);
   }
 
@@ -109,7 +109,7 @@ export default function Shop() {
             const possede = etat.inventaire.includes(o.id);
             const porte = etat.equipe.includes(o.id);
             const assez = etat.pieces >= o.prix;
-            const verrou = o.premium && !plus;
+            const verrou = estPremium(o) && !plus;
             const habille = imageTenue(espece, o.id);
             const image = habille ?? imageObjet(o.id);
             return (
@@ -135,10 +135,11 @@ export default function Shop() {
                 <Text style={styles.objetNom} numberOfLines={2}>
                   {o.nom}
                 </Text>
+                {o.collection ? <Text style={styles.collection}>{COLLECTIONS[o.collection]}</Text> : null}
                 {possede ? (
                   <Text style={styles.etat}>{porte ? 'Porté' : o.offert ? 'Offert · Porter' : 'Porter'}</Text>
                 ) : verrou ? (
-                  <Text style={[styles.etat, { color: couleurs.renardFonce }]}>Premium</Text>
+                  <Text style={[styles.etat, { color: couleurs.renardFonce }]}>🔒 Premium</Text>
                 ) : (
                   <View style={styles.prix}>
                     <IconePiece taille={14} />
@@ -270,6 +271,7 @@ const styles = StyleSheet.create({
   },
   objetNom: { fontSize: 12.5, fontWeight: '800', color: couleurs.brun, textAlign: 'center', minHeight: 32 },
   etat: { fontSize: 12, fontWeight: '800', color: couleurs.saugeFonce },
+  collection: { fontSize: 11, fontWeight: '700', color: couleurs.brunDoux },
   prix: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   prixTexte: { fontSize: 13, fontWeight: '800', color: '#9A6400', fontVariant: ['tabular-nums'] },
   voile: { flex: 1, backgroundColor: 'rgba(46,33,28,0.4)', justifyContent: 'flex-end' },

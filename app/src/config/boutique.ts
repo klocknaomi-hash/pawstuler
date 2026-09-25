@@ -18,6 +18,11 @@ export type ObjetBoutique = {
   offert?: boolean; // cadeau de bienvenue
   premium?: boolean; // réservé à Pawstuler Premium
   /**
+   * Collection d'événement (Halloween, Noël…). Une collection est Premium **en entier** :
+   * tenue, chapeau, chaussures, accessoires. Les utilisateurs gratuits la voient avec 🔒.
+   */
+  collection?: Collection;
+  /**
    * « Tenue complète » : une illustration montre le compagnon habillé en entier.
    * Il en porte donc une seule à la fois (en mettre une autre remplace la précédente).
    */
@@ -28,6 +33,18 @@ export type ObjetBoutique = {
    */
   illustre?: boolean;
 };
+
+export type Collection = 'halloween' | 'noel' | 'saint-valentin' | 'thanksgiving';
+
+export const COLLECTIONS: Record<Collection, string> = {
+  halloween: '🎃 Halloween',
+  noel: '🎄 Noël',
+  'saint-valentin': '💕 Saint-Valentin',
+  thanksgiving: '🦃 Thanksgiving',
+};
+
+/** Réservé à Premium : objet marqué Premium ou faisant partie d'une collection d'événement. */
+export const estPremium = (o: ObjetBoutique) => Boolean(o.premium || o.collection);
 
 /** Les deux rayons du Shop. */
 export const RAYONS = { tenues: 'Tenues complètes', objets: 'Objets' } as const;
@@ -46,7 +63,7 @@ export const LIBELLES_TYPES: Record<TypeObjet, string> = {
 };
 
 /** Raccourci pour une tenue illustrée (images dans assets/tenues/<animal>/<id>.png). */
-const illustre = (id: string, nom: string, type: TypeObjet, prix: number, emoji: string, premium?: boolean): ObjetBoutique => ({
+const illustre = (id: string, nom: string, type: TypeObjet, prix: number, emoji: string, collection?: Collection): ObjetBoutique => ({
   id,
   nom,
   type,
@@ -54,7 +71,7 @@ const illustre = (id: string, nom: string, type: TypeObjet, prix: number, emoji:
   emoji,
   habit: true,
   illustre: true,
-  ...(premium ? { premium } : {}),
+  ...(collection ? { collection } : {}),
 });
 
 export const CATALOGUE_BOUTIQUE: ObjetBoutique[] = [
@@ -136,11 +153,11 @@ export const CATALOGUE_BOUTIQUE: ObjetBoutique[] = [
   illustre('tenue-automne', 'Tenue d\'automne', 'saison', 80, '🍂'),
   illustre('tenue-hiver', 'Tenue d\'hiver', 'saison', 90, '❄️'),
   illustre('maillot-bain', 'Maillot de bain', 'saison', 50, '👙'),
-  illustre('chapeau-sorcier', 'Chapeau de sorcier', 'saison', 50, '🧙', true),
-  illustre('bonnet-noel', 'Bonnet de Noël', 'saison', 40, '🎅', true),
-  illustre('costume-sorcier', 'Costume de sorcier (Halloween)', 'saison', 100, '🎃', true),
-  illustre('tenue-noel', 'Tenue de Noël', 'saison', 100, '🎄', true),
-  illustre('robe-saint-valentin', 'Robe de la Saint-Valentin', 'saison', 100, '💝', true),
+  illustre('chapeau-sorcier', 'Chapeau de sorcier', 'saison', 50, '🧙', 'halloween'),
+  illustre('bonnet-noel', 'Bonnet de Noël', 'saison', 40, '🎅', 'noel'),
+  illustre('costume-sorcier', 'Costume de sorcier', 'saison', 100, '🎃', 'halloween'),
+  illustre('tenue-noel', 'Tenue de Noël', 'saison', 100, '🎄', 'noel'),
+  illustre('robe-saint-valentin', 'Robe de la Saint-Valentin', 'saison', 100, '💝', 'saint-valentin'),
 ];
 
 export const objetParId = (id: string) => CATALOGUE_BOUTIQUE.find((o) => o.id === id);

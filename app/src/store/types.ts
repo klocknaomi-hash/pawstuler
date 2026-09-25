@@ -95,12 +95,26 @@ export type Recherche = { id: string; debut: string; fin?: string };
 /** Une ligne du portefeuille de pièces. */
 export type Mouvement = { id: string; le: string; libelle: string; montant: number };
 
+/**
+ * L'abonnement : un seul état global pour toute l'app.
+ *  - gratuit : version gratuite (l'essai reste disponible tant qu'il n'a pas servi) ;
+ *  - essai : 7 jours d'essai de l'annuel (souscrit sur l'App Store, avec carte bancaire) ;
+ *  - actif : Premium payé (annuel ou mensuel).
+ */
 export type Abonnement = {
   statut: 'gratuit' | 'essai' | 'actif';
   debutEssai?: string; // AAAA-MM-JJ
   formule?: FormuleId;
   /** L'essai gratuit a déjà été utilisé (il n'est proposé qu'une fois). */
   essaiUtilise?: boolean;
+  /** Résiliation faite pendant l'essai : à la fin, retour en gratuit au lieu du paiement. */
+  resiliationPrevue?: boolean;
+  /** Dernier jour d'essai (1 à 7) dont l'écran « Jour X / 7 » a été montré. */
+  jourEssaiVu?: number;
+  /** L'essai vient de se terminer sans abonnement : message « essai terminé » à montrer une fois. */
+  finEssaiAVoir?: boolean;
+  /** Dernier rappel doux « tes 7 jours d'essai t'attendent » (AAAA-MM-JJ). */
+  rappelEssaiLe?: string;
 };
 
 /**
@@ -164,7 +178,10 @@ export type EtatApp = {
   mouvements: Mouvement[];
 
   /* Énergie et aventures */
+  /** Énergie au dernier changement (voir src/logique/energie.ts pour l'énergie en temps réel). */
   energie: number;
+  /** Heure (en millisecondes) à laquelle l'énergie sera entièrement rechargée. */
+  rechargeA?: number;
   aventuresDuJour: number;
   aventuresTotal: number;
   derniereAventure?: { le: string; texte: string; lieuId: string };
