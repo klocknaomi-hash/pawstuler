@@ -1,6 +1,9 @@
 /**
  * SHOP
  * Les pièces gagnées avec les tâches servent à personnaliser le compagnon.
+ * Deux rayons : « Tenues complètes » (le compagnon habillé en entier, une tenue à la fois,
+ * seulement celles illustrées pour son espèce) et « Objets ».
+ * On peut essayer une tenue avant de l'acheter : l'aperçu montre le compagnon habillé.
  * Le portefeuille est réellement débité à chaque achat, et le solde est le même partout.
  * Aucune pièce ne s'achète avec de l'argent.
  */
@@ -13,20 +16,27 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bouton } from '@/components/base';
 import { Compagnon } from '@/components/Compagnon';
 import { CompteurPieces, IconePiece } from '@/components/Pieces';
-import { CATALOGUE_BOUTIQUE, LIBELLES_TYPES, catalogueDe, type ObjetBoutique, type TypeObjet } from '@/config/boutique';
+import { LIBELLES_TYPES, RAYONS, type ObjetBoutique, type TypeObjet } from '@/config/boutique';
+import { objetsPour } from '@/logique/garderobe';
 import { arrondis, couleurs, espace, polices } from '@/config/theme';
-import { imageObjet } from '@/illustrations/registre';
+import { imageObjet, imageTenue } from '@/illustrations/registre';
 import { aPremium } from '@/services/abonnement';
 import { useApp } from '@/store/etat';
 
 export default function Shop() {
   const { etat, dispatch } = useApp();
   const plus = aPremium(etat);
+  const espece = etat.compagnon?.espece ?? 'renard';
+  const [rayon, setRayon] = useState<keyof typeof RAYONS>('tenues');
   const [type, setType] = useState<TypeObjet | 'tout'>('tout');
   const [achat, setAchat] = useState<ObjetBoutique | null>(null);
-  const portes = CATALOGUE_BOUTIQUE.filter((o) => etat.equipe.includes(o.id));
-  // Seuls les objets prévus pour cet animal (les vêtements illustrés arrivent animal par animal)
-  const catalogue = catalogueDe(etat.compagnon?.espece ?? 'renard').filter((o) => type === 'tout' || o.type === type);
+  // Seuls les objets prévus pour cet animal (les tenues illustrées arrivent animal par animal)
+  const disponibles = objetsPour(espece);
+  const portes = disponibles.filter((o) => etat.equipe.includes(o.id));
+  const duRayon = disponibles.filter((o) => (rayon === 'tenues' ? o.habit : !o.habit));
+  const typesDuRayon = [...new Set(duRayon.map((o) => o.type))];
+  const catalogue = duRayon.filter((o) => type === 'tout' || o.type === type);
+  const apercu = achat ? imageTenue(espece, achat.id) : undefined;
 
   function toucher(o: ObjetBoutique) {
     if (etat.inventaire.includes(o.id)) return dispatch({ type: 'EQUIPER', objetId: o.id });
@@ -50,18 +60,39 @@ export default function Shop() {
         </View>
 
         <View style={styles.vitrine}>
-          <Compagnon espece={etat.compagnon?.espece ?? 'renard'} pose="fier" taille={120} />
+          <Compagnon espece={espece} pose="fier" taille={120} equipe={etat.equipe} />
           <View style={{ flex: 1, gap: 6 }}>
             <Text style={styles.nom}>{etat.compagnon?.nom}</Text>
             <Text style={styles.detail}>
-              {portes.length ? `Porte : ${portes.map((o) => o.nom.toLowerCase()).join(', ')}` : 'Touche un objet que tu possèdes pour le lui mettre.'}
+              {portes.length ? `Porte : ${portes.map((o) => o.nom.toLowerCase()).join(', ')}` : 'Touche une tenue que tu possèdes pour la lui mettre.'}
             </Text>
             <Text style={styles.detail}>Tes tâches du jour te rapportent des pièces.</Text>
           </View>
         </View>
 
+        <View style={styles.rayons} accessibilityRole="tablist">
+          {(Object.keys(RAYONS) as (keyof typeof RAYONS)[]).map((r) => (
+            <Pressable
+              key={r}
+              onPress={() => {
+                setRayon(r);
+                setType('tout');
+              }}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: rayon === r }}
+              style={[styles.rayon, rayon === r && styles.rayonChoisi]}>
+              <Text style={[styles.rayonTexte, rayon === r && styles.rayonTexteChoisi]}>{RAYONS[r]}</Text>
+            </Pressable>
+          ))}
+        </View>
+        {rayon === 'tenues' && espece !== 'chat' && espece !== 'crocodile' && (
+          <Text style={styles.detail}>
+            La garde-robe de {etat.compagnon?.nom} arrive bientôt. En attendant, voici les tenues déjà prêtes pour tous.
+          </Text>
+        )}
+
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtres}>
-          {(['tout', ...Object.keys(LIBELLES_TYPES)] as (TypeObjet | 'tout')[]).map((t) => (
+          {(['tout', ...typesDuRayon] as (TypeObjet | 'tout')[]).map((t) => (
             <Pressable
               key={t}
               onPress={() => setType(t)}
@@ -79,7 +110,8 @@ export default function Shop() {
             const porte = etat.equipe.includes(o.id);
             const assez = etat.pieces >= o.prix;
             const verrou = o.premium && !plus;
-            const image = imageObjet(o.id);
+            const habille = imageTenue(espece, o.id);
+            const image = habille ?? imageObjet(o.id);
             return (
               <Pressable
                 key={o.id}
@@ -87,8 +119,18 @@ export default function Shop() {
                 accessibilityRole="button"
                 accessibilityLabel={`${o.nom}, ${possede ? (porte ? 'porté' : 'possédé') : `${o.prix} pièces`}`}
                 style={[styles.objet, porte && styles.objetPorte, !possede && !assez && !verrou && { opacity: 0.55 }]}>
-                <View style={styles.vignette}>
-                  {image ? <Image source={image} style={{ width: 52, height: 52 }} contentFit="contain" /> : <Text style={{ fontSize: 34 }}>{o.emoji}</Text>}
+                <View style={[styles.vignette, !!habille && styles.vignetteTenue]}>
+                  {image ? (
+                    <Image
+                      source={image}
+                      style={StyleSheet.absoluteFill}
+                      // On montre la partie du corps concernée : la tête pour un chapeau, les pieds pour des chaussures…
+                      contentFit={habille && o.type !== 'tenue' && o.type !== 'saison' ? 'cover' : 'contain'}
+                      contentPosition={CADRAGE[o.type]}
+                    />
+                  ) : (
+                    <Text style={{ fontSize: 34 }}>{o.emoji}</Text>
+                  )}
                 </View>
                 <Text style={styles.objetNom} numberOfLines={2}>
                   {o.nom}
@@ -114,13 +156,22 @@ export default function Shop() {
         <Pressable style={styles.voile} onPress={() => setAchat(null)}>
           {achat && (
             <Pressable style={styles.feuille} onPress={() => {}}>
-              <Text style={{ fontSize: 48 }}>{achat.emoji}</Text>
+              {apercu ? (
+                // Essayage : le compagnon habillé avec la tenue, avant de l'acheter
+                <Image source={apercu} style={styles.essayage} contentFit="contain" accessibilityLabel={`Aperçu : ${etat.compagnon?.nom} avec ${achat.nom}`} />
+              ) : (
+                <Text style={{ fontSize: 48 }}>{achat.emoji}</Text>
+              )}
               <Text style={styles.feuilleTitre}>{achat.nom}</Text>
               <View style={styles.soldes}>
                 <LigneSolde libelle="Ton solde" valeur={etat.pieces} />
                 <LigneSolde libelle="Prix" valeur={-achat.prix} />
-                <View style={styles.separateur} />
-                <LigneSolde libelle="Après achat" valeur={etat.pieces - achat.prix} fort />
+                {etat.pieces >= achat.prix && (
+                  <>
+                    <View style={styles.separateur} />
+                    <LigneSolde libelle="Après achat" valeur={etat.pieces - achat.prix} fort />
+                  </>
+                )}
               </View>
               {etat.pieces >= achat.prix ? (
                 <Bouton titre={`Acheter pour ${achat.prix} pièces`} onPress={confirmer} style={{ alignSelf: 'stretch' }} />
@@ -137,6 +188,19 @@ export default function Shop() {
     </SafeAreaView>
   );
 }
+
+/** Partie de l'image à montrer dans la vignette, selon le type de vêtement. */
+const CADRAGE: Record<TypeObjet, 'top' | 'center' | 'bottom'> = {
+  chapeau: 'top',
+  cou: 'center',
+  haut: 'center',
+  bas: 'bottom',
+  chaussures: 'bottom',
+  tenue: 'center',
+  saison: 'center',
+  accessoire: 'center',
+  objet: 'center',
+};
 
 function LigneSolde({ libelle, valeur, fort }: { libelle: string; valeur: number; fort?: boolean }) {
   return (
@@ -167,6 +231,13 @@ const styles = StyleSheet.create({
   nom: { fontFamily: polices.titre, fontSize: 22, fontWeight: '800', color: couleurs.brun },
   detail: { fontSize: 13.5, color: couleurs.brunDoux, fontWeight: '600', lineHeight: 18 },
   filtres: { gap: 6 },
+  rayons: { flexDirection: 'row', backgroundColor: couleurs.pecheClair, borderRadius: 999, padding: 4 },
+  rayon: { flex: 1, paddingVertical: 9, borderRadius: 999, alignItems: 'center' },
+  rayonChoisi: { backgroundColor: couleurs.carte },
+  rayonTexte: { fontWeight: '700', color: couleurs.brunDoux, fontSize: 14 },
+  rayonTexteChoisi: { color: couleurs.brun, fontWeight: '800' },
+  vignetteTenue: { width: '100%', height: 92, overflow: 'hidden' },
+  essayage: { width: 170, height: 210 },
   filtre: {
     borderRadius: 999,
     borderWidth: 1,

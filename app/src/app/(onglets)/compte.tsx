@@ -67,7 +67,7 @@ export default function Compte() {
         <Text style={styles.titre}>Compte</Text>
 
         <View style={styles.profil}>
-          {compagnon && <Compagnon espece={compagnon.espece} pose="neutre" taille={86} />}
+          {compagnon && <Compagnon espece={compagnon.espece} pose="neutre" taille={86} equipe={etat.equipe} />}
           <View style={{ flex: 1, gap: 2 }}>
             <Text style={styles.prenom}>{etat.utilisateur?.prenom}</Text>
             {compagnon && infos && (

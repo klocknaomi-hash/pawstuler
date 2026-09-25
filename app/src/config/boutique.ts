@@ -1,12 +1,13 @@
 /**
  * CATALOGUE DE LA BOUTIQUE
  * Les pièces se gagnent uniquement en faisant ses tâches : elles ne s'achètent jamais.
- * Les images sont déclarées dans src/illustrations/registre.ts : le chat a déjà sa garde-robe
- * (assets/tenues/chat), les autres animaux l'auront au fur et à mesure des illustrations.
+ * Rayon « Tenues complètes » : chaque illustration montre le compagnon habillé en entier
+ * (assets/tenues/<animal>). Le chat et le crocodile ont leur garde-robe ; les autres
+ * animaux l'auront au fur et à mesure. Rayon « Objets » : les autres objets.
+ * La liste réellement visible pour un animal est calculée par src/logique/garderobe.ts.
  */
-import type { EspeceId } from '@/config/compagnons';
 
-export type TypeObjet = 'chapeau' | 'haut' | 'bas' | 'chaussures' | 'tenue' | 'accessoire' | 'objet';
+export type TypeObjet = 'tenue' | 'saison' | 'haut' | 'bas' | 'chaussures' | 'chapeau' | 'cou' | 'accessoire' | 'objet';
 
 export type ObjetBoutique = {
   id: string;
@@ -17,111 +18,129 @@ export type ObjetBoutique = {
   offert?: boolean; // cadeau de bienvenue
   premium?: boolean; // réservé à Pawstuler Premium
   /**
-   * Vêtement porté sur le compagnon. Chaque illustration montre le compagnon habillé en entier :
-   * il porte donc un seul vêtement à la fois (en mettre un autre remplace le précédent).
+   * « Tenue complète » : une illustration montre le compagnon habillé en entier.
+   * Il en porte donc une seule à la fois (en mettre une autre remplace la précédente).
    */
   habit?: boolean;
-  /** Proposé seulement à ces animaux (ceux dont l'illustration existe). Absent = tous. */
-  especes?: EspeceId[];
+  /**
+   * Proposé seulement aux animaux qui ont l'illustration correspondante
+   * (déclarée dans src/illustrations/registre.ts, dossier assets/tenues/<animal>).
+   */
+  illustre?: boolean;
 };
 
+/** Les deux rayons du Shop. */
+export const RAYONS = { tenues: 'Tenues complètes', objets: 'Objets' } as const;
+
+/** Catégories à l'intérieur du rayon « Tenues complètes ». */
 export const LIBELLES_TYPES: Record<TypeObjet, string> = {
   tenue: 'Tenues',
+  saison: 'Saisons et fêtes',
   haut: 'Hauts',
   bas: 'Bas',
   chaussures: 'Chaussures',
   chapeau: 'Chapeaux',
+  cou: 'Autour du cou',
   accessoire: 'Accessoires',
   objet: 'Objets',
 };
 
-/** Raccourci pour les vêtements illustrés du chat (images dans assets/tenues/chat). */
-const chat = (id: string, nom: string, type: TypeObjet, prix: number, emoji: string, premium?: boolean): ObjetBoutique => ({
+/** Raccourci pour une tenue illustrée (images dans assets/tenues/<animal>/<id>.png). */
+const illustre = (id: string, nom: string, type: TypeObjet, prix: number, emoji: string, premium?: boolean): ObjetBoutique => ({
   id,
   nom,
   type,
   prix,
   emoji,
   habit: true,
-  especes: ['chat'],
+  illustre: true,
   ...(premium ? { premium } : {}),
 });
 
 export const CATALOGUE_BOUTIQUE: ObjetBoutique[] = [
-  /* ---------- Pour tous les compagnons ---------- */
-  { id: 'echarpe', nom: 'Écharpe de bienvenue', type: 'accessoire', prix: 0, emoji: '🧣', offert: true, habit: true },
+  /* ---------- Pour tous les compagnons (illustrés pour le chat et le crocodile) ---------- */
+  { id: 'echarpe', nom: 'Écharpe de bienvenue', type: 'cou', prix: 0, emoji: '🧣', offert: true, habit: true },
   { id: 'beret', nom: 'Béret', type: 'chapeau', prix: 40, emoji: '🧢', habit: true },
+  { id: 'cravate', nom: 'Cravate du lundi', type: 'cou', prix: 60, emoji: '👔', habit: true },
+
+  /* ---------- Objets ---------- */
   { id: 'lunettes', nom: 'Lunettes rondes', type: 'accessoire', prix: 30, emoji: '👓' },
-  { id: 'cravate', nom: 'Cravate du lundi', type: 'accessoire', prix: 60, emoji: '👔', habit: true },
   { id: 'sac', nom: "Sac à dos d'alternant", type: 'accessoire', prix: 80, emoji: '🎒' },
   { id: 'badge', nom: "Badge d'entreprise", type: 'accessoire', prix: 50, emoji: '🪪' },
   { id: 'plante', nom: 'Petite plante', type: 'objet', prix: 25, emoji: '🪴' },
   { id: 'tasse', nom: 'Tasse de café', type: 'objet', prix: 20, emoji: '☕' },
   { id: 'couronne', nom: 'Couronne des victoires', type: 'chapeau', prix: 150, emoji: '👑', premium: true },
 
-  /* ---------- Garde-robe du chat ---------- */
+  /* ---------- Tenues complètes illustrées (chat, crocodile ; les autres animaux arrivent) ---------- */
   // Hauts
-  chat('tshirt-blanc', 'T-shirt blanc', 'haut', 25, '👕'),
-  chat('pull-rouge', 'Pull rouge', 'haut', 40, '🧶'),
-  chat('sweat-capuche', 'Sweat à capuche', 'haut', 45, '🧥'),
-  chat('chemise-bleue', 'Chemise bleue', 'haut', 40, '👔'),
-  chat('gilet-camel', 'Gilet camel', 'haut', 45, '🧥'),
-  chat('veste-tailleur', 'Veste de tailleur', 'haut', 60, '🧥'),
-  chat('manteau-fourre', 'Manteau fourré', 'haut', 70, '🧥'),
-  chat('cire-jaune', 'Ciré jaune', 'haut', 50, '🧥'),
+  illustre('tshirt-blanc', 'T-shirt blanc', 'haut', 25, '👕'),
+  illustre('pull-rouge', 'Pull rouge', 'haut', 40, '🧶'),
+  illustre('sweat-capuche', 'Sweat à capuche', 'haut', 45, '🧥'),
+  illustre('chemise-bleue', 'Chemise bleue', 'haut', 40, '👔'),
+  illustre('gilet-camel', 'Gilet camel', 'haut', 45, '🧥'),
+  illustre('veste-tailleur', 'Veste de tailleur', 'haut', 60, '🧥'),
+  illustre('manteau-fourre', 'Manteau fourré', 'haut', 70, '🧥'),
+  illustre('cire-jaune', 'Ciré jaune', 'haut', 50, '🧥'),
   // Bas
-  chat('short-jean', 'Short en jean', 'bas', 25, '🩳'),
-  chat('pantalon-chino', 'Pantalon chino', 'bas', 35, '👖'),
-  chat('jean', 'Jean', 'bas', 35, '👖'),
-  chat('jogging', 'Jogging', 'bas', 30, '👖'),
-  chat('petite-jupe', 'Petite jupe', 'bas', 30, '👗'),
-  chat('pantalon-hiver', "Pantalon d'hiver", 'bas', 40, '👖'),
+  illustre('short-jean', 'Short en jean', 'bas', 25, '🩳'),
+  illustre('pantalon-chino', 'Pantalon chino', 'bas', 35, '👖'),
+  illustre('jean', 'Jean', 'bas', 35, '👖'),
+  illustre('jogging', 'Jogging', 'bas', 30, '👖'),
+  illustre('petite-jupe', 'Petite jupe', 'bas', 30, '👗'),
+  illustre('pantalon-hiver', 'Pantalon d\'hiver', 'bas', 40, '👖'),
+  illustre('pantalon-cargo', 'Pantalon cargo', 'bas', 40, '👖'),
+  illustre('short-bain', 'Short de bain', 'bas', 25, '🩳'),
+  illustre('bermuda', 'Bermuda à motifs', 'bas', 30, '🩳'),
   // Chaussures
-  chat('baskets', 'Baskets', 'chaussures', 30, '👟'),
-  chat('baskets-toile', 'Baskets en toile', 'chaussures', 30, '👟'),
-  chat('bottes-cuir', 'Bottes en cuir', 'chaussures', 45, '🥾'),
-  chat('bottes-pluie', 'Bottes de pluie', 'chaussures', 35, '🥾'),
-  chat('bottines', 'Bottines', 'chaussures', 40, '🥾'),
-  chat('chaussons', 'Chaussons', 'chaussures', 20, '🥿'),
-  chat('sandales', 'Sandales', 'chaussures', 25, '🩴'),
+  illustre('baskets', 'Baskets', 'chaussures', 30, '👟'),
+  illustre('baskets-toile', 'Baskets en toile', 'chaussures', 30, '👟'),
+  illustre('bottes-cuir', 'Bottes en cuir', 'chaussures', 45, '🥾'),
+  illustre('bottes-pluie', 'Bottes de pluie', 'chaussures', 35, '🥾'),
+  illustre('bottines', 'Bottines', 'chaussures', 40, '🥾'),
+  illustre('chaussons', 'Chaussons', 'chaussures', 20, '🥿'),
+  illustre('sandales', 'Sandales', 'chaussures', 25, '🩴'),
   // Chapeaux
-  chat('casquette', 'Casquette', 'chapeau', 30, '🧢'),
-  chat('bonnet', 'Bonnet', 'chapeau', 30, '🧶'),
-  chat('chapeau-paille', 'Chapeau de paille', 'chapeau', 35, '👒'),
-  chat('bob-jaune', 'Bob jaune', 'chapeau', 30, '👒'),
-  chat('chapeau-melon', 'Chapeau melon', 'chapeau', 45, '🎩'),
-  chat('chapeau-sorcier', 'Chapeau de sorcier', 'chapeau', 50, '🧙', true),
-  chat('bonnet-noel', 'Bonnet de Noël', 'chapeau', 40, '🎅', true),
-  // Accessoires
-  chat('bandana', 'Bandana', 'accessoire', 20, '🧣'),
-  chat('noeud-papillon', 'Nœud papillon', 'accessoire', 25, '🎀'),
-  // Tenues complètes
-  chat('pyjama', 'Pyjama rayé', 'tenue', 50, '😴'),
-  chat('survetement', 'Survêtement', 'tenue', 60, '🏃'),
-  chat('tshirt-short', 'T-shirt et short', 'tenue', 50, '👕'),
-  chat('robe-pois', 'Robe à pois', 'tenue', 60, '👗'),
-  chat('veste-rouge', 'Veste rouge', 'tenue', 70, '🧥'),
-  chat('duffle-coat', 'Duffle-coat', 'tenue', 80, '🧥'),
-  chat('gilet-vert', 'Gilet vert', 'tenue', 60, '🧥'),
-  chat('pull-jacquard', 'Pull jacquard', 'tenue', 70, '🧶'),
-  chat('gilet-beige', 'Gilet beige', 'tenue', 60, '🧥'),
-  chat('cire-capuche', 'Ciré à capuche', 'tenue', 60, '☔'),
-  chat('chemise-cravate', 'Chemise et cravate', 'tenue', 80, '👔'),
-  chat('costume', 'Costume', 'tenue', 120, '🤵'),
-  chat('blouse-blanche', 'Blouse blanche', 'tenue', 90, '🩺'),
-  chat('veste-chef', 'Veste de chef', 'tenue', 90, '🧑‍🍳'),
-  chat('tenue-printemps', 'Tenue de printemps', 'tenue', 80, '🌷'),
-  chat('tenue-ete', "Tenue d'été", 'tenue', 80, '🕶️'),
-  chat('tenue-automne', "Tenue d'automne", 'tenue', 80, '🍂'),
-  chat('tenue-hiver', "Tenue d'hiver", 'tenue', 90, '❄️'),
-  chat('maillot-bain', 'Maillot de bain', 'tenue', 50, '👙'),
-  // Événements (Premium)
-  chat('costume-sorcier', 'Costume de sorcier', 'tenue', 100, '🎃', true),
-  chat('tenue-noel', 'Tenue de Noël', 'tenue', 100, '🎄', true),
-  chat('robe-saint-valentin', 'Robe de la Saint-Valentin', 'tenue', 100, '💝', true),
+  illustre('casquette', 'Casquette', 'chapeau', 30, '🧢'),
+  illustre('bonnet', 'Bonnet', 'chapeau', 30, '🧶'),
+  illustre('chapeau-paille', 'Chapeau de paille', 'chapeau', 35, '👒'),
+  illustre('bob-jaune', 'Bob jaune', 'chapeau', 30, '👒'),
+  illustre('chapeau-melon', 'Chapeau melon', 'chapeau', 45, '🎩'),
+  // Autour du cou
+  illustre('bandana', 'Bandana', 'cou', 20, '🧣'),
+  illustre('noeud-papillon', 'Nœud papillon', 'cou', 25, '🎀'),
+  illustre('echarpe-marron', 'Écharpe marron', 'cou', 25, '🧣'),
+  illustre('noeud-bordeaux', 'Nœud bordeaux', 'cou', 25, '🎀'),
+  illustre('cravate-grise', 'Cravate grise', 'cou', 40, '👔'),
+  // Tenues
+  illustre('pyjama', 'Pyjama rayé', 'tenue', 50, '😴'),
+  illustre('survetement', 'Survêtement', 'tenue', 60, '🏃'),
+  illustre('tshirt-short', 'T-shirt et short', 'tenue', 50, '👕'),
+  illustre('robe-pois', 'Robe à pois', 'tenue', 60, '👗'),
+  illustre('robe-rose', 'Robe rose', 'tenue', 60, '👗'),
+  illustre('veste-rouge', 'Veste rouge', 'tenue', 70, '🧥'),
+  illustre('duffle-coat', 'Duffle-coat', 'tenue', 80, '🧥'),
+  illustre('doudoune', 'Doudoune', 'tenue', 80, '🧥'),
+  illustre('gilet-vert', 'Gilet vert', 'tenue', 60, '🧥'),
+  illustre('pull-jacquard', 'Pull jacquard', 'tenue', 70, '🧶'),
+  illustre('gilet-beige', 'Gilet beige', 'tenue', 60, '🧥'),
+  illustre('cire-capuche', 'Ciré à capuche', 'tenue', 60, '☔'),
+  illustre('chemise-fleurs', 'Chemise à fleurs', 'tenue', 60, '🌺'),
+  illustre('chemise-motifs', 'Chemise à motifs', 'tenue', 60, '👕'),
+  illustre('chemise-cravate', 'Chemise et cravate', 'tenue', 80, '👔'),
+  illustre('costume', 'Costume', 'tenue', 120, '🤵'),
+  illustre('blouse-blanche', 'Blouse blanche', 'tenue', 90, '🩺'),
+  illustre('veste-chef', 'Veste de chef', 'tenue', 90, '🧑‍🍳'),
+  // Collection saisonnière et événements (les événements sont Premium)
+  illustre('tenue-printemps', 'Tenue de printemps', 'saison', 80, '🌷'),
+  illustre('tenue-ete', 'Tenue d\'été', 'saison', 80, '🕶️'),
+  illustre('tenue-automne', 'Tenue d\'automne', 'saison', 80, '🍂'),
+  illustre('tenue-hiver', 'Tenue d\'hiver', 'saison', 90, '❄️'),
+  illustre('maillot-bain', 'Maillot de bain', 'saison', 50, '👙'),
+  illustre('chapeau-sorcier', 'Chapeau de sorcier', 'saison', 50, '🧙', true),
+  illustre('bonnet-noel', 'Bonnet de Noël', 'saison', 40, '🎅', true),
+  illustre('costume-sorcier', 'Costume de sorcier (Halloween)', 'saison', 100, '🎃', true),
+  illustre('tenue-noel', 'Tenue de Noël', 'saison', 100, '🎄', true),
+  illustre('robe-saint-valentin', 'Robe de la Saint-Valentin', 'saison', 100, '💝', true),
 ];
-
-/** Objets visibles dans le Shop pour cet animal. */
-export const catalogueDe = (espece: EspeceId) => CATALOGUE_BOUTIQUE.filter((o) => !o.especes || o.especes.includes(espece));
 
 export const objetParId = (id: string) => CATALOGUE_BOUTIQUE.find((o) => o.id === id);
