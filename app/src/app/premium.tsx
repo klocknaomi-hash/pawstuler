@@ -9,7 +9,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Bouton, Ecran, Texte, Titre } from '@/components/base';
 import { Compagnon } from '@/components/Compagnon';
@@ -27,6 +27,9 @@ import { arrondis, couleurs, espace, polices } from '@/config/theme';
 import { dateLisible, jourDe } from '@/logique/dates';
 import { acheterFormule, aPremium, essaiDisponible, joursRestantsEssai, libelleAbonnement, restaurerAchats } from '@/services/abonnement';
 import { useApp } from '@/store/etat';
+
+/** Page de l'App Store où l'on gère ou résilie ses abonnements. */
+const GERER_ABONNEMENT = 'https://apps.apple.com/account/subscriptions';
 
 /** Date lisible dans n jours (« 2 oct. »). */
 const dansNJours = (n: number) => dateLisible(jourDe(new Date(Date.now() + n * 86_400_000)));
@@ -50,6 +53,7 @@ export default function Premium() {
     setEnCours(false);
     if (resultat.ok) {
       dispatch({ type: 'SOUSCRIRE', formule: choix, essai: avecEssai });
+      // Essai : l'accueil ouvre ensuite l'écran « Jour 1 » (un seul déclencheur, pas de doublon)
       router.back();
     } else if (!resultat.annule) {
       setMessage(resultat.message ?? 'L’achat n’a pas abouti. Aucun montant n’a été débité.');
@@ -72,7 +76,18 @@ export default function Premium() {
       defilant
       bas={
         dejaPremium ? (
-          <Bouton titre="Fermer" variante="secondaire" onPress={() => router.back()} />
+          <View style={{ gap: espace.s }}>
+            <Bouton titre="Fermer" variante="secondaire" onPress={() => router.back()} />
+            <Bouton titre="Gérer mon abonnement" variante="texte" onPress={() => Linking.openURL(GERER_ABONNEMENT)} />
+            {/* Version de test : la vraie résiliation se fait dans les réglages Apple */}
+            {etat.abonnement.statut === 'essai' && (
+              <Bouton
+                titre={etat.abonnement.resiliationPrevue ? 'Annuler la résiliation (test)' : 'Simuler une résiliation (test)'}
+                variante="texte"
+                onPress={() => dispatch({ type: 'BASCULER_RESILIATION' })}
+              />
+            )}
+          </View>
         ) : (
           <>
             <Bouton titre={avecEssai ? formule.bouton : `M’abonner pour ${formule.prix}`} chargement={enCours} onPress={acheter} />
@@ -99,7 +114,11 @@ export default function Premium() {
         {essaiDisponible(etat) && <Texte style={{ textAlign: 'center' }}>Essai gratuit inclus avec l’abonnement annuel.</Texte>}
         {dejaPremium && (
           <Texte style={{ textAlign: 'center', color: couleurs.renardFonce, fontWeight: '700' }}>
-            {restants !== null ? `${libelleAbonnement(etat)}. Ensuite : 39,99 €/an, sauf résiliation.` : `${libelleAbonnement(etat)}. Merci !`}
+            {restants === null
+              ? `${libelleAbonnement(etat)}. Merci !`
+              : etat.abonnement.resiliationPrevue
+                ? `${libelleAbonnement(etat)}. Résiliation prévue : ensuite, version gratuite.`
+                : `${libelleAbonnement(etat)}. Ensuite : 39,99 €/an, sauf résiliation.`}
           </Texte>
         )}
       </View>

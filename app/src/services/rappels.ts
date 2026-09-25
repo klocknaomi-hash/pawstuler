@@ -9,13 +9,16 @@
  *  - Tâches du jour : chaque matin, une heure après le réveil du compagnon.
  *  - Relances : 7 jours après l'envoi d'une candidature restée sans réponse, à 10 h.
  *  - Essai Premium : 3 jours puis 1 jour avant la fin, à 10 h (transparence sur le prix).
+ *  - Essai encore disponible : un rappel doux au plus tous les 4 jours, à 18 h, sans insister.
  */
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { JOURS_ESSAI } from '@/config/abonnement';
 import { JOURS_AVANT_RELANCE } from '@/config/taches';
+import { jourDe } from '@/logique/dates';
 import { candidaturesActives } from '@/logique/tachesDuJour';
+import { essaiDisponible } from '@/services/abonnement';
 import type { EtatApp } from '@/store/types';
 
 /** iOS garde au maximum 64 rappels programmés : on reste largement en dessous. */
@@ -125,6 +128,15 @@ export async function synchroniserRappels(etat: EtatApp): Promise<Autorisation> 
     const heure = heureEveillee(etat, 10);
     await programmerLe(dateA(debut, JOURS_ESSAI - 3, heure), 'Ton essai Premium', 'Il se termine dans 3 jours. Ensuite : 39,99 €/an, sauf résiliation.');
     await programmerLe(dateA(debut, JOURS_ESSAI - 1, heure), 'Ton essai Premium', 'Il se termine demain. Ensuite : 39,99 €/an, sauf résiliation.');
+  }
+
+  // 4. Essai jamais utilisé : un petit rappel doux, 4 jours après le dernier
+  if (essaiDisponible(etat)) {
+    await programmerLe(
+      dateA(etat.abonnement.rappelEssaiLe ?? jourDe(), 4, heureEveillee(etat, 18)),
+      'Tes 7 jours d’essai Premium t’attendent ✨',
+      `Quand tu veux, sans pression. ${nom} est prêt à te montrer tout ce qu’il sait faire.`,
+    );
   }
 
   return 'accordee';

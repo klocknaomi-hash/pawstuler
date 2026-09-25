@@ -19,12 +19,13 @@ import { villeParId } from '@/config/villes';
 import { imageVille } from '@/illustrations/registre';
 import { aventuresRestantes } from '@/logique/compagnon';
 import { jourDe } from '@/logique/dates';
+import { energieDisponible } from '@/logique/energie';
 import { aPremium } from '@/services/abonnement';
 import { useApp } from '@/store/etat';
 
 export default function Aventure() {
   const { etat, dispatch } = useApp();
-  const peutPartir = aventuresRestantes(etat) > 0 && etat.energie >= COUT.aventure;
+  const peutPartir = aventuresRestantes(etat) > 0 && energieDisponible(etat) >= COUT.aventure;
   const [phase, setPhase] = useState<'depart' | 'recit'>(peutPartir ? 'depart' : 'recit');
   const lance = useRef(false);
 

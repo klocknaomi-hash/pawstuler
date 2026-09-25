@@ -18,11 +18,49 @@ export function joursRestantsEssai(etat: EtatApp): number | null {
   return Math.max(0, JOURS_ESSAI - joursEntre(etat.abonnement.debutEssai));
 }
 
-/** Vrai si l'utilisateur a accès à Premium (essai en cours ou abonnement actif). */
+/** Jour de l'essai (1 à 7), ou null si pas d'essai en cours. Calculé sur la date, pas sur les ouvertures. */
+export function jourEssai(etat: EtatApp): number | null {
+  const restants = joursRestantsEssai(etat);
+  if (restants === null || restants <= 0) return null;
+  return JOURS_ESSAI - restants + 1;
+}
+
+/**
+ * Vrai si l'utilisateur a accès à Premium : abonnement actif, essai en cours,
+ * ou essai terminé sans résiliation (l'App Store démarre alors l'abonnement annuel).
+ * C'est l'unique règle utilisée partout (énergie, Shop, fonctions Premium).
+ */
 export function aPremium(etat: EtatApp): boolean {
   if (etat.abonnement.statut === 'actif') return true;
   const restants = joursRestantsEssai(etat);
-  return restants !== null && restants > 0;
+  if (restants === null) return false;
+  return restants > 0 || !etat.abonnement.resiliationPrevue;
+}
+
+/** Niveau affiché et utilisé pour les règles : gratuit, essai ou Premium. */
+export function niveau(etat: EtatApp): 'gratuit' | 'essai' | 'premium' {
+  if (jourEssai(etat) !== null) return 'essai';
+  return aPremium(etat) ? 'premium' : 'gratuit';
+}
+
+/**
+ * Fin de l'essai (appelée chaque jour) : sans résiliation, l'annuel démarre ;
+ * après une résiliation, retour en gratuit (tout est conservé) avec un petit message.
+ */
+export function abonnementDuJour(etat: EtatApp): EtatApp['abonnement'] {
+  const a = etat.abonnement;
+  const restants = joursRestantsEssai(etat);
+  if (restants === null || restants > 0) return a;
+  return a.resiliationPrevue
+    ? { ...a, statut: 'gratuit', resiliationPrevue: false, finEssaiAVoir: true }
+    : { ...a, statut: 'actif', formule: 'annuel' };
+}
+
+/** Rappel doux « tes 7 jours d'essai t'attendent toujours » : au plus tous les 4 jours. */
+export function rappelEssaiDisponible(etat: EtatApp, aujourdhui: string): boolean {
+  if (!essaiDisponible(etat) || !etat.onboardingTermine) return false;
+  const dernier = etat.abonnement.rappelEssaiLe;
+  return !dernier || joursEntre(dernier, aujourdhui) >= 4;
 }
 
 /** L'essai gratuit n'est proposé qu'une fois (et seulement avec l'annuel). */
@@ -31,18 +69,21 @@ export const essaiDisponible = (etat: EtatApp) => !etat.abonnement.essaiUtilise 
 /** Libellé du statut, pour la page Compte. */
 export function libelleAbonnement(etat: EtatApp): string {
   if (etat.abonnement.statut === 'actif') return `${NOM_OFFRE} · ${formuleParId(etat.abonnement.formule ?? 'mensuel').libelle.toLowerCase()}`;
-  const restants = joursRestantsEssai(etat);
-  if (restants !== null && restants > 0) return `Essai gratuit : ${restants} jour${restants > 1 ? 's' : ''} restant${restants > 1 ? 's' : ''}`;
+  const jour = jourEssai(etat);
+  if (jour !== null) return `Essai Premium : jour ${jour} sur ${JOURS_ESSAI}`;
+  if (aPremium(etat)) return `${NOM_OFFRE} · annuel`;
   return 'Version gratuite';
 }
 
 /** Message de rappel à afficher pendant l'essai (null s'il n'y a rien à dire). */
 export function rappelEssai(etat: EtatApp): string | null {
   const restants = joursRestantsEssai(etat);
-  if (restants === null) return null;
-  if (restants === 3) return 'Ton essai Premium se termine dans 3 jours. Ensuite : 39,99 €/an, sauf résiliation.';
-  if (restants === 1) return 'Ton essai Premium se termine demain. Ensuite : 39,99 €/an, sauf résiliation.';
-  if (restants === 0) return 'Ton essai Premium est terminé. Tu gardes tout ce que tu as gagné.';
+  if (restants === null || restants <= 0) return null;
+  const suite = etat.abonnement.resiliationPrevue
+    ? 'Ensuite, tu repasses en version gratuite (tu gardes tout).'
+    : 'Ensuite : 39,99 €/an, sauf résiliation.';
+  if (restants === 3) return `Ton essai Premium se termine dans 3 jours. ${suite}`;
+  if (restants === 1) return `Ton essai Premium se termine demain. ${suite}`;
   return null;
 }
 

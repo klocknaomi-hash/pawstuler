@@ -9,15 +9,17 @@ import { createContext, useContext, useEffect, useReducer, useRef, useState, typ
 import { AppState } from 'react-native';
 
 import type { FormuleId } from '@/config/abonnement';
-import { CATALOGUE_BOUTIQUE, objetParId } from '@/config/boutique';
+import { CATALOGUE_BOUTIQUE, estPremium, objetParId } from '@/config/boutique';
 import { emailValide } from '@/config/candidatures';
 import { especeValide, type EspeceId, type Pronoms } from '@/config/compagnons';
-import { COUT, ENERGIE_MAX, ENERGIE_PAR_TACHE, PIECES_AVENTURE } from '@/config/energie';
+import { COUT, ENERGIE_PAR_TACHE, NIVEAUX_ENERGIE, PIECES_AVENTURE } from '@/config/energie';
 import { OBJECTIF_SERIE_PAR_DEFAUT } from '@/config/serie';
 import { PIECES_OBJECTIF, PIECES_TACHE_PERSO, PLAFOND_PIECES_JOUR } from '@/config/taches';
 import { VILLES, type VilleId } from '@/config/villes';
 import { aventuresRestantes, composerAventure, lieuEmbauche } from '@/logique/compagnon';
 import { jourDe, joursEntre, nouvelId } from '@/logique/dates';
+import { appliquerEnergie, energieDisponible, energieMax } from '@/logique/energie';
+import { abonnementDuJour, aPremium } from '@/services/abonnement';
 import { candidaturesActives, emploiActuel, preparerTaches } from '@/logique/tachesDuJour';
 
 import type { Candidature, EtatApp, Parametres, StatutCandidature, TypeContrat, Utilisateur } from './types';
@@ -42,7 +44,7 @@ export const ETAT_INITIAL: EtatApp = {
   pieces: 0,
   piecesDuJour: 0,
   mouvements: [],
-  energie: ENERGIE_MAX,
+  energie: NIVEAUX_ENERGIE.gratuit.max,
   aventuresDuJour: 0,
   aventuresTotal: 0,
   decouvertes: [],
@@ -101,7 +103,12 @@ export type Action =
   | { type: 'NOUVELLE_RECHERCHE' }
   /* Pawstuler Premium */
   | { type: 'SOUSCRIRE'; formule: FormuleId; essai: boolean }
-  | { type: 'RESTAURER_ABONNEMENT'; formule: FormuleId };
+  | { type: 'RESTAURER_ABONNEMENT'; formule: FormuleId }
+  /** Version de test : simule une résiliation (ou son annulation) faite dans les réglages Apple. */
+  | { type: 'BASCULER_RESILIATION' }
+  | { type: 'VOIR_JOUR_ESSAI'; jour: number }
+  | { type: 'VOIR_FIN_ESSAI' }
+  | { type: 'VOIR_RAPPEL_ESSAI'; jour: string };
 
 /* ---------- Petits outils ---------- */
 
@@ -123,7 +130,6 @@ function crediterDuJour(etat: EtatApp, montant: number, libelle: string): EtatAp
   return { ...credite, piecesDuJour: Math.max(0, etat.piecesDuJour + (credite.pieces - etat.pieces)) };
 }
 
-const bornerEnergie = (n: number) => Math.max(0, Math.min(ENERGIE_MAX, n));
 
 /** Coche automatiquement la première tâche du jour non faite qui correspond. */
 function validerTacheLiee(etat: EtatApp, correspond: (t: EtatApp['taches'][number]) => boolean): EtatApp {
@@ -251,7 +257,10 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
         onboardingTermine: true,
         contexte: 'recherche',
         recherches: etat.recherches.length ? etat.recherches : [nouvelleRecherche()],
-        energie: ENERGIE_MAX,
+        energie: energieMax(etat),
+        rechargeA: undefined,
+        // Le premier rappel doux de l'essai n'arrive que quelques jours après l'inscription
+        abonnement: { ...etat.abonnement, rappelEssaiLe: etat.abonnement.rappelEssaiLe ?? jourDe() },
         inventaire: [...new Set([...etat.inventaire, ...cadeaux])],
       };
       return compterJourSerie({ ...fini, taches: preparerTaches(fini, jourDe()), jourTaches: jourDe() }, jourDe());
@@ -260,15 +269,16 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
     /* ----- Tâches, pièces et énergie ----- */
     case 'PREPARER_JOUR': {
       if (!etat.onboardingTermine) return etat;
-      // Chaque ouverture de l'app compte pour la série (une fois par jour)
-      const compte = compterJourSerie(etat, action.jour);
+      // Chaque ouverture de l'app compte pour la série (une fois par jour),
+      // et la fin éventuelle de l'essai Premium est appliquée
+      const compte = compterJourSerie({ ...etat, abonnement: abonnementDuJour(etat) }, action.jour);
       if (compte.jourTaches === action.jour) return compte;
-      // Nouveau jour : tâches renouvelées, énergie rechargée, nouvelle aventure possible
+      // Nouveau jour : tâches renouvelées, nouvelle aventure possible.
+      // L'énergie, elle, suit sa propre recharge en temps réel (5 h en gratuit, 3 h en Premium).
       return {
         ...compte,
         taches: preparerTaches(compte, action.jour),
         jourTaches: action.jour,
-        energie: ENERGIE_MAX,
         aventuresDuJour: 0,
         piecesDuJour: 0,
       };
@@ -276,11 +286,12 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
     case 'COCHER_TACHE': {
       const t = etat.taches.find((x) => x.id === action.id);
       if (!t || t.faite) return etat;
-      const energieDonnee = Math.min(ENERGIE_PAR_TACHE, ENERGIE_MAX - etat.energie);
+      const energie = appliquerEnergie(etat, ENERGIE_PAR_TACHE);
+      const energieDonnee = energie.energie - energieDisponible(etat);
       const gain = gainPlafonne(etat, t.pieces);
       const coche: EtatApp = {
         ...etat,
-        energie: etat.energie + energieDonnee,
+        ...energie,
         taches: etat.taches.map((x) => (x.id === t.id ? { ...x, faite: true, energieDonnee, piecesDonnees: gain } : x)),
         modelesFaits: t.modeleId && !etat.modelesFaits.includes(t.modeleId) ? [...etat.modelesFaits, t.modeleId] : etat.modelesFaits,
       };
@@ -292,7 +303,7 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
       if (!t || !t.faite) return etat;
       const decoche: EtatApp = {
         ...etat,
-        energie: bornerEnergie(etat.energie - (t.energieDonnee ?? 0)),
+        ...appliquerEnergie(etat, -(t.energieDonnee ?? 0)),
         taches: etat.taches.map((x) => (x.id === t.id ? { ...x, faite: false, energieDonnee: 0, piecesDonnees: 0 } : x)),
       };
       return crediterDuJour(decoche, -(t.piecesDonnees ?? t.pieces), `Tâche décochée : ${t.titre}`);
@@ -310,15 +321,15 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
       };
     case 'INTERAGIR': {
       const cout = COUT[action.moment];
-      if (etat.energie < cout) return etat;
-      return { ...etat, energie: etat.energie - cout };
+      if (energieDisponible(etat) < cout) return etat;
+      return { ...etat, ...appliquerEnergie(etat, -cout) };
     }
     case 'PARTIR_EN_AVENTURE': {
-      if (etat.energie < COUT.aventure || aventuresRestantes(etat) === 0) return etat;
+      if (energieDisponible(etat) < COUT.aventure || aventuresRestantes(etat) === 0) return etat;
       const { lieuId, texte } = composerAventure(etat);
       const parti: EtatApp = {
         ...etat,
-        energie: etat.energie - COUT.aventure,
+        ...appliquerEnergie(etat, -COUT.aventure),
         aventuresDuJour: etat.aventuresDuJour + 1,
         aventuresTotal: etat.aventuresTotal + 1,
         derniereAventure: { le: jourDe(), texte, lieuId },
@@ -391,6 +402,8 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
     case 'ACHETER': {
       const objet = CATALOGUE_BOUTIQUE.find((o) => o.id === action.objetId);
       if (!objet || etat.inventaire.includes(objet.id) || etat.pieces < objet.prix) return etat;
+      // Collections d'événement et objets Premium : achat réservé à Premium (ce qui est déjà acquis reste acquis)
+      if (estPremium(objet) && !aPremium(etat)) return etat;
       const achete = { ...etat, inventaire: [...etat.inventaire, objet.id], equipe: porter(etat.equipe, objet.id) };
       return crediter(achete, -objet.prix, `Achat : ${objet.nom}`);
     }
@@ -489,14 +502,24 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
     }
 
     /* ----- Pawstuler Premium ----- */
-    case 'SOUSCRIRE':
+    case 'SOUSCRIRE': {
       // L'essai gratuit n'existe qu'avec l'annuel ; le mensuel est actif tout de suite.
-      return {
-        ...etat,
-        abonnement: action.essai
-          ? { statut: 'essai', debutEssai: jourDe(), formule: action.formule, essaiUtilise: true }
-          : { statut: 'actif', formule: action.formule, essaiUtilise: etat.abonnement.essaiUtilise },
-      };
+      const abonnement: EtatApp['abonnement'] = action.essai
+        ? { statut: 'essai', debutEssai: jourDe(), formule: action.formule, essaiUtilise: true, jourEssaiVu: 0 }
+        : { statut: 'actif', formule: action.formule, essaiUtilise: etat.abonnement.essaiUtilise };
+      // Bienvenue dans Premium : l'énergie passe tout de suite au nouveau maximum
+      return { ...etat, abonnement, energie: NIVEAUX_ENERGIE.premium.max, rechargeA: undefined };
+    }
+    case 'BASCULER_RESILIATION':
+      return etat.abonnement.statut === 'essai'
+        ? { ...etat, abonnement: { ...etat.abonnement, resiliationPrevue: !etat.abonnement.resiliationPrevue } }
+        : etat;
+    case 'VOIR_JOUR_ESSAI':
+      return { ...etat, abonnement: { ...etat.abonnement, jourEssaiVu: action.jour } };
+    case 'VOIR_FIN_ESSAI':
+      return { ...etat, abonnement: { ...etat.abonnement, finEssaiAVoir: false } };
+    case 'VOIR_RAPPEL_ESSAI':
+      return { ...etat, abonnement: { ...etat.abonnement, rappelEssaiLe: action.jour } };
     case 'RESTAURER_ABONNEMENT':
       return { ...etat, abonnement: { ...etat.abonnement, statut: 'actif', formule: action.formule } };
   }
