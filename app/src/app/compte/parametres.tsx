@@ -1,14 +1,15 @@
 /**
- * COMPTE › PARAMÈTRES — notifications et rythme du compagnon.
- * Les préférences sont enregistrées dès maintenant ; l'envoi réel des notifications
- * sera branché dans une prochaine étape (expo-notifications).
+ * COMPTE › PARAMÈTRES — rappels sur le téléphone et rythme du compagnon.
+ * Les rappels sont programmés par src/services/rappels.ts (sans serveur).
  */
-import { StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Linking, StyleSheet, Text, View } from 'react-native';
 
-import { Ecran, Pastille, SousTitre } from '@/components/base';
+import { Bouton, Ecran, Pastille, SousTitre } from '@/components/base';
 import { Groupe, LigneInterrupteur } from '@/components/Liste';
 import { couleurs, espace } from '@/config/theme';
 import { HEURES_COUCHER, HEURES_REVEIL, heureLisible } from '@/logique/rythme';
+import { autorisation, type Autorisation } from '@/services/rappels';
 import { useApp } from '@/store/etat';
 
 export default function Parametres() {
@@ -16,11 +17,16 @@ export default function Parametres() {
   const p = etat.parametres;
   const nom = etat.compagnon?.nom ?? 'Ton compagnon';
   const changer = (modifs: Partial<typeof p>) => dispatch({ type: 'MODIFIER_PARAMETRES', parametres: modifs });
+  // Autorisation du téléphone : si elle a été refusée, on explique comment la rétablir
+  const [permis, setPermis] = useState<Autorisation>('accordee');
+  useEffect(() => {
+    autorisation().then(setPermis).catch(() => {});
+  }, [p]);
 
   return (
     <Ecran defilant avecEntete>
-      <Groupe titre="Notifications">
-        <LigneInterrupteur premiere libelle="Autoriser les notifications" valeur={p.notifications} onChange={(v) => changer({ notifications: v })} />
+      <Groupe titre="Rappels">
+        <LigneInterrupteur premiere libelle="Recevoir des rappels" valeur={p.notifications} onChange={(v) => changer({ notifications: v })} />
         <LigneInterrupteur
           libelle="Rappels de relance"
           detail="Quand une candidature n’a pas de réponse depuis 7 jours"
@@ -34,6 +40,17 @@ export default function Parametres() {
           onChange={(v) => changer({ rappelsTaches: v })}
         />
       </Groupe>
+      {p.notifications && permis === 'refusee' && (
+        <View style={styles.alerte}>
+          <Text style={styles.detail}>
+            Les notifications de Pawstuler sont coupées dans les réglages de ton iPhone. Tu peux les réactiver quand tu veux.
+          </Text>
+          <Bouton titre="Ouvrir les réglages" variante="secondaire" onPress={() => Linking.openSettings()} />
+        </View>
+      )}
+      {p.notifications && permis === 'indisponible' && (
+        <Text style={styles.detail}>Les rappels fonctionnent sur ton téléphone (pas dans la version web).</Text>
+      )}
 
       <View style={{ gap: espace.s }}>
         <SousTitre>Le rythme de {nom}</SousTitre>
@@ -67,6 +84,7 @@ export default function Parametres() {
 
 const styles = StyleSheet.create({
   pastilles: { flexDirection: 'row', flexWrap: 'wrap', gap: espace.s },
+  alerte: { backgroundColor: couleurs.pecheClair, borderRadius: 16, padding: espace.l, gap: espace.m },
   detail: { fontSize: 13.5, color: couleurs.brunDoux, fontWeight: '600', lineHeight: 19 },
   label: { fontSize: 12.5, fontWeight: '800', color: couleurs.brunDoux, textTransform: 'uppercase', letterSpacing: 0.6, marginTop: espace.s },
 });
