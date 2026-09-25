@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Champ, Ecran, Pastille, SousTitre } from '@/components/base';
 import { Groupe, Ligne } from '@/components/Liste';
-import { compagnonParId } from '@/config/compagnons';
+import { LIBELLES_PRONOMS, compagnonParId, type Pronoms } from '@/config/compagnons';
 import { couleurs, espace } from '@/config/theme';
 import { villeParId } from '@/config/villes';
 import { dateLisible } from '@/logique/dates';
@@ -45,6 +45,23 @@ export default function Profil() {
         autoCapitalize="words"
         maxLength={16}
       />
+
+      {etat.compagnon && (
+        <View style={{ gap: espace.s }}>
+          <SousTitre>Pronoms de {etat.compagnon.nom}</SousTitre>
+          <Text style={styles.detail}>Facultatif : touche à nouveau pour ne rien préciser.</Text>
+          <View style={styles.pastilles}>
+            {(Object.keys(LIBELLES_PRONOMS) as Pronoms[]).map((p) => (
+              <Pastille
+                key={p}
+                libelle={LIBELLES_PRONOMS[p]}
+                choisi={etat.compagnon?.pronoms === p}
+                onPress={() => dispatch({ type: 'DEFINIR_PRONOMS', pronoms: etat.compagnon?.pronoms === p ? undefined : p })}
+              />
+            ))}
+          </View>
+        </View>
+      )}
 
       <Groupe>
         {etat.compagnon && (

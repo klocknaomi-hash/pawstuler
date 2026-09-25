@@ -19,7 +19,7 @@ import { villeParId } from '@/config/villes';
 import { imageVille } from '@/illustrations/registre';
 import { aventuresRestantes } from '@/logique/compagnon';
 import { jourDe } from '@/logique/dates';
-import { aZiggyPlus } from '@/services/abonnement';
+import { aPremium } from '@/services/abonnement';
 import { useApp } from '@/store/etat';
 
 export default function Aventure() {
@@ -64,11 +64,11 @@ export default function Aventure() {
       bas={
         <>
           <Bouton titre="Retour à l’accueil" onPress={() => router.back()} />
-          {encore === 0 && !aZiggyPlus(etat) && (
+          {encore === 0 && !aPremium(etat) && (
             <Bouton
-              titre={`Avec Ziggy+ : jusqu’à ${AVENTURES_PAR_JOUR.ziggyPlus} aventures par jour`}
+              titre={`Avec Premium : jusqu’à ${AVENTURES_PAR_JOUR.premium} aventures par jour`}
               variante="texte"
-              onPress={() => router.replace('/ziggy-plus')}
+              onPress={() => router.replace('/premium')}
             />
           )}
         </>

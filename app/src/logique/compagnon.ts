@@ -6,7 +6,7 @@
 import { RECITS } from '@/config/aventures';
 import { AVENTURES_PAR_JOUR } from '@/config/energie';
 import { villeParId, type Lieu } from '@/config/villes';
-import { aZiggyPlus } from '@/services/abonnement';
+import { aPremium } from '@/services/abonnement';
 import type { EtatApp } from '@/store/types';
 
 import { candidaturesActives } from './tachesDuJour';
@@ -47,7 +47,7 @@ export function lieuEmbauche(etat: EtatApp): Lieu | undefined {
 
 /** Nombre d'aventures encore possibles aujourd'hui. */
 export function aventuresRestantes(etat: EtatApp): number {
-  const max = aZiggyPlus(etat) ? AVENTURES_PAR_JOUR.ziggyPlus : AVENTURES_PAR_JOUR.gratuit;
+  const max = aPremium(etat) ? AVENTURES_PAR_JOUR.premium : AVENTURES_PAR_JOUR.gratuit;
   return Math.max(0, max - etat.aventuresDuJour);
 }
 

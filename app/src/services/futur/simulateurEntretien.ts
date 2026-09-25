@@ -5,7 +5,7 @@
  * Principe : l'utilisateur fournit une offre (entreprise, lien, description) ; l'IA l'analyse,
  * puis mène un entretien vocal de 15 à 30 minutes, rebondit sur les réponses et donne un retour.
  * Deux modes : « Ziggy » (rassurant, ludique) et « Recruteur » (réaliste, exigeant).
- * Fonctionnalité pensée pour Ziggy+, et pour l'iPad ou l'ordinateur à terme.
+ * Fonctionnalité pensée pour Pawstuler Premium, et pour l'iPad ou l'ordinateur à terme.
  */
 
 export type ModeEntretien = 'ziggy' | 'recruteur';

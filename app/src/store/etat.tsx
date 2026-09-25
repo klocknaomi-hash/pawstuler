@@ -10,12 +10,13 @@ import { AppState } from 'react-native';
 
 import type { FormuleId } from '@/config/abonnement';
 import { CATALOGUE_BOUTIQUE } from '@/config/boutique';
-import { especeValide, type EspeceId } from '@/config/compagnons';
+import { especeValide, type EspeceId, type Pronoms } from '@/config/compagnons';
 import { COUT, ENERGIE_MAX, ENERGIE_PAR_TACHE, PIECES_AVENTURE } from '@/config/energie';
+import { OBJECTIF_SERIE_PAR_DEFAUT } from '@/config/serie';
 import { PIECES_OBJECTIF, PIECES_TACHE_PERSO, PLAFOND_PIECES_JOUR } from '@/config/taches';
 import { VILLES, type VilleId } from '@/config/villes';
 import { aventuresRestantes, composerAventure, lieuEmbauche } from '@/logique/compagnon';
-import { jourDe, nouvelId } from '@/logique/dates';
+import { jourDe, joursEntre, nouvelId } from '@/logique/dates';
 import { candidaturesActives, emploiActuel, preparerTaches } from '@/logique/tachesDuJour';
 
 import type { Candidature, EtatApp, Parametres, StatutCandidature, TypeContrat, Utilisateur } from './types';
@@ -31,6 +32,7 @@ export const ETAT_INITIAL: EtatApp = {
   recherche: { objectif: 'emploi', contrats: [] },
   rythme: { reveil: 8, coucher: 22 },
   onboardingTermine: false,
+  serie: { objectif: OBJECTIF_SERIE_PAR_DEFAUT, actuelle: 0, meilleure: 0 },
   contexte: 'recherche',
   recherches: [],
   emplois: [],
@@ -42,6 +44,7 @@ export const ETAT_INITIAL: EtatApp = {
   energie: ENERGIE_MAX,
   aventuresDuJour: 0,
   aventuresTotal: 0,
+  decouvertes: [],
   candidatures: [],
   inventaire: [],
   equipe: [],
@@ -63,8 +66,10 @@ export type Action =
   | { type: 'DEFINIR_CONTRATS'; contrats: TypeContrat[] }
   | { type: 'CHOISIR_ESPECE'; espece: EspeceId; nomParDefaut: string }
   | { type: 'NOMMER_COMPAGNON'; nom: string }
+  | { type: 'DEFINIR_PRONOMS'; pronoms?: Pronoms }
   | { type: 'CHOISIR_VILLE'; villeId: VilleId }
   | { type: 'DEFINIR_RYTHME'; reveil: number; coucher: number }
+  | { type: 'DEFINIR_OBJECTIF_SERIE'; jours: number }
   | { type: 'TERMINER_ONBOARDING' }
   /* Tâches, pièces, énergie */
   | { type: 'PREPARER_JOUR'; jour: string }
@@ -93,8 +98,9 @@ export type Action =
   | { type: 'BASCULER_OBJECTIF'; id: string }
   | { type: 'SUPPRIMER_OBJECTIF'; id: string }
   | { type: 'NOUVELLE_RECHERCHE' }
-  /* Ziggy+ */
-  | { type: 'DEMARRER_ESSAI'; formule: FormuleId };
+  /* Pawstuler Premium */
+  | { type: 'SOUSCRIRE'; formule: FormuleId; essai: boolean }
+  | { type: 'RESTAURER_ABONNEMENT'; formule: FormuleId };
 
 /* ---------- Petits outils ---------- */
 
@@ -124,6 +130,28 @@ function validerTacheLiee(etat: EtatApp, correspond: (t: EtatApp['taches'][numbe
   return t ? reducer(etat, { type: 'COCHER_TACHE', id: t.id }) : etat;
 }
 
+/**
+ * Compte le jour dans la série 🐾 (appelé à chaque ouverture de l'app).
+ * Même jour : rien ne change. Lendemain : +1. Après une pause : nouvelle série à 1, sans rien perdre.
+ */
+function compterJourSerie(etat: EtatApp, jour: string): EtatApp {
+  const s = etat.serie;
+  if (s.dernierJour === jour) return etat;
+  const suite = s.dernierJour !== undefined && joursEntre(s.dernierJour, jour) === 1;
+  const actuelle = suite ? s.actuelle + 1 : 1;
+  return {
+    ...etat,
+    serie: {
+      ...s,
+      actuelle,
+      meilleure: Math.max(s.meilleure, actuelle),
+      dernierJour: jour,
+      objectifAtteintLe: actuelle === s.objectif ? jour : s.objectifAtteintLe,
+      repriseLe: s.dernierJour !== undefined && !suite ? jour : s.repriseLe,
+    },
+  };
+}
+
 const nouvelleRecherche = () => ({ id: nouvelId(), debut: jourDe() });
 
 /** Met à jour les anciennes sauvegardes (version 1) vers le modèle actuel. */
@@ -140,6 +168,9 @@ function migrer(brut: Partial<EtatApp> & { version?: number }): EtatApp {
     rechercheId: c.rechercheId ?? rechercheId,
   }));
   if (brut.version !== 2 && brut.utilisateur) etat.connecte = true;
+  // Anciennes sauvegardes : la dernière aventure devient la première découverte
+  if (etat.decouvertes.length === 0 && etat.derniereAventure && etat.villeId)
+    etat.decouvertes = [{ villeId: etat.villeId, lieuId: etat.derniereAventure.lieuId, le: etat.derniereAventure.le }];
   return etat;
 }
 
@@ -170,10 +201,17 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
       return { ...etat, compagnon: { espece: action.espece, nom: action.nomParDefaut, neLe: jourDe() } };
     case 'NOMMER_COMPAGNON':
       return etat.compagnon ? { ...etat, compagnon: { ...etat.compagnon, nom: action.nom } } : etat;
+    case 'DEFINIR_PRONOMS':
+      return etat.compagnon ? { ...etat, compagnon: { ...etat.compagnon, pronoms: action.pronoms } } : etat;
     case 'CHOISIR_VILLE':
       return { ...etat, villeId: action.villeId };
     case 'DEFINIR_RYTHME':
       return { ...etat, rythme: { reveil: action.reveil, coucher: action.coucher } };
+    case 'DEFINIR_OBJECTIF_SERIE': {
+      // Nouvel objectif : s'il est déjà atteint par la série en cours, on le fête aujourd'hui
+      const atteint = etat.serie.actuelle >= action.jours && etat.serie.dernierJour ? etat.serie.dernierJour : undefined;
+      return { ...etat, serie: { ...etat.serie, objectif: action.jours, objectifAtteintLe: atteint } };
+    }
     case 'TERMINER_ONBOARDING': {
       // Cadeau de bienvenue : les objets « offerts » du Shop
       const cadeaux = CATALOGUE_BOUTIQUE.filter((o) => o.offert).map((o) => o.id);
@@ -185,16 +223,19 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
         energie: ENERGIE_MAX,
         inventaire: [...new Set([...etat.inventaire, ...cadeaux])],
       };
-      return { ...fini, taches: preparerTaches(fini, jourDe()), jourTaches: jourDe() };
+      return compterJourSerie({ ...fini, taches: preparerTaches(fini, jourDe()), jourTaches: jourDe() }, jourDe());
     }
 
     /* ----- Tâches, pièces et énergie ----- */
     case 'PREPARER_JOUR': {
-      if (!etat.onboardingTermine || etat.jourTaches === action.jour) return etat;
+      if (!etat.onboardingTermine) return etat;
+      // Chaque ouverture de l'app compte pour la série (une fois par jour)
+      const compte = compterJourSerie(etat, action.jour);
+      if (compte.jourTaches === action.jour) return compte;
       // Nouveau jour : tâches renouvelées, énergie rechargée, nouvelle aventure possible
       return {
-        ...etat,
-        taches: preparerTaches(etat, action.jour),
+        ...compte,
+        taches: preparerTaches(compte, action.jour),
         jourTaches: action.jour,
         energie: ENERGIE_MAX,
         aventuresDuJour: 0,
@@ -250,6 +291,11 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
         aventuresDuJour: etat.aventuresDuJour + 1,
         aventuresTotal: etat.aventuresTotal + 1,
         derniereAventure: { le: jourDe(), texte, lieuId },
+        // Premier passage dans ce lieu : il rejoint la section « Découverte » (et offre son souvenir)
+        decouvertes:
+          etat.villeId && !etat.decouvertes.some((d) => d.villeId === etat.villeId && d.lieuId === lieuId)
+            ? [...etat.decouvertes, { villeId: etat.villeId, lieuId, le: jourDe() }]
+            : etat.decouvertes,
       };
       return crediterDuJour(parti, gainPlafonne(etat, PIECES_AVENTURE), 'Aventure du jour');
     }
@@ -407,9 +453,17 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
       return { ...relance, taches: preparerTaches(relance, aujourdhui), jourTaches: aujourdhui };
     }
 
-    /* ----- Ziggy+ ----- */
-    case 'DEMARRER_ESSAI':
-      return { ...etat, abonnement: { statut: 'essai', debutEssai: jourDe(), formule: action.formule } };
+    /* ----- Pawstuler Premium ----- */
+    case 'SOUSCRIRE':
+      // L'essai gratuit n'existe qu'avec l'annuel ; le mensuel est actif tout de suite.
+      return {
+        ...etat,
+        abonnement: action.essai
+          ? { statut: 'essai', debutEssai: jourDe(), formule: action.formule, essaiUtilise: true }
+          : { statut: 'actif', formule: action.formule, essaiUtilise: etat.abonnement.essaiUtilise },
+      };
+    case 'RESTAURER_ABONNEMENT':
+      return { ...etat, abonnement: { ...etat.abonnement, statut: 'actif', formule: action.formule } };
   }
 }
 

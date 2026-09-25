@@ -1,7 +1,7 @@
 /**
  * COMPTE
  * Une vraie section : profil, portefeuille, parcours, paramètres, confidentialité (RGPD),
- * abonnement Ziggy+, déconnexion et suppression du compte.
+ * abonnement Pawstuler Premium, déconnexion et suppression du compte.
  */
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
@@ -48,7 +48,12 @@ export default function Compte() {
       `Ton profil, ${compagnon?.nom ?? 'ton compagnon'}, tes pièces et tes candidatures seront définitivement effacés. Cette action est irréversible.`,
       'Supprimer définitivement',
       async () => {
-        await supprimerCompte();
+        try {
+          await supprimerCompte();
+        } catch (e) {
+          const message = e instanceof Error ? e.message : 'La suppression n’a pas abouti.';
+          return Platform.OS === 'web' ? undefined : Alert.alert('Suppression impossible', message);
+        }
         dispatch({ type: 'SUPPRIMER_COMPTE' });
         router.replace('/presentation');
       },
@@ -76,6 +81,9 @@ export default function Compte() {
 
         <Groupe titre="Mon profil">
           <Ligne premiere icone="person-outline" libelle="Profil et compagnon" onPress={() => router.push('/compte/profil')} />
+          {compagnon && (
+            <Ligne icone="paw-outline" libelle={`Profil de ${compagnon.nom}`} valeur={`Série : ${etat.serie.actuelle} j`} onPress={() => router.push('/compagnon')} />
+          )}
           <Ligne icone="wallet-outline" libelle="Mon portefeuille" valeur={`${etat.pieces} pièces`} onPress={() => router.push('/compte/portefeuille')} />
           <Ligne
             icone="briefcase-outline"
@@ -94,7 +102,7 @@ export default function Compte() {
         </Groupe>
 
         <Groupe titre="Abonnement">
-          <Ligne premiere icone="sparkles-outline" libelle="Ziggy+" valeur={libelleAbonnement(etat)} onPress={() => router.push('/ziggy-plus')} />
+          <Ligne premiere icone="sparkles-outline" libelle="Pawstuler Premium" valeur={libelleAbonnement(etat)} onPress={() => router.push('/premium')} />
         </Groupe>
 
         <Groupe titre="Compte">
