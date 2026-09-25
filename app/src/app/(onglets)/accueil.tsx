@@ -156,7 +156,7 @@ export default function Accueil() {
           </View>
           <View style={styles.sol}>
             <Pressable onPress={() => !dort && interagir('calin')} accessibilityRole="button" accessibilityLabel={`Câliner ${compagnon.nom}`}>
-              <Compagnon espece={compagnon.espece} pose={pose} taille={150} promenade={!dort && !moment} reaction={reaction} />
+              <Compagnon espece={compagnon.espece} pose={pose} taille={150} promenade={!dort && !moment} reaction={reaction} equipe={etat.equipe} />
             </Pressable>
             {gains.filter((g) => g.pieces > 0).map((g) => (
               <Animated.View key={g.cle} entering={SlideInDown.duration(250)} exiting={FadeOutUp.duration(700)} style={styles.gainVolant}>

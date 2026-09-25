@@ -114,7 +114,7 @@ export default function AventurePro() {
       {/* Le compagnon, en parallèle */}
       {compagnon && (
         <View style={styles.parallele}>
-          <Compagnon espece={compagnon.espece} pose="fier" taille={84} />
+          <Compagnon espece={compagnon.espece} pose="fier" taille={84} equipe={etat.equipe} />
           <Text style={styles.paralleleTexte}>
             {compagnon.metier && lieu
               ? `${compagnon.nom} a commencé lui aussi : ${compagnon.metier.intitule.toLowerCase()} à ${lieu.nom}.`

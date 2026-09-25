@@ -45,7 +45,7 @@ export default function Ville() {
         <View style={[styles.carte, { backgroundColor: ville.couleur }]}>
           {image && <Image source={image} style={StyleSheet.absoluteFill} contentFit="cover" />}
           <View style={styles.compagnon}>
-            <Compagnon espece={etat.compagnon.espece} pose={dort ? 'dort' : 'aventure'} taille={110} promenade={!dort} />
+            <Compagnon espece={etat.compagnon.espece} pose={dort ? 'dort' : 'aventure'} taille={110} promenade={!dort} equipe={etat.equipe} />
           </View>
         </View>
 

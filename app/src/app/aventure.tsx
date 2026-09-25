@@ -51,7 +51,7 @@ export default function Aventure() {
     return (
       <Ecran fond={couleurs.ciel} style={styles.centre}>
         {decor && <Image source={decor} style={[StyleSheet.absoluteFill, { opacity: 0.35 }]} contentFit="cover" />}
-        <Compagnon espece={etat.compagnon.espece} pose="aventure" taille={190} promenade />
+        <Compagnon espece={etat.compagnon.espece} pose="aventure" taille={190} promenade equipe={etat.equipe} />
         <Titre style={{ textAlign: 'center' }}>{nom} part explorer {ville.nom}…</Titre>
         <Texte style={{ textAlign: 'center' }}>−{COUT.aventure} ⚡</Texte>
       </Ecran>
@@ -78,7 +78,7 @@ export default function Aventure() {
       </Pressable>
 
       <View style={styles.centre}>
-        <Compagnon espece={etat.compagnon.espece} pose="content" taille={170} reaction={1} />
+        <Compagnon espece={etat.compagnon.espece} pose="content" taille={170} reaction={1} equipe={etat.equipe} />
         <Titre style={{ textAlign: 'center' }}>{aventure ? `${nom} est rentré !` : 'Pas encore d’aventure aujourd’hui'}</Titre>
       </View>
 

@@ -5,6 +5,9 @@
  *  - s'il peut se promener, il se déplace un peu de temps en temps ;
  *  - quand `reaction` change (tâche cochée…), il fait un petit saut.
  *
+ * S'il porte une tenue complète illustrée pour son espèce (`equipe`), c'est elle qui s'affiche
+ * (sauf quand il dort : on range la tenue pour la nuit).
+ *
  * Aujourd'hui il utilise les images fixes du registre. Quand les animations définitives
  * (Lottie ou Rive) seront fournies, c'est ici seulement qu'on les branchera.
  */
@@ -21,7 +24,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { imageCompagnon } from '@/illustrations/registre';
+import { imageCompagnon, imageTenue, tenuePortee } from '@/illustrations/registre';
 import { compagnonParId, type EspeceId, type Pose } from '@/config/compagnons';
 
 export function Compagnon({
@@ -31,6 +34,7 @@ export function Compagnon({
   vivant = true,
   promenade = false,
   reaction = 0,
+  equipe,
   style,
 }: {
   espece: EspeceId;
@@ -42,6 +46,8 @@ export function Compagnon({
   promenade?: boolean;
   /** Changer ce nombre déclenche un saut de joie. */
   reaction?: number;
+  /** Objets portés (état de l'app) : affiche la tenue complète s'il en porte une. */
+  equipe?: string[];
   style?: StyleProp<ViewStyle>;
 }) {
   const souffle = useSharedValue(1);
@@ -86,7 +92,8 @@ export function Compagnon({
     transform: [{ translateX: position.value }, { translateY: saut.value }, { scaleX: regard.value }, { scaleY: souffle.value }],
   }));
 
-  const source = imageCompagnon(espece, pose);
+  const tenue = equipe && pose !== 'dort' ? tenuePortee(espece, equipe) : undefined;
+  const source = (tenue && imageTenue(espece, tenue)) || imageCompagnon(espece, pose);
   const infos = compagnonParId(espece);
 
   return (

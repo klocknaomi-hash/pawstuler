@@ -6,7 +6,7 @@
 - **Maquette HTML** (`maquette/`) : première exploration visuelle, ne plus la faire évoluer. La référence est désormais l'app.
 - **App Expo** (`app/`) : application complète et fonctionnelle (données sur le téléphone) : démarrage, tâches, pièces, énergie, aventures, candidatures, Shop, ville, « J'ai décroché ! », aventure professionnelle, Compte, Pawstuler Premium (voir section 10).
 - **Illustrations du Drive branchées** : les 4 compagnons (9 poses chacun), l'œuf propre à chaque animal (5 étapes), Clairebourg (lac pour l'accueil, centre-ville pour l'onglet ville) et Sunnyville (place à la fontaine).
-- **Ajouts récents** : connexion réelle prête à brancher (Supabase, voir `docs/connexion-et-abonnement.md`), écran d'abonnement **Pawstuler Premium**, objectif de série 🐾 à l'onboarding avec badge sur l'accueil, page de profil du compagnon.
+- **Ajouts récents** : connexion réelle prête à brancher (Supabase, voir `docs/connexion-et-abonnement.md`), écran d'abonnement **Pawstuler Premium**, objectif de série 🐾 à l'onboarding avec badge sur l'accueil, page de profil du compagnon, **garde-robe « Tenues complètes »** du chat (55 tenues) et du crocodile (43 tenues).
 - Prochaines étapes : brancher les clés (connexion, RevenueCat), les animations Dimini, puis les vrais services (connexion, paiement App Store, notifications, compte en ligne).
 
 Avant tout gros changement : proposer un plan et attendre ma validation (section 8).
@@ -109,7 +109,12 @@ Un vrai suivi de candidatures, mais simple et dans notre univers, jamais un gros
 - Après un refus, le compagnon envoie un message réconfortant : « Leur perte. On en envoie une autre ensemble ? 🐾 »
 
 ### 5.7 Shop
-Dans la navigation entre Candidatures et Clairebourg. Chapeaux, vêtements, accessoires, objets, achetés avec les pièces. Un premier objet est offert. Certains objets sont réservés à Pawstuler Premium.
+Dans la navigation entre Candidatures et Clairebourg. Achats avec les pièces (confirmation avec le solde avant / après). Un premier objet est offert (l'écharpe). Certains objets sont réservés à Pawstuler Premium. Deux rayons :
+- **Tenues complètes** : chaque illustration montre le compagnon **habillé en entier** (images de corps entier générées avec Gemini, une par vêtement ou par tenue). Le compagnon porte **une seule tenue à la fois** : en mettre une autre remplace la précédente. Catégories : Tenues, Saisons et fêtes, Hauts, Bas, Chaussures, Chapeaux, Autour du cou. Chaque animal ne voit que les tenues illustrées pour lui : aujourd'hui **le chat (55)** et **le crocodile (43)** ; le renard et le lapin gardent pour l'instant l'écharpe, le béret et la cravate. **Essayage** : toucher une tenue non achetée montre le compagnon habillé avant l'achat. La tenue portée s'affiche partout où vit le compagnon (accueil, ville, profil, Compte, aventures) ; quand il dort ou dans les grands moments émotionnels (« J'ai décroché ! », réconfort après un refus), on garde sa pose expressive.
+- **Objets** : lunettes, sac, badge, plante, tasse, couronne (Premium).
+- Événements Premium : costume de sorcier (Halloween), tenue de Noël, robe de la Saint-Valentin, chapeau de sorcier, bonnet de Noël.
+- **Ajouter une tenue** : déposer `app/assets/tenues/<animal>/<id>.png` (fond transparent, sans contour blanc), la déclarer dans le registre ; si l'id existe déjà dans `boutique.ts`, elle apparaît automatiquement pour cet animal, sinon ajouter une ligne au catalogue.
+- **Vêtements en calques** (haut + bas + chaussures combinés) : possible plus tard avec un gabarit par animal (voir la discussion du 25/09) ; pas encore construit.
 
 ### 5.8 Les villes
 2 villes :
@@ -214,7 +219,7 @@ Chaque tâche rapporte des **pièces** (valeurs ci-dessous, réglables dans `app
 ## 10. Architecture technique (app/)
 - **Expo SDK 57, Expo Router, TypeScript.** Routes dans `app/src/app/` : `(demarrage)/` (présentation, connexion, onboarding), `(onglets)/` (accueil, candidatures, boutique = Shop, ville, compte), `candidature/[id]`, `compte/*` (profil, parametres, confidentialite, portefeuille), `compagnon` (profil du compagnon), et les fenêtres `aventure`, `decroche`, `aventure-pro`, `nouvelle-candidature`, `premium` (abonnement). L'onboarding se termine par `(demarrage)/serie`.
 - **Réglages** dans `app/src/config/` : `theme`, `taches`, `energie`, `aventures`, `compagnons`, `villes`, `boutique`, `abonnement`, `candidatures`, `serie`.
-- **Illustrations** : un seul registre, `app/src/illustrations/registre.ts`. Fichiers dans `app/assets/` : `compagnons/<animal>/<pose>.png` ; `oeufs/<animal>-1-intact.png`, `-2-fissure`, `-3-craquele`, `-eclosion`, `-ne` ; `villes/<ville>/portrait.jpg` (accueil), `paysage.jpg` (cartes) et `centre.jpg` (onglet ville, facultatif). Une image manquante affiche un visuel de secours. Les animations définitives (Lottie ou Rive) se brancheront dans `app/src/components/Compagnon.tsx`.
+- **Illustrations** : un seul registre, `app/src/illustrations/registre.ts`. Fichiers dans `app/assets/` : `compagnons/<animal>/<pose>.png` ; `oeufs/<animal>-1-intact.png`, `-2-fissure`, `-3-craquele`, `-eclosion`, `-ne` ; `villes/<ville>/portrait.jpg` (accueil), `paysage.jpg` (cartes) et `centre.jpg` (onglet ville, facultatif) ; `tenues/<animal>/<id>.png` (compagnon habillé, id = celui du catalogue `boutique.ts`). Ce que le Shop propose à chaque animal est calculé dans `app/src/logique/garderobe.ts`. Une image manquante affiche un visuel de secours. Les animations définitives (Lottie ou Rive) se brancheront dans `app/src/components/Compagnon.tsx`.
 - **Données** : un seul état (`app/src/store/`), sauvegardé sur le téléphone ; les anciennes sauvegardes sont migrées automatiquement. Logique métier dans `app/src/logique/` (tâches du jour, vie du compagnon, rythme, dates).
 - **Services** (`app/src/services/`) : connexion (`auth/` : Supabase en mode réel, compte local en mode démo ; clés dans `app/.env`, modèle `app/.env.exemple`), abonnement (achat App Store via RevenueCat à brancher), compte et RGPD (export, suppression), futur simulateur d'entretien.
 - Avant de dire qu'une étape est terminée : `npx tsc --noEmit` et `npx eslint src` sans erreur, et parcours testé.
@@ -225,7 +230,7 @@ Ces valeurs ne viennent pas de mes consignes : Claude les a choisies pour que l'
 - **Moments avec le compagnon** : « Câlin » et « Jouer » sont des propositions de Claude pour donner une utilité à l'énergie.
 - **Récompenses** : aventure +10 pièces, objectif pro atteint +15, « J'ai décroché ! » +50.
 - **Premium** : 3 aventures par jour (contre 1 en gratuit).
-- **Shop** (`boutique.ts`) : la liste des objets et leurs prix (de 20 à 150 pièces), l'écharpe offerte, la couronne réservée à Premium.
+- **Shop** (`boutique.ts`) : la liste des objets et leurs prix (de 20 à 150 pièces ; tenues de 20 à 120), l'écharpe offerte, la couronne et les tenues d'événements réservées à Premium, les noms des tenues.
 - **Récits d'aventure** (`aventures.ts`) et **lieux de Sunnyville** : textes provisoires.
 - **Personnalité du crocodile** : « Grand cœur sous ses airs sérieux ».
 - **Série** (`serie.ts`) : un jour compte à l'ouverture de l'app ; objectifs proposés 2, 5, 7, 14 jours (5 par défaut) et leurs textes.
@@ -234,4 +239,5 @@ Ces valeurs ne viennent pas de mes consignes : Claude les a choisies pour que l'
 
 ## 12. Questions ouvertes
 Aucune question bloquante. À ajuster après tes premiers tests sur iPhone : les valeurs de la section 11.
-- **Plan « animal vivant »** (énergie 30/100 avec recharge toutes les 5 h / 3 h, animations câlin, jeu, baignade, repos, recherche de Milo, opportunités du jour, journal) : proposé, en attente de ta validation et des fichiers du Drive.
+- **Plan « animal vivant »** : annulé. À la place, Claude ajoute de petits mouvements au compagnon (câlin, jeu, petits gestes) sur la base existante.
+- **Planche « Design sans titre-2 »** (dossier Tenues complètes du Drive) : vêtements seuls, sans animal. Pas utilisée pour l'instant ; pourra servir d'icônes du Shop ou de base pour les vêtements en calques.

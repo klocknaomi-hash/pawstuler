@@ -9,7 +9,7 @@ import { createContext, useContext, useEffect, useReducer, useRef, useState, typ
 import { AppState } from 'react-native';
 
 import type { FormuleId } from '@/config/abonnement';
-import { CATALOGUE_BOUTIQUE } from '@/config/boutique';
+import { CATALOGUE_BOUTIQUE, objetParId } from '@/config/boutique';
 import { especeValide, type EspeceId, type Pronoms } from '@/config/compagnons';
 import { COUT, ENERGIE_MAX, ENERGIE_PAR_TACHE, PIECES_AVENTURE } from '@/config/energie';
 import { OBJECTIF_SERIE_PAR_DEFAUT } from '@/config/serie';
@@ -150,6 +150,16 @@ function compterJourSerie(etat: EtatApp, jour: string): EtatApp {
       repriseLe: s.dernierJour !== undefined && !suite ? jour : s.repriseLe,
     },
   };
+}
+
+/**
+ * Met (ou enlève) un objet. Un vêtement (« habit ») remplace le vêtement déjà porté,
+ * car chaque illustration montre le compagnon habillé en entier.
+ */
+function porter(equipe: string[], objetId: string): string[] {
+  if (equipe.includes(objetId)) return equipe.filter((id) => id !== objetId);
+  const habit = objetParId(objetId)?.habit;
+  return [...(habit ? equipe.filter((id) => !objetParId(id)?.habit) : equipe), objetId];
 }
 
 const nouvelleRecherche = () => ({ id: nouvelId(), debut: jourDe() });
@@ -351,17 +361,12 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
     case 'ACHETER': {
       const objet = CATALOGUE_BOUTIQUE.find((o) => o.id === action.objetId);
       if (!objet || etat.inventaire.includes(objet.id) || etat.pieces < objet.prix) return etat;
-      const achete = { ...etat, inventaire: [...etat.inventaire, objet.id], equipe: [...etat.equipe, objet.id] };
+      const achete = { ...etat, inventaire: [...etat.inventaire, objet.id], equipe: porter(etat.equipe, objet.id) };
       return crediter(achete, -objet.prix, `Achat : ${objet.nom}`);
     }
     case 'EQUIPER':
       if (!etat.inventaire.includes(action.objetId)) return etat;
-      return {
-        ...etat,
-        equipe: etat.equipe.includes(action.objetId)
-          ? etat.equipe.filter((id) => id !== action.objetId)
-          : [...etat.equipe, action.objetId],
-      };
+      return { ...etat, equipe: porter(etat.equipe, action.objetId) };
 
     /* ----- Parcours professionnel ----- */
     case 'DECROCHER': {

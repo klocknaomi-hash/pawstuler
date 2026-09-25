@@ -126,6 +126,115 @@ const VILLES: Record<VilleId, Images<FormatVille>> = {
   },
 };
 
+/**
+ * Vêtements portés, par animal : chaque image montre le compagnon habillé en entier
+ * (clé = id de l'objet dans src/config/boutique.ts). Les autres animaux arriveront petit à petit.
+ */
+const TENUES: Partial<Record<EspeceId, Images<string>>> = {
+  chat: {
+    'bandana': require('../../assets/tenues/chat/bandana.png'),
+    'baskets': require('../../assets/tenues/chat/baskets.png'),
+    'baskets-toile': require('../../assets/tenues/chat/baskets-toile.png'),
+    'beret': require('../../assets/tenues/chat/beret.png'),
+    'blouse-blanche': require('../../assets/tenues/chat/blouse-blanche.png'),
+    'bob-jaune': require('../../assets/tenues/chat/bob-jaune.png'),
+    'bonnet': require('../../assets/tenues/chat/bonnet.png'),
+    'bonnet-noel': require('../../assets/tenues/chat/bonnet-noel.png'),
+    'bottes-cuir': require('../../assets/tenues/chat/bottes-cuir.png'),
+    'bottes-pluie': require('../../assets/tenues/chat/bottes-pluie.png'),
+    'bottines': require('../../assets/tenues/chat/bottines.png'),
+    'casquette': require('../../assets/tenues/chat/casquette.png'),
+    'chapeau-melon': require('../../assets/tenues/chat/chapeau-melon.png'),
+    'chapeau-paille': require('../../assets/tenues/chat/chapeau-paille.png'),
+    'chapeau-sorcier': require('../../assets/tenues/chat/chapeau-sorcier.png'),
+    'chaussons': require('../../assets/tenues/chat/chaussons.png'),
+    'chemise-bleue': require('../../assets/tenues/chat/chemise-bleue.png'),
+    'chemise-cravate': require('../../assets/tenues/chat/chemise-cravate.png'),
+    'cire-capuche': require('../../assets/tenues/chat/cire-capuche.png'),
+    'cire-jaune': require('../../assets/tenues/chat/cire-jaune.png'),
+    'costume': require('../../assets/tenues/chat/costume.png'),
+    'costume-sorcier': require('../../assets/tenues/chat/costume-sorcier.png'),
+    'cravate': require('../../assets/tenues/chat/cravate.png'),
+    'duffle-coat': require('../../assets/tenues/chat/duffle-coat.png'),
+    'echarpe': require('../../assets/tenues/chat/echarpe.png'),
+    'gilet-beige': require('../../assets/tenues/chat/gilet-beige.png'),
+    'gilet-camel': require('../../assets/tenues/chat/gilet-camel.png'),
+    'gilet-vert': require('../../assets/tenues/chat/gilet-vert.png'),
+    'jean': require('../../assets/tenues/chat/jean.png'),
+    'jogging': require('../../assets/tenues/chat/jogging.png'),
+    'maillot-bain': require('../../assets/tenues/chat/maillot-bain.png'),
+    'manteau-fourre': require('../../assets/tenues/chat/manteau-fourre.png'),
+    'noeud-papillon': require('../../assets/tenues/chat/noeud-papillon.png'),
+    'pantalon-chino': require('../../assets/tenues/chat/pantalon-chino.png'),
+    'pantalon-hiver': require('../../assets/tenues/chat/pantalon-hiver.png'),
+    'petite-jupe': require('../../assets/tenues/chat/petite-jupe.png'),
+    'pull-jacquard': require('../../assets/tenues/chat/pull-jacquard.png'),
+    'pull-rouge': require('../../assets/tenues/chat/pull-rouge.png'),
+    'pyjama': require('../../assets/tenues/chat/pyjama.png'),
+    'robe-pois': require('../../assets/tenues/chat/robe-pois.png'),
+    'robe-saint-valentin': require('../../assets/tenues/chat/robe-saint-valentin.png'),
+    'sandales': require('../../assets/tenues/chat/sandales.png'),
+    'short-jean': require('../../assets/tenues/chat/short-jean.png'),
+    'survetement': require('../../assets/tenues/chat/survetement.png'),
+    'sweat-capuche': require('../../assets/tenues/chat/sweat-capuche.png'),
+    'tenue-automne': require('../../assets/tenues/chat/tenue-automne.png'),
+    'tenue-ete': require('../../assets/tenues/chat/tenue-ete.png'),
+    'tenue-hiver': require('../../assets/tenues/chat/tenue-hiver.png'),
+    'tenue-noel': require('../../assets/tenues/chat/tenue-noel.png'),
+    'tenue-printemps': require('../../assets/tenues/chat/tenue-printemps.png'),
+    'tshirt-blanc': require('../../assets/tenues/chat/tshirt-blanc.png'),
+    'tshirt-short': require('../../assets/tenues/chat/tshirt-short.png'),
+    'veste-chef': require('../../assets/tenues/chat/veste-chef.png'),
+    'veste-rouge': require('../../assets/tenues/chat/veste-rouge.png'),
+    'veste-tailleur': require('../../assets/tenues/chat/veste-tailleur.png'),
+  },
+  crocodile: {
+    'bandana': require('../../assets/tenues/crocodile/bandana.png'),
+    'beret': require('../../assets/tenues/crocodile/beret.png'),
+    'bermuda': require('../../assets/tenues/crocodile/bermuda.png'),
+    'blouse-blanche': require('../../assets/tenues/crocodile/blouse-blanche.png'),
+    'bob-jaune': require('../../assets/tenues/crocodile/bob-jaune.png'),
+    'bonnet': require('../../assets/tenues/crocodile/bonnet.png'),
+    'bonnet-noel': require('../../assets/tenues/crocodile/bonnet-noel.png'),
+    'casquette': require('../../assets/tenues/crocodile/casquette.png'),
+    'chapeau-melon': require('../../assets/tenues/crocodile/chapeau-melon.png'),
+    'chapeau-paille': require('../../assets/tenues/crocodile/chapeau-paille.png'),
+    'chapeau-sorcier': require('../../assets/tenues/crocodile/chapeau-sorcier.png'),
+    'chemise-fleurs': require('../../assets/tenues/crocodile/chemise-fleurs.png'),
+    'chemise-motifs': require('../../assets/tenues/crocodile/chemise-motifs.png'),
+    'cire-capuche': require('../../assets/tenues/crocodile/cire-capuche.png'),
+    'costume': require('../../assets/tenues/crocodile/costume.png'),
+    'costume-sorcier': require('../../assets/tenues/crocodile/costume-sorcier.png'),
+    'cravate': require('../../assets/tenues/crocodile/cravate.png'),
+    'cravate-grise': require('../../assets/tenues/crocodile/cravate-grise.png'),
+    'doudoune': require('../../assets/tenues/crocodile/doudoune.png'),
+    'duffle-coat': require('../../assets/tenues/crocodile/duffle-coat.png'),
+    'echarpe': require('../../assets/tenues/crocodile/echarpe.png'),
+    'echarpe-marron': require('../../assets/tenues/crocodile/echarpe-marron.png'),
+    'jean': require('../../assets/tenues/crocodile/jean.png'),
+    'jogging': require('../../assets/tenues/crocodile/jogging.png'),
+    'maillot-bain': require('../../assets/tenues/crocodile/maillot-bain.png'),
+    'noeud-bordeaux': require('../../assets/tenues/crocodile/noeud-bordeaux.png'),
+    'noeud-papillon': require('../../assets/tenues/crocodile/noeud-papillon.png'),
+    'pantalon-cargo': require('../../assets/tenues/crocodile/pantalon-cargo.png'),
+    'pantalon-chino': require('../../assets/tenues/crocodile/pantalon-chino.png'),
+    'petite-jupe': require('../../assets/tenues/crocodile/petite-jupe.png'),
+    'pull-jacquard': require('../../assets/tenues/crocodile/pull-jacquard.png'),
+    'pyjama': require('../../assets/tenues/crocodile/pyjama.png'),
+    'robe-rose': require('../../assets/tenues/crocodile/robe-rose.png'),
+    'robe-saint-valentin': require('../../assets/tenues/crocodile/robe-saint-valentin.png'),
+    'short-bain': require('../../assets/tenues/crocodile/short-bain.png'),
+    'short-jean': require('../../assets/tenues/crocodile/short-jean.png'),
+    'survetement': require('../../assets/tenues/crocodile/survetement.png'),
+    'tenue-automne': require('../../assets/tenues/crocodile/tenue-automne.png'),
+    'tenue-ete': require('../../assets/tenues/crocodile/tenue-ete.png'),
+    'tenue-hiver': require('../../assets/tenues/crocodile/tenue-hiver.png'),
+    'tenue-noel': require('../../assets/tenues/crocodile/tenue-noel.png'),
+    'tenue-printemps': require('../../assets/tenues/crocodile/tenue-printemps.png'),
+    'veste-chef': require('../../assets/tenues/crocodile/veste-chef.png'),
+  },
+};
+
 /** Objets de la boutique, par id (voir src/config/boutique.ts). */
 const BOUTIQUE: Images<string> = {};
 
@@ -145,3 +254,9 @@ export const imageNaissance = (espece: EspeceId) => OEUFS[espece].ne ?? imageCom
 export const imageVille = (ville: VilleId, format: FormatVille) =>
   VILLES[ville][format] ?? VILLES[ville].portrait ?? VILLES[ville].paysage;
 export const imageObjet = (id: string) => BOUTIQUE[id];
+
+/** Le compagnon habillé avec ce vêtement (undefined si l'illustration n'existe pas encore pour cet animal). */
+export const imageTenue = (espece: EspeceId, objetId: string) => TENUES[espece]?.[objetId];
+
+/** Le vêtement que le compagnon porte et qui a une illustration pour son espèce. */
+export const tenuePortee = (espece: EspeceId, equipe: string[]) => equipe.find((id) => imageTenue(espece, id));
