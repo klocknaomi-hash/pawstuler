@@ -1,11 +1,12 @@
-# Illustrations de la maquette
+# Illustrations de Ziggy et de Clairbourg
 
-Dépose ici les images (PNG, fond transparent de préférence). La maquette les charge automatiquement ;
-tant qu'un fichier manque, elle affiche un dessin de secours.
+Découpées à partir des images fournies (fond transparent, sans contour blanc).
+La maquette n'utilise pas encore ces fichiers : ils seront branchés après validation.
 
 | Fichier | Moment dans l'app |
 |---|---|
-| `decor-jardin-lac.png` | Décor de l'Accueil et bandeau de Clairbourg |
+| `decor-clairbourg.jpg` | La ville de Ziggy (Accueil et onglet Clairbourg) |
+| `ziggy-salut.png` | Onboarding, arrivée en gare |
 | `ziggy-neutre.png` | Accueil, état normal |
 | `ziggy-content.png` | Juste après avoir coché une tâche |
 | `ziggy-excite.png` | Jauge pleine, prêt pour l'aventure |
