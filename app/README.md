@@ -47,8 +47,8 @@ Onglets : **Accueil** · **Candidatures** · **Shop** · **Clairebourg** (la vil
 
 1. Dépose les fichiers dans `assets/` :
    - `assets/compagnons/<animal>/<pose>.png` (poses : salut, neutre, content, excite, dort, reconfort, fier, aventure, celebration)
-   - `assets/oeufs/<animal>-eclosion.png` et `assets/oeufs/<animal>-ne.png`
-   - `assets/villes/<ville>/portrait.jpg` (accueil) et `paysage.jpg` (cartes)
+   - `assets/oeufs/<animal>-1-intact.png`, `-2-fissure.png`, `-3-craquele.png` (les 3 touchers), `-eclosion.png` et `-ne.png`
+   - `assets/villes/<ville>/portrait.jpg` (accueil), `paysage.jpg` (cartes) et, si besoin, `centre.jpg` (onglet de la ville)
 2. Déclare-les dans `src/illustrations/registre.ts`, dans le bloc correspondant.
 
 Tant qu'une image manque, l'app affiche un visuel de secours (emoji et couleur) : rien ne casse.

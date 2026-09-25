@@ -2,7 +2,7 @@
  * LES VILLES
  * Une ville n'est pas un simple fond d'écran : c'est l'univers où le compagnon vit,
  * se déplace, visite des lieux et avance dans sa propre carrière.
- * Les images sont déclarées dans src/assets/registre.ts.
+ * Les images sont déclarées dans src/illustrations/registre.ts.
  */
 
 export type VilleId = 'clairebourg' | 'sunnyville';
