@@ -31,8 +31,8 @@ const COMPAGNONS: Record<EspeceId, Images<Pose>> = {
     celebration: require('../../assets/compagnons/renard/celebration.png'),
   },
   chat: {},
-  chien: {},
-  loutre: {},
+  crocodile: {},
+  lapin: {},
 };
 
 /** Les états de l'œuf. Les 3 premiers sont communs à tous les animaux. */

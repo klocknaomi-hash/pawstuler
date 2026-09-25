@@ -1,5 +1,5 @@
 /**
- * ONBOARDING 4/7 — La naissance du compagnon
+ * ONBOARDING 4/6 — La naissance du compagnon
  * 1. L'œuf apparaît. 2. L'utilisateur le touche. 3. Il se fissure (une étape par toucher).
  * 4. Il se casse. 5. L'animal apparaît. 6. Il fait coucou. 7. On passe à son prénom.
  *
@@ -55,6 +55,23 @@ export default function Oeuf() {
     echelle.set(withSpring(1, { damping: 9 }));
     flottement.set(withRepeat(withTiming(-8, { duration: 1400, easing: Easing.inOut(Easing.quad) }), -1, true));
   }, [echelle, flottement]);
+
+  // L'œuf tremble légèrement de temps en temps, de plus en plus fort à chaque fissure
+  useEffect(() => {
+    if (phase !== 'oeuf') return;
+    const force = 3 + touchers * 2;
+    const minuterie = setInterval(() => {
+      rotation.set(
+        withSequence(
+          withTiming(-force, { duration: 80 }),
+          withTiming(force, { duration: 110 }),
+          withTiming(-force / 2, { duration: 90 }),
+          withTiming(0, { duration: 80 }),
+        ),
+      );
+    }, 2200);
+    return () => clearInterval(minuterie);
+  }, [phase, touchers, rotation]);
 
   function toucher() {
     if (phase !== 'oeuf') return;

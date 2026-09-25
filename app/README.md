@@ -17,9 +17,17 @@ Pour recommencer le parcours de démarrage depuis zéro : supprime puis réinsta
 ## Le parcours
 
 Présentation → Connexion (Apple / Google / e-mail) → Prénom → Objectif (emploi + contrat) → Choix de l'animal
-→ Œuf qui éclot → Prénom du compagnon → Choix de la ville → Rythme (réveil / coucher) → Accueil.
+(renard, chat, crocodile, lapin) → Œuf qui éclot → Prénom du compagnon → Choix de la ville → Accueil.
 
-Onglets : **Accueil** (tâches du jour) · **Candidatures** · **Boutique** · **Ville** du compagnon. Ziggy+ s'ouvre depuis l'accueil.
+Onglets : **Accueil** · **Candidatures** · **Shop** · **Clairebourg** (la ville du compagnon) · **Compte**.
+
+- **Accueil** : le compagnon dans sa ville, son énergie ⚡, l'Aventure du jour, et « Tes tâches du jour ».
+- **Pièces 🪙** : gagnées avec les tâches, jamais remises à zéro, dépensées dans le Shop (portefeuille dans Compte).
+- **Énergie ⚡** : 30 par jour, dépensée pour les câlins, les jeux et l'aventure ; chaque tâche en redonne un peu.
+- **🎉 J'ai décroché !** (depuis une candidature) → **Mon aventure professionnelle** : poste, premier jour,
+  objectifs, progression. Les candidatures sont conservées. On peut recommencer une recherche plus tard.
+- **Compte** : profil, portefeuille, paramètres (notifications, rythme du compagnon), données et RGPD,
+  Ziggy+, déconnexion, suppression du compte.
 
 ## Où changer quoi
 
@@ -27,6 +35,8 @@ Onglets : **Accueil** (tâches du jour) · **Candidatures** · **Boutique** · *
 |---|---|
 | Couleurs, polices, espacements | `src/config/theme.ts` |
 | Les tâches et les pièces qu'elles rapportent | `src/config/taches.ts` |
+| L'énergie, le coût des moments, les aventures par jour | `src/config/energie.ts` |
+| Les récits des aventures | `src/config/aventures.ts` |
 | Les animaux (noms proposés, personnalités) | `src/config/compagnons.ts` |
 | Les villes et leurs lieux | `src/config/villes.ts` |
 | Les objets de la boutique et leurs prix | `src/config/boutique.ts` |
@@ -48,6 +58,8 @@ Les animations définitives (Lottie ou Rive) se brancheront dans `src/components
 
 - **Connexion** : Apple, Google et e-mail créent pour l'instant un compte local sur le téléphone (`src/services/auth`). Les vrais services se brancheront à cet endroit.
 - **Ziggy+** : l'essai démarre sans paiement. L'achat App Store se branchera dans `src/services/abonnement.ts`.
+- **Notifications** : les préférences sont enregistrées, l'envoi réel sera branché plus tard.
+- **Compte en ligne** : export et suppression des données préparés dans `src/services/compte.ts`.
 - **Simulateur d'entretien** : seulement la forme des données (`src/services/futur/simulateurEntretien.ts`).
 
 ## Commandes utiles

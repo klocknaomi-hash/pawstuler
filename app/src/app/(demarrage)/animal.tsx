@@ -1,4 +1,4 @@
-/** ONBOARDING 3/7 — Le choix du compagnon parmi les animaux de src/config/compagnons.ts. */
+/** ONBOARDING 3/6 — Le choix du compagnon parmi les animaux de src/config/compagnons.ts. */
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';

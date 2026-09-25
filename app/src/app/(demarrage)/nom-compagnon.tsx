@@ -1,4 +1,4 @@
-/** ONBOARDING 5/7 — Le prénom du compagnon (prérempli avec son nom proposé). */
+/** ONBOARDING 5/6 — Le prénom du compagnon (prérempli avec son nom proposé). */
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';

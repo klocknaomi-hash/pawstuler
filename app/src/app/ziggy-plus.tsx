@@ -12,7 +12,8 @@ import { Bouton, Ecran, Texte, Titre } from '@/components/base';
 import { Compagnon } from '@/components/Compagnon';
 import { FORMULES, INCLUS_GRATUIT, INCLUS_ZIGGY_PLUS, JOURS_ESSAI, MENTION_RENOUVELLEMENT, type FormuleId } from '@/config/abonnement';
 import { arrondis, couleurs, espace, polices } from '@/config/theme';
-import { joursRestantsEssai, useApp } from '@/store/etat';
+import { joursRestantsEssai, lancerEssai } from '@/services/abonnement';
+import { useApp } from '@/store/etat';
 
 export default function ZiggyPlus() {
   const { etat, dispatch } = useApp();
@@ -20,8 +21,8 @@ export default function ZiggyPlus() {
   const restants = joursRestantsEssai(etat);
   const choisie = FORMULES.find((f) => f.id === formule)!;
 
-  function essayer() {
-    dispatch({ type: 'DEMARRER_ESSAI', formule });
+  async function essayer() {
+    if (await lancerEssai()) dispatch({ type: 'DEMARRER_ESSAI', formule });
     router.back();
   }
 
@@ -31,8 +32,8 @@ export default function ZiggyPlus() {
       bas={
         restants === null ? (
           <>
-            <Bouton titre={`Essayer gratuitement ${JOURS_ESSAI} jours`} onPress={essayer} />
-            <Text style={styles.prixBas}>Puis {choisie.apresEssai}. Sans engagement.</Text>
+            <Bouton titre={`Commencer mes ${JOURS_ESSAI} jours gratuits`} onPress={essayer} />
+            <Text style={styles.prixBas}>{choisie.apresEssai}. Résiliable à tout moment.</Text>
           </>
         ) : (
           <Bouton titre="Fermer" variante="secondaire" onPress={() => router.back()} />

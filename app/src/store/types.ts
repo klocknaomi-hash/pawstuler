@@ -2,8 +2,13 @@
  * LE MODÈLE DE DONNÉES
  * Tout ce que l'app garde en mémoire sur le téléphone.
  * Le jour où on ajoute un serveur (compte en ligne), c'est cette forme qu'on synchronisera.
+ *
+ * Le compte n'est jamais limité à une seule recherche :
+ *   🔎 recherche → 🎉 J'ai décroché → 💼 vie professionnelle → 🔎 nouvelle recherche éventuelle.
+ * Rien n'est supprimé automatiquement : les anciens postes et candidatures restent dans l'historique.
  */
 import type { FormuleId } from '@/config/abonnement';
+import type { Contexte } from '@/config/aventures';
 import type { EspeceId } from '@/config/compagnons';
 import type { VilleId } from '@/config/villes';
 
@@ -29,6 +34,8 @@ export type Tache = {
   modeleId?: string;
   /** Candidature liée (ex. « Relancer Atelier Nuage »). */
   candidatureId?: string;
+  /** Énergie réellement donnée au compagnon en cochant (reprise si on décoche). */
+  energieDonnee?: number;
 };
 
 export type StatutCandidature = 'a-envoyer' | 'envoyee' | 'relancee' | 'entretien' | 'offre' | 'refus';
@@ -41,10 +48,40 @@ export type Candidature = {
   contact?: string;
   /** Date d'envoi au format AAAA-MM-JJ. */
   dateEnvoi?: string;
+  /** Date de l'entretien, si prévu. */
+  dateEntretien?: string;
   statut: StatutCandidature;
   note?: string;
   creeLe: string;
+  /** Historique des changements de statut. */
+  historique: { statut: StatutCandidature; le: string }[];
+  /** Rangée dans l'historique (jamais supprimée). */
+  archivee: boolean;
+  /** Recherche à laquelle appartient la candidature. */
+  rechercheId: string;
 };
+
+export type ObjectifPro = { id: string; titre: string; atteint: boolean; creeLe: string };
+
+/** Un poste décroché : le chapitre « Mon aventure professionnelle ». */
+export type Emploi = {
+  id: string;
+  entreprise: string;
+  poste: string;
+  premierJour?: string; // AAAA-MM-JJ
+  decrocheLe: string;
+  objectifs: ObjectifPro[];
+  /** Candidature d'origine, si le poste vient du suivi. */
+  candidatureId?: string;
+  /** Fin du chapitre (quand l'utilisateur recommence une recherche). */
+  termineLe?: string;
+};
+
+/** Une période de recherche d'emploi. */
+export type Recherche = { id: string; debut: string; fin?: string };
+
+/** Une ligne du portefeuille de pièces. */
+export type Mouvement = { id: string; le: string; libelle: string; montant: number };
 
 export type Abonnement = {
   statut: 'gratuit' | 'essai' | 'actif';
@@ -52,22 +89,49 @@ export type Abonnement = {
   formule?: FormuleId;
 };
 
+export type Parametres = {
+  notifications: boolean;
+  rappelsRelance: boolean;
+  rappelsTaches: boolean;
+};
+
 export type EtatApp = {
-  version: 1;
+  version: 2;
   utilisateur?: Utilisateur;
+  /** Session ouverte sur ce téléphone (les données restent même après déconnexion). */
+  connecte: boolean;
   recherche: { objectif: 'emploi'; contrats: TypeContrat[] };
-  compagnon?: { espece: EspeceId; nom: string; neLe: string };
+  compagnon?: {
+    espece: EspeceId;
+    nom: string;
+    neLe: string;
+    /** Poste occupé par le compagnon dans sa ville (après « J'ai décroché ! »). */
+    metier?: { lieuId: string; intitule: string; depuis: string };
+  };
   villeId?: VilleId;
   /** Heures de réveil et de coucher du compagnon (0 à 23). */
   rythme: { reveil: number; coucher: number };
   onboardingTermine: boolean;
 
-  pieces: number;
+  /** Où en est l'utilisateur : en recherche ou dans son nouveau poste. */
+  contexte: Contexte;
+  recherches: Recherche[];
+  emplois: Emploi[];
+
+  /* Tâches et récompenses */
   taches: Tache[];
   /** Jour (AAAA-MM-JJ) pour lequel les tâches ont été préparées. */
   jourTaches?: string;
   /** Modèles de tâches déjà réalisés au moins une fois. */
   modelesFaits: string[];
+  pieces: number;
+  mouvements: Mouvement[];
+
+  /* Énergie et aventures */
+  energie: number;
+  aventuresDuJour: number;
+  aventuresTotal: number;
+  derniereAventure?: { le: string; texte: string; lieuId: string };
 
   candidatures: Candidature[];
 
@@ -75,4 +139,5 @@ export type EtatApp = {
   equipe: string[]; // objets portés par le compagnon
 
   abonnement: Abonnement;
+  parametres: Parametres;
 };

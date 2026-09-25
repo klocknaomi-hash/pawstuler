@@ -22,21 +22,25 @@ export type Ville = {
   accroche: string;
   couleur: string; // couleur de la carte tant que l'illustration manque
   lieux: Lieu[];
+  /** Nom définitif choisi (sinon nom provisoire, à confirmer). */
+  nomDefinitif?: boolean;
 };
 
 export const VILLES: Ville[] = [
   {
     id: 'clairebourg',
     nom: 'Clairebourg',
+    nomDefinitif: true,
     ambiance: 'campagne',
-    accroche: 'Un lac, des chemins fleuris et des petits commerces.',
+    accroche: 'Une petite ville française, son lac, ses chemins fleuris et ses commerces.',
     couleur: '#A9C68E',
     lieux: [
       { id: 'boulangerie', nom: 'Boulangerie Mercier', metier: 'Apprenti boulanger' },
       { id: 'librairie', nom: 'Librairie des Tilleuls', metier: 'Libraire junior' },
       { id: 'studio', nom: 'Studio Hibou', metier: 'Aide photographe' },
       { id: 'agence', nom: 'Agence Tamaris', metier: 'Assistant de voyage' },
-      { id: 'ponton', nom: 'Le ponton du lac' },
+      { id: 'cafe', nom: 'Café du Lac', metier: 'Barista' },
+      { id: 'parc', nom: 'Le parc et son ponton' },
     ],
   },
   {

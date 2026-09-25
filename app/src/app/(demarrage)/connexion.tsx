@@ -30,7 +30,7 @@ export default function Connexion() {
       const utilisateur = await seConnecter(f, f === 'email' ? { email, motDePasse } : undefined);
       dispatch({ type: 'CONNECTER', utilisateur });
       // Compte déjà configuré → accueil ; sinon on commence l'onboarding
-      router.replace(etat.onboardingTermine ? '/' : '/prenom');
+      router.replace(etat.onboardingTermine ? '/accueil' : '/prenom');
     } catch {
       setErreur('La connexion n’a pas abouti. Vérifie ta connexion internet et réessaie.');
     } finally {

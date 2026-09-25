@@ -1,4 +1,4 @@
-/** ONBOARDING 2/7 — Ce que l'utilisateur recherche (emploi + type de contrat, facultatif). */
+/** ONBOARDING 2/6 — Ce que l'utilisateur recherche (emploi + type de contrat, facultatif). */
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';

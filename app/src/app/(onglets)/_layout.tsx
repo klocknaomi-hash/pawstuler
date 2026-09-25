@@ -1,7 +1,7 @@
-/** Les onglets : Accueil · Candidatures · Boutique · Ville. */
+/** Les 5 onglets : Accueil · Candidatures · Shop · la ville du compagnon · Compte. */
 import { Ionicons } from '@expo/vector-icons';
-import type { ColorValue } from 'react-native';
 import { Tabs } from 'expo-router/js-tabs';
+import type { ColorValue } from 'react-native';
 
 import { couleurs, polices } from '@/config/theme';
 import { villeParId } from '@/config/villes';
@@ -17,7 +17,7 @@ function icone(nom: NomIcone, actif: NomIcone) {
 
 export default function LayoutOnglets() {
   const { etat } = useApp();
-  const nomVille = etat.villeId ? villeParId(etat.villeId).nom : 'Ville';
+  const nomVille = etat.villeId ? villeParId(etat.villeId).nom : 'Ma ville';
 
   return (
     <Tabs
@@ -26,16 +26,20 @@ export default function LayoutOnglets() {
         tabBarActiveTintColor: couleurs.renardFonce,
         tabBarInactiveTintColor: couleurs.brunDoux,
         tabBarStyle: { backgroundColor: couleurs.carte, borderTopColor: couleurs.ligne },
-        tabBarLabelStyle: { fontFamily: polices.texte, fontWeight: '700', fontSize: 11 },
+        tabBarLabelStyle: { fontFamily: polices.texte, fontWeight: '700', fontSize: 10.5 },
         sceneStyle: { backgroundColor: couleurs.creme },
       }}>
       <Tabs.Screen name="accueil" options={{ title: 'Accueil', tabBarIcon: icone('home-outline', 'home') }} />
       <Tabs.Screen
         name="candidatures"
-        options={{ title: 'Candidatures', tabBarIcon: icone('folder-open-outline', 'folder-open') }}
+        options={{
+          title: etat.contexte === 'pro' ? 'Parcours' : 'Candidatures',
+          tabBarIcon: icone('folder-open-outline', 'folder-open'),
+        }}
       />
-      <Tabs.Screen name="boutique" options={{ title: 'Boutique', tabBarIcon: icone('storefront-outline', 'storefront') }} />
+      <Tabs.Screen name="boutique" options={{ title: 'Shop', tabBarIcon: icone('storefront-outline', 'storefront') }} />
       <Tabs.Screen name="ville" options={{ title: nomVille, tabBarIcon: icone('map-outline', 'map') }} />
+      <Tabs.Screen name="compte" options={{ title: 'Compte', tabBarIcon: icone('person-circle-outline', 'person-circle') }} />
     </Tabs>
   );
 }

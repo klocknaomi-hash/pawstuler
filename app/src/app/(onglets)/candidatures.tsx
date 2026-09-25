@@ -1,62 +1,93 @@
 /**
  * CANDIDATURES
- * Le suivi, sans tableau Excel : une carte par candidature, un statut clair,
- * une recherche rapide, des filtres, et les relances à faire mises en avant.
+ * Le suivi, sans tableau Excel : une carte par candidature, un statut clair, une recherche
+ * rapide, des filtres, et les relances à faire mises en avant.
+ * Après « J'ai décroché ! », « Mon aventure professionnelle » s'affiche en haut ;
+ * les candidatures restent consultables (rien n'est supprimé automatiquement).
  */
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { STATUTS, statutParId } from '@/config/candidatures';
 import { arrondis, couleurs, espace, polices } from '@/config/theme';
 import { dateLisible, jourDe, joursEntre } from '@/logique/dates';
-import { relanceDue } from '@/logique/tachesDuJour';
+import { candidaturesActives, emploiActuel, relanceDue } from '@/logique/tachesDuJour';
 import { useApp } from '@/store/etat';
-import type { Candidature, StatutCandidature } from '@/store/types';
+import type { StatutCandidature } from '@/store/types';
+
+type Vue = 'en-cours' | 'historique';
 
 export default function Candidatures() {
-  const { etat, dispatch } = useApp();
+  const { etat } = useApp();
+  const [vue, setVue] = useState<Vue>(etat.contexte === 'pro' ? 'historique' : 'en-cours');
   const [filtre, setFiltre] = useState<StatutCandidature | 'toutes'>('toutes');
   const [recherche, setRecherche] = useState('');
   const aujourdhui = jourDe();
+  const emploi = emploiActuel(etat);
+
+  const actives = useMemo(() => candidaturesActives(etat), [etat]);
+  const idsActifs = useMemo(() => new Set(actives.map((c) => c.id)), [actives]);
+  const base = vue === 'en-cours' ? actives : etat.candidatures.filter((c) => !idsActifs.has(c.id));
 
   const liste = useMemo(() => {
     const q = recherche.trim().toLowerCase();
-    return etat.candidatures.filter(
+    return base.filter(
       (c) =>
         (filtre === 'toutes' || c.statut === filtre) &&
         (!q || c.entreprise.toLowerCase().includes(q) || c.poste.toLowerCase().includes(q)),
     );
-  }, [etat.candidatures, filtre, recherche]);
+  }, [base, filtre, recherche]);
 
-  const envoyees = etat.candidatures.filter((c) => c.statut !== 'a-envoyer').length;
-  const entretiens = etat.candidatures.filter((c) => c.statut === 'entretien' || c.statut === 'offre').length;
-  const aRelancer = etat.candidatures.filter((c) => relanceDue(c, aujourdhui)).length;
-
-  function changerStatut(c: Candidature) {
-    const choisir = (statut: StatutCandidature) => dispatch({ type: 'CHANGER_STATUT', id: c.id, statut });
-    if (Platform.OS === 'web') {
-      const i = STATUTS.findIndex((s) => s.id === c.statut);
-      choisir(STATUTS[(i + 1) % STATUTS.length].id);
-      return;
-    }
-    Alert.alert(c.entreprise, 'Où en est cette candidature ?', [
-      ...STATUTS.filter((s) => s.id !== c.statut).map((s) => ({ text: s.libelle, onPress: () => choisir(s.id) })),
-      { text: 'Annuler', style: 'cancel' as const },
-    ]);
-  }
+  const envoyees = actives.filter((c) => c.statut !== 'a-envoyer').length;
+  const entretiens = actives.filter((c) => c.statut === 'entretien' || c.statut === 'offre').length;
+  const aRelancer = actives.filter((c) => relanceDue(c, aujourdhui)).length;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: couleurs.creme }} edges={['top']}>
       <ScrollView contentContainerStyle={styles.contenu} keyboardShouldPersistTaps="handled">
-        <Text style={styles.titre}>Candidatures</Text>
+        <Text style={styles.titre}>{etat.contexte === 'pro' ? 'Mon parcours' : 'Candidatures'}</Text>
 
-        <View style={styles.stats}>
-          <Stat valeur={envoyees} libelle="envoyées" />
-          <Stat valeur={entretiens} libelle="entretiens" />
-          <Stat valeur={aRelancer} libelle="à relancer" accent={aRelancer > 0} />
+        {etat.contexte === 'pro' && emploi && (
+          <Pressable style={styles.pro} onPress={() => router.push('/aventure-pro')} accessibilityRole="button">
+            <Text style={{ fontSize: 28 }}>💼</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.proTitre}>Mon aventure professionnelle</Text>
+              <Text style={styles.proSous}>
+                {emploi.poste} chez {emploi.entreprise}
+              </Text>
+              <Text style={styles.proSous}>
+                {emploi.objectifs.filter((o) => o.atteint).length}/{emploi.objectifs.length} objectif
+                {emploi.objectifs.length > 1 ? 's' : ''} atteint{emploi.objectifs.filter((o) => o.atteint).length > 1 ? 's' : ''}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={couleurs.brun} />
+          </Pressable>
+        )}
+
+        {etat.contexte === 'recherche' && (
+          <View style={styles.stats}>
+            <Stat valeur={envoyees} libelle="envoyées" />
+            <Stat valeur={entretiens} libelle="entretiens" />
+            <Stat valeur={aRelancer} libelle="à relancer" accent={aRelancer > 0} />
+          </View>
+        )}
+
+        <View style={styles.onglets}>
+          {(['en-cours', 'historique'] as Vue[]).map((v) => (
+            <Pressable
+              key={v}
+              onPress={() => setVue(v)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: vue === v }}
+              style={[styles.onglet, vue === v && styles.ongletActif]}>
+              <Text style={[styles.ongletTexte, vue === v && { color: couleurs.brun }]}>
+                {v === 'en-cours' ? 'Recherche en cours' : 'Historique'}
+              </Text>
+            </Pressable>
+          ))}
         </View>
 
         <View style={styles.recherche}>
@@ -87,12 +118,22 @@ export default function Candidatures() {
         {liste.length === 0 ? (
           <View style={styles.vide}>
             <Text style={styles.videTitre}>
-              {etat.candidatures.length === 0 ? 'Aucune candidature pour l’instant' : 'Rien ici avec ce filtre'}
+              {base.length > 0
+                ? 'Rien ici avec ce filtre'
+                : vue === 'historique'
+                  ? 'Ton historique est vide'
+                  : etat.contexte === 'pro'
+                    ? 'Pas de recherche en cours'
+                    : 'Aucune candidature pour l’instant'}
             </Text>
             <Text style={styles.videTexte}>
-              {etat.candidatures.length === 0
-                ? `Ajoute ta première candidature, ou juste une offre qui te plaît. ${etat.compagnon?.nom ?? ''} s’en souviendra pour toi.`
-                : 'Essaie un autre filtre.'}
+              {base.length > 0
+                ? 'Essaie un autre filtre.'
+                : vue === 'historique'
+                  ? 'Tes anciennes candidatures et celles que tu archives apparaîtront ici.'
+                  : etat.contexte === 'pro'
+                    ? 'Tu pourras en recommencer une depuis « Mon aventure professionnelle ».'
+                    : `Ajoute ta première candidature, ou juste une offre qui te plaît. ${etat.compagnon?.nom ?? ''} s’en souviendra pour toi.`}
             </Text>
           </View>
         ) : (
@@ -100,45 +141,52 @@ export default function Candidatures() {
             const s = statutParId(c.statut);
             const relance = relanceDue(c, aujourdhui);
             return (
-              <View key={c.id} style={styles.carte}>
+              <Pressable
+                key={c.id}
+                style={styles.carte}
+                onPress={() => router.push({ pathname: '/candidature/[id]', params: { id: c.id } })}
+                accessibilityRole="button"
+                accessibilityLabel={`${c.entreprise}, ${c.poste}, ${s.libelle}`}>
                 <View style={styles.carteHaut}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.entreprise}>{c.entreprise}</Text>
                     <Text style={styles.poste}>{c.poste}</Text>
                   </View>
-                  <Pressable
-                    onPress={() => changerStatut(c)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Statut : ${s.libelle}. Toucher pour changer`}
-                    style={[styles.statut, { backgroundColor: s.fond }]}>
+                  <View style={[styles.statut, { backgroundColor: s.fond }]}>
                     <Text style={[styles.statutTexte, { color: s.texte }]}>{s.libelle}</Text>
-                    <Ionicons name="chevron-down" size={14} color={s.texte} />
-                  </Pressable>
+                  </View>
                 </View>
-                <View style={styles.carteBas}>
-                  <Text style={styles.meta}>
-                    {c.dateEnvoi ? `Envoyée le ${dateLisible(c.dateEnvoi)}` : 'Pas encore envoyée'}
-                    {c.contact ? ` · ${c.contact}` : ''}
+                <Text style={styles.meta}>
+                  {c.dateEnvoi ? `Envoyée le ${dateLisible(c.dateEnvoi)}` : 'Pas encore envoyée'}
+                  {c.dateEntretien ? ` · Entretien le ${dateLisible(c.dateEntretien)}` : ''}
+                  {c.archivee ? ' · Archivée' : ''}
+                </Text>
+                {relance && (
+                  <Text style={styles.relance}>
+                    Cette candidature date de {joursEntre(c.dateEnvoi!, aujourdhui)} jours. Pense à la relancer.
                   </Text>
-                  {relance && (
-                    <Text style={styles.relance}>
-                      {joursEntre(c.dateEnvoi!, aujourdhui)} j sans réponse : pense à relancer
-                    </Text>
-                  )}
-                </View>
-              </View>
+                )}
+              </Pressable>
             );
           })
         )}
+
+        {etat.contexte === 'recherche' && vue === 'en-cours' && (
+          <Pressable onPress={() => router.push('/decroche')} accessibilityRole="button" style={styles.decroche}>
+            <Text style={styles.decrocheTexte}>🎉 J’ai décroché un poste</Text>
+          </Pressable>
+        )}
       </ScrollView>
 
-      <Pressable
-        style={styles.fab}
-        onPress={() => router.push('/nouvelle-candidature')}
-        accessibilityRole="button"
-        accessibilityLabel="Ajouter une candidature">
-        <Ionicons name="add" size={30} color={couleurs.blanc} />
-      </Pressable>
+      {etat.contexte === 'recherche' && (
+        <Pressable
+          style={styles.fab}
+          onPress={() => router.push('/nouvelle-candidature')}
+          accessibilityRole="button"
+          accessibilityLabel="Ajouter une candidature">
+          <Ionicons name="add" size={30} color={couleurs.blanc} />
+        </Pressable>
+      )}
     </SafeAreaView>
   );
 }
@@ -155,6 +203,16 @@ function Stat({ valeur, libelle, accent }: { valeur: number; libelle: string; ac
 const styles = StyleSheet.create({
   contenu: { padding: espace.l, gap: espace.m, paddingBottom: 100 },
   titre: { fontFamily: polices.titre, fontSize: 28, fontWeight: '800', color: couleurs.brun },
+  pro: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espace.m,
+    backgroundColor: couleurs.pecheClair,
+    borderRadius: arrondis.m,
+    padding: espace.l,
+  },
+  proTitre: { fontWeight: '800', color: couleurs.brun, fontSize: 16 },
+  proSous: { fontWeight: '600', color: couleurs.brunDoux, fontSize: 13.5, marginTop: 2 },
   stats: { flexDirection: 'row', gap: espace.s },
   stat: {
     flex: 1,
@@ -167,6 +225,10 @@ const styles = StyleSheet.create({
   },
   statValeur: { fontFamily: polices.titre, fontSize: 24, fontWeight: '800', color: couleurs.brun, fontVariant: ['tabular-nums'] },
   statLibelle: { fontSize: 12, fontWeight: '700', color: couleurs.brunDoux },
+  onglets: { flexDirection: 'row', backgroundColor: '#F3E8DD', borderRadius: 14, padding: 4 },
+  onglet: { flex: 1, borderRadius: 10, paddingVertical: 9, alignItems: 'center' },
+  ongletActif: { backgroundColor: couleurs.carte },
+  ongletTexte: { fontWeight: '800', fontSize: 13.5, color: couleurs.brunDoux },
   recherche: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -203,11 +265,12 @@ const styles = StyleSheet.create({
   carteHaut: { flexDirection: 'row', gap: espace.s, alignItems: 'flex-start' },
   entreprise: { fontSize: 16.5, fontWeight: '800', color: couleurs.brun },
   poste: { fontSize: 14, fontWeight: '600', color: couleurs.brunDoux, marginTop: 2 },
-  statut: { flexDirection: 'row', alignItems: 'center', gap: 3, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5 },
+  statut: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5 },
   statutTexte: { fontSize: 12.5, fontWeight: '800' },
-  carteBas: { gap: 4 },
   meta: { fontSize: 13, fontWeight: '600', color: couleurs.brunDoux },
   relance: { fontSize: 13, fontWeight: '800', color: couleurs.renardFonce },
+  decroche: { alignSelf: 'center', paddingVertical: espace.m, paddingHorizontal: espace.l },
+  decrocheTexte: { fontWeight: '800', color: couleurs.corail, fontSize: 15 },
   fab: {
     position: 'absolute',
     right: espace.l,

@@ -10,19 +10,21 @@ export const JOURS_ESSAI = 7;
 export type FormuleId = 'mensuel' | 'annuel';
 
 export const FORMULES: { id: FormuleId; libelle: string; prix: string; apresEssai: string; detail?: string }[] = [
-  { id: 'annuel', libelle: 'Annuel', prix: '39,99 €/an', apresEssai: '39,99 €/an après l’essai', detail: 'Soit 3,33 €/mois' },
-  { id: 'mensuel', libelle: 'Mensuel', prix: '5,99 €/mois', apresEssai: '5,99 €/mois après l’essai' },
+  { id: 'annuel', libelle: 'Annuel', prix: '39,99 €/an', apresEssai: '7 jours gratuits, puis 39,99 €/an', detail: 'Soit 3,33 €/mois' },
+  { id: 'mensuel', libelle: 'Mensuel', prix: '5,99 €/mois', apresEssai: '7 jours gratuits, puis 5,99 €/mois' },
 ];
 
 export const INCLUS_GRATUIT = [
   'Tâches du jour et tâches personnelles',
   'Suivi de toutes tes candidatures',
-  'Ton compagnon, ses pièces et sa ville',
-  'Boutique et personnalisation de base',
+  'Ton compagnon, sa ville et ta progression',
+  'Pièces, Shop et personnalisation de base',
+  '1 aventure du jour',
 ];
 
 export const INCLUS_ZIGGY_PLUS = [
-  'Animations et interactions en plus avec ton compagnon',
+  'Jusqu’à 3 aventures par jour et plus d’interactions avec ton compagnon',
+  'Animations supplémentaires et personnalisation avancée',
   'Vêtements, accessoires et événements exclusifs',
   'Plus de lieux et d’histoires dans ta ville',
   'Recommandations personnalisées et analyses de ton parcours',

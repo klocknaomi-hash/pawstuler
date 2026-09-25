@@ -13,8 +13,8 @@ import { arrondis, couleurs, espace, polices } from '@/config/theme';
 const POINTS: { icone: keyof typeof Ionicons.glyphMap; texte: string }[] = [
   { icone: 'checkbox-outline', texte: 'Des petites tâches chaque jour, adaptées à ta recherche' },
   { icone: 'folder-open-outline', texte: 'Toutes tes candidatures au même endroit' },
-  { icone: 'sparkles-outline', texte: 'Des pièces à chaque effort, pour faire plaisir à ton compagnon' },
-  { icone: 'home-outline', texte: 'Il vit dans sa ville et cherche son job, en même temps que toi' },
+  { icone: 'sparkles-outline', texte: 'Des pièces à chaque effort, pour personnaliser ton compagnon' },
+  { icone: 'home-outline', texte: 'Il vit dans sa ville, part en aventure et progresse avec toi' },
 ];
 
 export default function Presentation() {
@@ -38,7 +38,7 @@ export default function Presentation() {
 
       <View style={{ gap: espace.s }}>
         <Titre style={{ textAlign: 'center' }}>Ta recherche d’emploi, à deux.</Titre>
-        <Texte style={{ textAlign: 'center' }}>Ton compagnon avance avec toi, un petit pas après l’autre.</Texte>
+        <Texte style={{ textAlign: 'center' }}>Tu n’es pas seul dans ta recherche d’emploi. Ton compagnon avance avec toi.</Texte>
       </View>
 
       <View style={styles.points}>

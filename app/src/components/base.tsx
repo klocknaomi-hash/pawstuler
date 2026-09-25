@@ -31,8 +31,11 @@ export function Ecran({
   style,
   fond = couleurs.creme,
   bas,
+  avecEntete = false,
 }: {
   children: ReactNode;
+  /** Page avec en-tête natif (titre + retour) : pas de marge de sécurité en haut. */
+  avecEntete?: boolean;
   defilant?: boolean;
   style?: StyleProp<ViewStyle>;
   fond?: string;
@@ -47,7 +50,7 @@ export function Ecran({
     <View style={[styles.contenu, { flex: 1 }, style]}>{children}</View>
   );
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: fond }} edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: fond }} edges={avecEntete ? ['bottom'] : ['top', 'bottom']}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {contenu}
         {bas ? <View style={styles.bas}>{bas}</View> : null}

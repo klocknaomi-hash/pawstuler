@@ -1,4 +1,4 @@
-/** ONBOARDING 1/7 — Le prénom de l'utilisateur. */
+/** ONBOARDING 1/6 — Le prénom de l'utilisateur. */
 import { router } from 'expo-router';
 import { useState } from 'react';
 

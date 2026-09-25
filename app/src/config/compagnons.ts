@@ -1,22 +1,22 @@
 /**
  * LES COMPAGNONS
  * Pour ajouter ou retirer un animal, on modifie seulement cette liste.
- * Les images de chaque animal sont déclarées dans src/assets/registre.ts.
+ * Les images de chaque animal sont déclarées dans src/illustrations/registre.ts.
  */
 
-export type EspeceId = 'renard' | 'chat' | 'chien' | 'loutre';
+export type EspeceId = 'renard' | 'chat' | 'crocodile' | 'lapin';
 
 /** Les états visuels d'un compagnon. Chaque état = une image (ou plus tard une animation). */
 export type Pose =
   | 'salut' // onboarding, naissance
   | 'neutre' // accueil
-  | 'content' // tâche cochée
-  | 'excite' // grosse journée
+  | 'content' // tâche cochée, câlin
+  | 'excite' // jeu, grosse journée
   | 'dort' // en dehors de ses heures d'éveil
   | 'reconfort' // après un refus
-  | 'fier' // entretien obtenu
-  | 'aventure' // part se promener en ville
-  | 'celebration'; // poste décroché
+  | 'fier' // entretien obtenu, poste décroché
+  | 'aventure' // part en aventure dans sa ville
+  | 'celebration'; // « J'ai décroché ! »
 
 export type Compagnon = {
   id: EspeceId;
@@ -45,21 +45,22 @@ export const COMPAGNONS: Compagnon[] = [
     emoji: '🐱',
   },
   {
-    id: 'chien',
-    espece: 'le chien',
-    nomParDefaut: 'Waffle',
-    personnalite: 'Enthousiaste et loyal',
-    couleur: '#D9A66B',
-    emoji: '🐶',
+    id: 'crocodile',
+    espece: 'le crocodile',
+    nomParDefaut: 'Kiwi', // nom provisoire
+    personnalite: 'Grand cœur sous ses airs sérieux',
+    couleur: '#9CC48A',
+    emoji: '🐊',
   },
   {
-    id: 'loutre',
-    espece: 'la loutre',
-    nomParDefaut: 'Kiwi',
-    personnalite: 'Sociable, connaît tout le monde',
-    couleur: '#B08A6E',
-    emoji: '🦦',
+    id: 'lapin',
+    espece: 'le lapin',
+    nomParDefaut: 'Nugget',
+    personnalite: 'Un peu stressé mais courageux',
+    couleur: '#E8D5C4',
+    emoji: '🐰',
   },
 ];
 
 export const compagnonParId = (id: EspeceId) => COMPAGNONS.find((c) => c.id === id) ?? COMPAGNONS[0];
+export const especeValide = (id: string): id is EspeceId => COMPAGNONS.some((c) => c.id === id);
