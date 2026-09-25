@@ -3,7 +3,11 @@
  * Affiche l'animal dans une pose, et le garde « vivant » :
  *  - il respire en permanence ;
  *  - s'il peut se promener, il se déplace un peu de temps en temps ;
- *  - quand `reaction` change (tâche cochée…), il fait un petit saut.
+ *  - quand `reaction` change (tâche cochée…), il fait un petit saut ;
+ *  - quand `geste` change, il fait un vrai petit mouvement : il se blottit (câlin)
+ *    ou sautille en se dandinant (jeu) ;
+ *  - quand il se promène, il fait aussi de temps en temps un petit geste tout seul
+ *    (petit bond, balancement, étirement) : il ne reste jamais figé.
  *
  * S'il porte une tenue complète illustrée pour son espèce (`equipe`), c'est elle qui s'affiche
  * (sauf quand il dort : on range la tenue pour la nuit).
@@ -27,6 +31,9 @@ import Animated, {
 import { imageCompagnon, imageTenue, tenuePortee } from '@/illustrations/registre';
 import { compagnonParId, type EspeceId, type Pose } from '@/config/compagnons';
 
+/** Un mouvement demandé au compagnon. `cle` change à chaque demande. */
+export type Geste = { type: 'calin' | 'jeu'; cle: number };
+
 export function Compagnon({
   espece,
   pose = 'neutre',
@@ -34,6 +41,7 @@ export function Compagnon({
   vivant = true,
   promenade = false,
   reaction = 0,
+  geste,
   equipe,
   style,
 }: {
@@ -46,6 +54,8 @@ export function Compagnon({
   promenade?: boolean;
   /** Changer ce nombre déclenche un saut de joie. */
   reaction?: number;
+  /** Changer `cle` déclenche le mouvement correspondant. */
+  geste?: Geste;
   /** Objets portés (état de l'app) : affiche la tenue complète s'il en porte une. */
   equipe?: string[];
   style?: StyleProp<ViewStyle>;
@@ -54,6 +64,9 @@ export function Compagnon({
   const saut = useSharedValue(0);
   const position = useSharedValue(0);
   const regard = useSharedValue(1); // 1 = regarde à droite, -1 = à gauche
+  const largeur = useSharedValue(1); // s'élargit quand il se blottit
+  const hauteur = useSharedValue(1); // s'écrase ou s'étire
+  const penche = useSharedValue(0); // en degrés
 
   // Respiration
   useEffect(() => {
@@ -88,8 +101,53 @@ export function Compagnon({
     saut.set(withSequence(withTiming(-taille * 0.18, { duration: 180 }), withSpring(0, { damping: 6, stiffness: 180 })));
   }, [reaction, taille, saut]);
 
+  // Gestes demandés par l'écran (câlin, jeu)
+  const cleGeste = geste?.cle ?? 0;
+  const typeGeste = geste?.type;
+  useEffect(() => {
+    if (!cleGeste || !typeGeste) return;
+    if (typeGeste === 'calin') {
+      // Il se blottit deux fois, doucement, en penchant la tête
+      const blotti = { duration: 260, easing: Easing.inOut(Easing.quad) };
+      largeur.set(withSequence(withTiming(1.12, blotti), withTiming(1, blotti), withTiming(1.1, blotti), withSpring(1, { damping: 8 })));
+      hauteur.set(withSequence(withTiming(0.9, blotti), withTiming(1, blotti), withTiming(0.92, blotti), withSpring(1, { damping: 8 })));
+      penche.set(withSequence(withTiming(-6, { duration: 500 }), withTiming(0, { duration: 600 })));
+    } else {
+      // Il joue : deux petits bonds en se dandinant
+      const bond = (h: number) => withSequence(withTiming(-taille * h, { duration: 170 }), withTiming(0, { duration: 170, easing: Easing.in(Easing.quad) }));
+      saut.set(withSequence(bond(0.16), bond(0.22), withSpring(0, { damping: 6 })));
+      penche.set(withSequence(withTiming(-10, { duration: 170 }), withTiming(10, { duration: 340 }), withTiming(-6, { duration: 200 }), withSpring(0)));
+      hauteur.set(withSequence(withTiming(0.9, { duration: 90 }), withSpring(1, { damping: 5 })));
+    }
+  }, [cleGeste, typeGeste, taille, largeur, hauteur, penche, saut]);
+
+  // Petits gestes spontanés quand il se promène (jamais quand il dort)
+  useEffect(() => {
+    if (!promenade || pose === 'dort') return;
+    let minuterie: ReturnType<typeof setTimeout>;
+    const gesteSpontane = () => {
+      const tirage = Math.random();
+      if (tirage < 0.35) {
+        saut.set(withSequence(withTiming(-taille * 0.07, { duration: 150 }), withSpring(0, { damping: 7 })));
+      } else if (tirage < 0.7) {
+        penche.set(withSequence(withTiming(-5, { duration: 350 }), withTiming(5, { duration: 700 }), withTiming(0, { duration: 350 })));
+      } else {
+        hauteur.set(withSequence(withTiming(1.05, { duration: 450 }), withTiming(1, { duration: 450 })));
+      }
+      minuterie = setTimeout(gesteSpontane, 7000 + Math.random() * 7000);
+    };
+    minuterie = setTimeout(gesteSpontane, 5000 + Math.random() * 4000);
+    return () => clearTimeout(minuterie);
+  }, [promenade, pose, taille, saut, penche, hauteur]);
+
   const anime = useAnimatedStyle(() => ({
-    transform: [{ translateX: position.value }, { translateY: saut.value }, { scaleX: regard.value }, { scaleY: souffle.value }],
+    transform: [
+      { translateX: position.value },
+      { translateY: saut.value },
+      { rotate: `${penche.value}deg` },
+      { scaleX: regard.value * largeur.value },
+      { scaleY: souffle.value * hauteur.value },
+    ],
   }));
 
   const tenue = equipe && pose !== 'dort' ? tenuePortee(espece, equipe) : undefined;
