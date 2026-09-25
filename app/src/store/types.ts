@@ -9,7 +9,7 @@
  */
 import type { FormuleId } from '@/config/abonnement';
 import type { Contexte } from '@/config/aventures';
-import type { EspeceId } from '@/config/compagnons';
+import type { EspeceId, Pronoms } from '@/config/compagnons';
 import type { VilleId } from '@/config/villes';
 
 export type TypeContrat = 'cdi' | 'cdd' | 'stage' | 'alternance' | 'freelance';
@@ -97,6 +97,25 @@ export type Abonnement = {
   statut: 'gratuit' | 'essai' | 'actif';
   debutEssai?: string; // AAAA-MM-JJ
   formule?: FormuleId;
+  /** L'essai gratuit a déjà été utilisé (il n'est proposé qu'une fois). */
+  essaiUtilise?: boolean;
+};
+
+/**
+ * La série de jours consécutifs 🐾 : un jour compte dès que l'app est ouverte.
+ * Si elle s'arrête, elle recommence à 1 (rien n'est perdu, la meilleure série est gardée).
+ */
+export type Serie = {
+  /** Objectif choisi (en jours consécutifs). */
+  objectif: number;
+  actuelle: number;
+  meilleure: number;
+  /** Dernier jour compté (AAAA-MM-JJ). */
+  dernierJour?: string;
+  /** Jour où l'objectif actuel a été atteint (pour le fêter une fois). */
+  objectifAtteintLe?: string;
+  /** Jour où une nouvelle série a commencé après une pause (message bienveillant). */
+  repriseLe?: string;
 };
 
 export type Parametres = {
@@ -115,6 +134,8 @@ export type EtatApp = {
     espece: EspeceId;
     nom: string;
     neLe: string;
+    /** Pronoms choisis (facultatif). */
+    pronoms?: Pronoms;
     /** Poste occupé par le compagnon dans sa ville (après « J'ai décroché ! »). */
     metier?: { lieuId: string; intitule: string; depuis: string };
   };
@@ -122,6 +143,7 @@ export type EtatApp = {
   /** Heures de réveil et de coucher du compagnon (0 à 23). */
   rythme: { reveil: number; coucher: number };
   onboardingTermine: boolean;
+  serie: Serie;
 
   /** Où en est l'utilisateur : en recherche ou dans son nouveau poste. */
   contexte: Contexte;
@@ -144,6 +166,8 @@ export type EtatApp = {
   aventuresDuJour: number;
   aventuresTotal: number;
   derniereAventure?: { le: string; texte: string; lieuId: string };
+  /** Lieux découverts en aventure (section « Découverte » et souvenirs de la collection). */
+  decouvertes: { villeId: VilleId; lieuId: string; le: string }[];
 
   candidatures: Candidature[];
 

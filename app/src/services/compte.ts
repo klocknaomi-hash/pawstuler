@@ -8,6 +8,7 @@
  */
 import { Share } from 'react-native';
 
+import { fermerSession, supprimerCompteEnLigne } from '@/services/auth';
 import { effacerSauvegarde } from '@/store/etat';
 import type { EtatApp } from '@/store/types';
 
@@ -17,12 +18,13 @@ export async function exporterDonnees(etat: EtatApp): Promise<void> {
   await Share.share({ title: 'Mes données Pawstuler', message: JSON.stringify(copie, null, 2) });
 }
 
-/** Supprime définitivement le compte. TODO(serveur) : supprimer aussi les données en ligne. */
+/** Supprime définitivement le compte : en ligne (si la connexion réelle est branchée), puis sur le téléphone. */
 export async function supprimerCompte(): Promise<void> {
+  await supprimerCompteEnLigne();
   await effacerSauvegarde();
 }
 
-/** Déconnexion. TODO(auth) : révoquer la session auprès du fournisseur. */
+/** Déconnexion : ferme la session en ligne. Les données restent sur le téléphone. */
 export async function deconnecter(): Promise<void> {
-  return;
+  await fermerSession().catch(() => {});
 }

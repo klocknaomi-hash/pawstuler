@@ -13,7 +13,7 @@ export type ObjetBoutique = {
   prix: number;
   emoji: string; // visuel de secours tant que l'illustration n'est pas fournie
   offert?: boolean; // cadeau de bienvenue
-  premium?: boolean; // réservé à Ziggy+
+  premium?: boolean; // réservé à Pawstuler Premium
 };
 
 export const LIBELLES_TYPES: Record<TypeObjet, string> = {

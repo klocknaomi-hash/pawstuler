@@ -16,12 +16,12 @@ import { CompteurPieces, IconePiece } from '@/components/Pieces';
 import { CATALOGUE_BOUTIQUE, LIBELLES_TYPES, type ObjetBoutique, type TypeObjet } from '@/config/boutique';
 import { arrondis, couleurs, espace, polices } from '@/config/theme';
 import { imageObjet } from '@/illustrations/registre';
-import { aZiggyPlus } from '@/services/abonnement';
+import { aPremium } from '@/services/abonnement';
 import { useApp } from '@/store/etat';
 
 export default function Shop() {
   const { etat, dispatch } = useApp();
-  const plus = aZiggyPlus(etat);
+  const plus = aPremium(etat);
   const [type, setType] = useState<TypeObjet | 'tout'>('tout');
   const [achat, setAchat] = useState<ObjetBoutique | null>(null);
   const portes = CATALOGUE_BOUTIQUE.filter((o) => etat.equipe.includes(o.id));
@@ -29,7 +29,7 @@ export default function Shop() {
 
   function toucher(o: ObjetBoutique) {
     if (etat.inventaire.includes(o.id)) return dispatch({ type: 'EQUIPER', objetId: o.id });
-    if (o.premium && !plus) return router.push('/ziggy-plus');
+    if (o.premium && !plus) return router.push('/premium');
     setAchat(o);
   }
 
@@ -95,7 +95,7 @@ export default function Shop() {
                 {possede ? (
                   <Text style={styles.etat}>{porte ? 'Porté' : o.offert ? 'Offert · Porter' : 'Porter'}</Text>
                 ) : verrou ? (
-                  <Text style={[styles.etat, { color: couleurs.renardFonce }]}>Ziggy+</Text>
+                  <Text style={[styles.etat, { color: couleurs.renardFonce }]}>Premium</Text>
                 ) : (
                   <View style={styles.prix}>
                     <IconePiece taille={14} />

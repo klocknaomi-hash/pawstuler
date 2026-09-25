@@ -17,6 +17,7 @@ import { Compagnon } from '@/components/Compagnon';
 import { JaugeEnergie } from '@/components/Energie';
 import { LigneTache } from '@/components/LigneTache';
 import { CompteurPieces, IconePiece } from '@/components/Pieces';
+import { BadgeSerie } from '@/components/Serie';
 import type { Pose } from '@/config/compagnons';
 import { COUT, ENERGIE_PAR_TACHE } from '@/config/energie';
 import { PLAFOND_PIECES_JOUR } from '@/config/taches';
@@ -24,6 +25,7 @@ import { arrondis, couleurs, espace, ombre, polices } from '@/config/theme';
 import { villeParId } from '@/config/villes';
 import { imageVille } from '@/illustrations/registre';
 import { aventuresRestantes } from '@/logique/compagnon';
+import { jourDe } from '@/logique/dates';
 import { estEndormi, heureLisible } from '@/logique/rythme';
 import { emploiActuel } from '@/logique/tachesDuJour';
 import { rappelEssai } from '@/services/abonnement';
@@ -54,6 +56,9 @@ export default function Accueil() {
   const dort = estEndormi(etat.rythme);
   const pose: Pose = moment?.pose ?? (dort ? 'dort' : toutFait ? 'excite' : 'neutre');
   const rappel = rappelEssai(etat);
+  const aujourdhui = jourDe();
+  const serieFetee = etat.serie.objectifAtteintLe === aujourdhui;
+  const serieReprise = etat.serie.repriseLe === aujourdhui;
   const restantes = aventuresRestantes(etat);
 
   /** Fait réagir le compagnon quelques secondes (pose + bulle). */
@@ -105,15 +110,17 @@ export default function Accueil() {
     reagir(type === 'calin' ? 'content' : 'excite', type === 'calin' ? 'Merci, ça fait du bien !' : 'Encore une partie ? 😄');
   }
 
-  const bulle =
-    moment?.texte ??
-    (dort
-      ? `${compagnon.nom} dort jusqu’à ${heureLisible(etat.rythme.reveil)}. Tes progrès l’attendront au réveil.`
-      : toutFait
-        ? 'Bravo, tout est fait pour aujourd’hui !'
-        : faites > 0
-          ? `Déjà ${faites} de faite${faites > 1 ? 's' : ''}. On continue ?`
-          : `Bonjour ${etat.utilisateur?.prenom ?? ''} ! On commence par quoi aujourd’hui ?`);
+  /** Ce que dit le compagnon : réaction du moment, sommeil, série, puis avancée des tâches. */
+  function messageDuJour(): string {
+    const prenom = etat.utilisateur?.prenom ?? '';
+    if (dort) return `${compagnon?.nom} dort jusqu’à ${heureLisible(etat.rythme.reveil)}. Tes progrès l’attendront au réveil.`;
+    if (serieFetee && faites === 0) return `${etat.serie.actuelle} jours d’affilée, objectif atteint ! Merci d’être là 🐾`;
+    if (serieReprise && faites === 0) return `Content de te revoir ${prenom} ! On repart ensemble, à ton rythme 🐾`;
+    if (toutFait) return 'Bravo, tout est fait pour aujourd’hui !';
+    if (faites > 0) return `Déjà ${faites} de faite${faites > 1 ? 's' : ''}. On continue ?`;
+    return `Bonjour ${prenom} ! On commence par quoi aujourd’hui ?`;
+  }
+  const bulle = moment?.texte ?? messageDuJour();
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: couleurs.creme }} edges={['top']}>
@@ -124,6 +131,12 @@ export default function Accueil() {
             {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
           </Text>
         </View>
+        <Pressable
+          onPress={() => router.push('/compagnon')}
+          accessibilityRole="button"
+          accessibilityLabel={`Série de ${etat.serie.actuelle} jour${etat.serie.actuelle > 1 ? 's' : ''}. Voir le profil de ${compagnon.nom}`}>
+          <BadgeSerie serie={etat.serie} />
+        </Pressable>
         <Pressable onPress={() => router.push('/compte/portefeuille')} accessibilityRole="button" accessibilityLabel="Mon portefeuille">
           <CompteurPieces pieces={etat.pieces} />
         </Pressable>
@@ -193,7 +206,7 @@ export default function Accueil() {
         </View>
 
         {rappel && (
-          <Pressable style={styles.rappel} onPress={() => router.push('/ziggy-plus')}>
+          <Pressable style={styles.rappel} onPress={() => router.push('/premium')}>
             <Ionicons name="time-outline" size={18} color={couleurs.brun} />
             <Text style={styles.rappelTexte}>{rappel}</Text>
           </Pressable>

@@ -1,7 +1,7 @@
 /**
- * ONBOARDING 6/6 — La ville où le compagnon va vivre (2 à la campagne, 2 en ville).
+ * ONBOARDING 6/7 — La ville où le compagnon va vivre.
  * Une ville devient choisissable dès que son illustration existe dans le registre.
- * Dernière étape : on arrive ensuite sur l'accueil.
+ * Ensuite : l'objectif de série (dernière étape).
  */
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
@@ -25,14 +25,13 @@ export default function VilleDepart() {
   const [choix, setChoix] = useState<VilleId>(etat.villeId ?? 'clairebourg');
   const nom = etat.compagnon?.nom ?? 'Ton compagnon';
 
-  function terminer() {
+  function continuer() {
     dispatch({ type: 'CHOISIR_VILLE', villeId: choix });
-    dispatch({ type: 'TERMINER_ONBOARDING' });
-    router.replace('/accueil');
+    router.push('/serie');
   }
 
   return (
-    <Ecran defilant bas={<Bouton titre="C’est parti !" onPress={terminer} />}>
+    <Ecran defilant bas={<Bouton titre="Continuer" onPress={continuer} />}>
       <EnteteEtape etape={6} />
       <Titre>Où veux-tu commencer ton aventure ?</Titre>
       <Texte>{nom} y vivra, visitera ses lieux et y cherchera son propre job, en même temps que toi.</Texte>

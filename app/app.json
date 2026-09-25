@@ -9,7 +9,8 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.pawstuler.app"
+      "bundleIdentifier": "com.pawstuler.app",
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
@@ -34,7 +35,9 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "expo-apple-authentication",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": false,

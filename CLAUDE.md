@@ -4,9 +4,10 @@
 
 - **Phase 0 (analyse et plan) : terminée et validée.** Stack choisie : **Expo (React Native)**, pour tester sur iPhone avec Expo Go, sans Mac.
 - **Maquette HTML** (`maquette/`) : première exploration visuelle, ne plus la faire évoluer. La référence est désormais l'app.
-- **App Expo** (`app/`) : application complète et fonctionnelle (données sur le téléphone) : démarrage, tâches, pièces, énergie, aventures, candidatures, Shop, ville, « J'ai décroché ! », aventure professionnelle, Compte, Ziggy+ (voir section 10).
+- **App Expo** (`app/`) : application complète et fonctionnelle (données sur le téléphone) : démarrage, tâches, pièces, énergie, aventures, candidatures, Shop, ville, « J'ai décroché ! », aventure professionnelle, Compte, Pawstuler Premium (voir section 10).
 - **Illustrations du Drive branchées** : les 4 compagnons (9 poses chacun), l'œuf propre à chaque animal (5 étapes), Clairebourg (lac pour l'accueil, centre-ville pour l'onglet ville) et Sunnyville (place à la fontaine).
-- Prochaines étapes : les animations Dimini, puis les vrais services (connexion, paiement App Store, notifications, compte en ligne).
+- **Ajouts récents** : connexion réelle prête à brancher (Supabase, voir `docs/connexion-et-abonnement.md`), écran d'abonnement **Pawstuler Premium**, objectif de série 🐾 à l'onboarding avec badge sur l'accueil, page de profil du compagnon.
+- Prochaines étapes : brancher les clés (connexion, RevenueCat), les animations Dimini, puis les vrais services (connexion, paiement App Store, notifications, compte en ligne).
 
 Avant tout gros changement : proposer un plan et attendre ma validation (section 8).
 
@@ -30,7 +31,7 @@ Cible : étudiants et jeunes actifs de 18 à 35 ans, en France. App entièrement
 2. **Aucune culpabilisation.** Le compagnon ne meurt jamais, ne tombe jamais malade et n'est jamais triste à cause de l'absence de l'utilisateur. Les séries (streaks) sont bienveillantes.
 3. **Confiance, pas surveillance.** L'utilisateur déclare lui-même ses tâches terminées. Il peut cocher, décocher (la récompense est alors reprise) et supprimer une tâche.
 4. **Les pièces se gagnent, elles ne s'achètent jamais** avec de l'argent.
-5. **La version gratuite est vraiment utile** : Ziggy+ enrichit l'expérience, il ne débloque pas l'essentiel.
+5. **La version gratuite est vraiment utile** : Pawstuler Premium enrichit l'expérience, il ne débloque pas l'essentiel.
 6. **Simplicité.** Si une fonctionnalité complique l'app sans servir la boucle principale, elle attend.
 
 ## 4. Les compagnons
@@ -52,7 +53,7 @@ Le crocodile remplace le chien pour avoir des silhouettes bien différentes. Le 
 ## 5. Le parcours et les fonctionnalités
 
 ### 5.1 Parcours complet
-Présentation → Connexion → Onboarding (prénom → objectif → choix de l'animal → œuf → naissance → prénom du compagnon → ville) → Accueil → Tâches → Récompenses → Pièces → Shop → Personnalisation → Candidatures → Progression → Aventures en ville → 🎉 J'ai décroché → 💼 Mon aventure professionnelle → Objectifs / progression → 🔎 Nouvelle recherche éventuelle.
+Présentation → Connexion → Onboarding (prénom → objectif → choix de l'animal → œuf → naissance → prénom du compagnon → ville → objectif de série) → Accueil → Tâches → Récompenses → Pièces → Shop → Personnalisation → Candidatures → Progression → Aventures en ville → 🎉 J'ai décroché → 💼 Mon aventure professionnelle → Objectifs / progression → 🔎 Nouvelle recherche éventuelle.
 
 **Navigation : 5 onglets** — Accueil · Candidatures · Shop · Clairebourg (la ville du compagnon) · Compte.
 
@@ -60,7 +61,11 @@ Présentation → Connexion → Onboarding (prénom → objectif → choix de l'
 Un seul écran court avant tout : l'animal, une phrase d'accroche, 4 points (tâches du jour, candidatures, pièces et personnalisation, compagnon qui vit et cherche avec toi).
 
 ### 5.3 Connexion
-Apple, Google, e-mail/mot de passe. Pour l'instant, chaque méthode crée un compte local sur le téléphone ; les vrais services se branchent dans `app/src/services/auth` sans toucher aux écrans.
+Apple, Google, e-mail/mot de passe (création de compte, connexion, mot de passe oublié). Les comptes sont gérés par **Supabase** (`app/src/services/auth`) :
+- **Mode réel** dès que les clés sont dans `app/.env` : Apple via la fenêtre native d'Apple, Google via la page de connexion Google sécurisée, e-mail via Supabase. Messages d'erreur simples en français.
+- **Mode démo** tant que les clés sont absentes : chaque méthode crée un compte local sur le téléphone (comme avant), avec la mention « Version de test ».
+- Déconnexion : ferme la session en ligne, les données restent sur le téléphone. Suppression du compte : en ligne (fonction serveur `supprimer-compte`) puis sur le téléphone.
+- **Ce qu'il reste à configurer de mon côté** (comptes Apple Developer, Supabase, Google Cloud, Expo, RevenueCat) : `docs/connexion-et-abonnement.md`. Apple et les achats ne se testent que dans une version construite avec EAS, pas dans Expo Go.
 
 ### 5.4 Onboarding
 1. **Prénom** : « Comment tu t'appelles ? »
@@ -68,10 +73,17 @@ Apple, Google, e-mail/mot de passe. Pour l'instant, chaque méthode crée un com
 3. **Choix de l'animal** parmi les 4, très visuel.
 4. **Œuf** : œuf intact → il tremble légèrement → première fissure → plusieurs fissures → il s'ouvre → l'animal apparaît → petite animation de bienvenue. L'utilisateur touche l'œuf pour avancer. Élément magique assumé, pour tous les animaux.
 5. **Prénom du compagnon** : son nom s'affiche en grand, « Comment veux-tu l'appeler ? », « Saisis son prénom », prérempli avec le nom proposé.
-6. **Ville** : « Où veux-tu commencer ton aventure ? », une carte par ville (voir 5.8), puis l'accueil.
+6. **Ville** : « Où veux-tu commencer ton aventure ? », une carte par ville (voir 5.8).
+7. **Objectif de série** 🐾 : « Ton petit objectif de série », au choix 2, 5 (par défaut), 7 ou 14 jours d'affilée. Ton bienveillant : « Chaque petite série compte », « Pas de pression : si tu fais une pause, ta série recommence simplement. Tu ne perds rien. » Puis l'accueil.
+
+### 5.4 bis Série de jours 🐾 (streak)
+- Un jour compte dès que l'utilisateur **ouvre l'app** (une fois par jour). Lendemain : +1 ; même jour : rien ne change ; après une pause : la série recommence à 1.
+- **Jamais de culpabilisation** : une pause ne fait rien perdre (pièces, objets, compagnon, meilleure série gardés). Au retour, le compagnon dit « Content de te revoir ! On repart ensemble, à ton rythme 🐾 ». Objectif atteint : « X jours d'affilée, objectif atteint ! Merci d'être là 🐾 ».
+- **Badge permanent** en haut de l'accueil, à gauche du compteur de pièces (🐾 + nombre de jours). Le toucher ouvre le profil du compagnon, où l'on peut changer d'objectif.
+- Réglages : `app/src/config/serie.ts`.
 
 ### 5.5 Accueil et tâches du jour
-L'accueil est simple : le compagnon dans sa ville, puis **« Tes tâches du jour »**, sans accumulation de widgets.
+L'accueil est simple : en haut, le badge de série 🐾 et le compteur de pièces ; puis le compagnon dans sa ville, puis **« Tes tâches du jour »**, sans accumulation de widgets.
 - Chaque matin, l'app propose ~5 tâches : relances à faire, tâches de démarrage jamais faites (CV, critères, LinkedIn), une tâche liée au contrat, puis des tâches variées. Plus tard, elles pourront être générées par l'IA.
 - L'utilisateur peut créer ses propres tâches (elles restent d'un jour à l'autre tant qu'elles ne sont pas faites).
 - Boucle : **tâche → validation → animation → pièces**.
@@ -79,7 +91,7 @@ L'accueil est simple : le compagnon dans sa ville, puis **« Tes tâches du jour
 ### 5.5 bis Énergie ⚡ et Aventure du jour
 - **L'énergie n'est pas une monnaie** : c'est la capacité du compagnon à vivre des moments dans la journée (ex. ⚡ 30/30).
 - Elle se dépense : câlin (5), jeu (10), **Aventure du jour** (20). Elle revient au maximum chaque matin, et chaque tâche terminée en redonne 3 (reprises si on décoche). Réglages dans `app/src/config/energie.ts`.
-- **Aventure du jour** : un court récit dans un lieu de la ville, en miroir du parcours de l'utilisateur, + 10 pièces. Gratuit : 1 par jour, puis « Nouvelle aventure demain ». Ziggy+ : jusqu'à 3 par jour.
+- **Aventure du jour** : un court récit dans un lieu de la ville, en miroir du parcours de l'utilisateur, + 10 pièces. Gratuit : 1 par jour, puis « Nouvelle aventure demain ». Premium : jusqu'à 3 par jour. Chaque premier passage dans un lieu l'ajoute à la « Découverte » du compagnon et lui offre un souvenir pour sa collection.
 
 ### 5.5 ter Pièces 🪙 (portefeuille)
 - Gagnées gratuitement avec les tâches (et les aventures, les objectifs pro, « J'ai décroché ! »). **Jamais remises à zéro** : elles s'accumulent.
@@ -97,7 +109,7 @@ Un vrai suivi de candidatures, mais simple et dans notre univers, jamais un gros
 - Après un refus, le compagnon envoie un message réconfortant : « Leur perte. On en envoie une autre ensemble ? 🐾 »
 
 ### 5.7 Shop
-Dans la navigation entre Candidatures et Clairebourg. Chapeaux, vêtements, accessoires, objets, achetés avec les pièces. Un premier objet est offert. Certains objets sont réservés à Ziggy+.
+Dans la navigation entre Candidatures et Clairebourg. Chapeaux, vêtements, accessoires, objets, achetés avec les pièces. Un premier objet est offert. Certains objets sont réservés à Pawstuler Premium.
 
 ### 5.8 Les villes
 2 villes :
@@ -107,12 +119,17 @@ L'architecture permet d'ajouter d'autres villes plus tard dans `app/src/config/v
 
 **Une ville n'est pas un fond d'écran.** Le compagnon doit pouvoir s'y déplacer, visiter des lieux, vivre des événements, rencontrer des personnages et progresser professionnellement, **en miroir de l'utilisateur** : l'utilisateur a un entretien → le compagnon aussi, dans un lieu de sa ville ; l'utilisateur décroche un poste → le compagnon aussi, avec une grande célébration.
 
-### 5.9 Ziggy+ (freemium)
+### 5.9 Pawstuler Premium (freemium)
+- **Nom affiché : « Pawstuler Premium »**, jamais lié au nom du compagnon (l'ancien nom « Ziggy+ » n'est plus utilisé).
 - **Gratuit** : onboarding, animal, ville, tâches du jour et tâches perso, candidatures, pièces, progression, boutique et personnalisation de base, premières recommandations.
-- **Ziggy+** : animations et interactions en plus, vêtements et événements exclusifs, plus de contenu en ville, personnalisation avancée, recommandations et analyses poussées, aide avancée CV/offres/entretiens.
-- **Essai gratuit de 7 jours**, puis **5,99 €/mois** ou **39,99 €/an**. Renouvellement automatique selon les conditions de l'App Store, sauf résiliation. Aucune formulation ambiguë.
-- Rappels dans l'app : « Ton essai Ziggy+ se termine dans 3 jours. », puis « … demain. »
-- Ne jamais présenter Ziggy+ comme « payer pour avoir le suivi de candidatures ».
+- **Premium** : animations et interactions en plus, vêtements et événements exclusifs, plus de contenu en ville, personnalisation avancée, recommandations et analyses poussées, aide avancée CV/offres/entretiens.
+- **Offre** :
+  - **Annuel : 39,99 €/an, avec 7 jours d'essai gratuit** (l'essai est réservé à l'annuel et proposé une seule fois).
+  - **Mensuel : 5,99 €/mois, sans essai gratuit** (payé dès la confirmation).
+- **Écran d'abonnement** (`app/src/app/premium.tsx`, s'ouvre depuis Compte, le Shop, les aventures et les rappels) : ce qui reste gratuit, ce que Premium ajoute, choix de la formule, frise de l'essai (aujourd'hui 0 € → rappel → date et montant du premier paiement), phrase complète sous le bouton (prix après l'essai, renouvellement automatique, résiliation au moins 24 h avant), mention légale App Store, liens « Restaurer mes achats », « Conditions d'utilisation », « Confidentialité ». Aucune formulation ambiguë.
+- Rappels dans l'app : « Ton essai Premium se termine dans 3 jours. Ensuite : 39,99 €/an, sauf résiliation. », puis « … demain. »
+- Paiement réel : App Store via **RevenueCat**, à brancher dans `app/src/services/abonnement.ts` (produits `pawstuler_premium_annuel` et `pawstuler_premium_mensuel`, entitlement `premium`). En attendant, l'achat est simulé.
+- Ne jamais présenter Premium comme « payer pour avoir le suivi de candidatures ».
 
 ### 5.10 🎉 « J'ai décroché ! » et 💼 Mon aventure professionnelle
 - Depuis une candidature (entretien ou offre) ou depuis l'onglet Candidatures : grande célébration, le compagnon décroche lui aussi un poste dans sa ville (+50 pièces).
@@ -122,7 +139,16 @@ L'architecture permet d'ajouter d'autres villes plus tard dans `app/src/config/v
 - **Retour à la recherche plus tard** : « Recommencer une recherche » ouvre un nouveau parcours ; l'historique (postes, candidatures), le compagnon et les pièces sont conservés.
 
 ### 5.11 Compte
-Une vraie section : Mon profil (prénom, compagnon, ville, contrat), Mon portefeuille, Mon parcours pro, Paramètres (notifications, rythme du compagnon), Confidentialité (données, RGPD, export), Abonnement Ziggy+, déconnexion (les données restent sur le téléphone) et suppression du compte.
+Une vraie section : Mon profil (prénom, compagnon, ville, contrat), Mon portefeuille, Mon parcours pro, Paramètres (notifications, rythme du compagnon), Confidentialité (données, RGPD, export), Abonnement Pawstuler Premium, **Profil du compagnon**, déconnexion (les données restent sur le téléphone) et suppression du compte.
+
+### 5.11 bis Profil du compagnon
+Une vraie page (`app/src/app/compagnon.tsx`), ouverte depuis le badge de série de l'accueil ou Compte › « Profil de [nom] » :
+- **Photo** du compagnon (pose « fier ») dans le décor de sa ville, **nom** en grand, espèce, **pronoms** s'ils sont choisis (Il / lui, Elle, Iel ; facultatifs, modifiables dans Compte › Profil ; les textes s'accordent), ville.
+- **Badge de série** + meilleure série + nombre d'aventures ; objectif de série modifiable.
+- Onglets **À propos** (présentation, depuis quand il vit en ville, recherche ou poste) / **Détails** (espèce, pronoms, date de naissance, ville, situation, collection) / **Traits** (traits de caractère, ce qu'il aime).
+- **Collection** en grille : objets du Shop possédés et **souvenirs d'aventure** (un par lieu de la ville, offert au premier passage) ; ce qui n'est pas encore obtenu apparaît en silhouette « ??? ».
+- **Découverte** : les lieux de la ville explorés en aventure (avec la date), les autres « Lieu à découvrir ».
+- Réglages : textes et traits dans `compagnons.ts`, souvenirs dans `villes.ts`.
 
 ### 5.12 Simulateur d'entretien (version future, ne pas développer maintenant)
 À partir d'une offre (entreprise, lien, description), l'IA mène un entretien vocal de 15 à 30 min, rebondit et donne un retour. Deux modes : **Ziggy** (rassurant, ludique) et **Recruteur** (réaliste, exigeant). Fonctionnalité premium, pensée à terme pour iPad et ordinateur. La forme des données est déjà prévue dans `app/src/services/futur/`.
@@ -186,11 +212,11 @@ Chaque tâche rapporte des **pièces** (valeurs ci-dessous, réglables dans `app
 9. 🦊 « Allez, on commence doucement : ajoute ta première candidature… ou juste une offre qui te plaît. »
 
 ## 10. Architecture technique (app/)
-- **Expo SDK 57, Expo Router, TypeScript.** Routes dans `app/src/app/` : `(demarrage)/` (présentation, connexion, onboarding), `(onglets)/` (accueil, candidatures, boutique = Shop, ville, compte), `candidature/[id]`, `compte/*` (profil, parametres, confidentialite, portefeuille), et les fenêtres `aventure`, `decroche`, `aventure-pro`, `nouvelle-candidature`, `ziggy-plus`.
-- **Réglages** dans `app/src/config/` : `theme`, `taches`, `energie`, `aventures`, `compagnons`, `villes`, `boutique`, `abonnement`, `candidatures`.
+- **Expo SDK 57, Expo Router, TypeScript.** Routes dans `app/src/app/` : `(demarrage)/` (présentation, connexion, onboarding), `(onglets)/` (accueil, candidatures, boutique = Shop, ville, compte), `candidature/[id]`, `compte/*` (profil, parametres, confidentialite, portefeuille), `compagnon` (profil du compagnon), et les fenêtres `aventure`, `decroche`, `aventure-pro`, `nouvelle-candidature`, `premium` (abonnement). L'onboarding se termine par `(demarrage)/serie`.
+- **Réglages** dans `app/src/config/` : `theme`, `taches`, `energie`, `aventures`, `compagnons`, `villes`, `boutique`, `abonnement`, `candidatures`, `serie`.
 - **Illustrations** : un seul registre, `app/src/illustrations/registre.ts`. Fichiers dans `app/assets/` : `compagnons/<animal>/<pose>.png` ; `oeufs/<animal>-1-intact.png`, `-2-fissure`, `-3-craquele`, `-eclosion`, `-ne` ; `villes/<ville>/portrait.jpg` (accueil), `paysage.jpg` (cartes) et `centre.jpg` (onglet ville, facultatif). Une image manquante affiche un visuel de secours. Les animations définitives (Lottie ou Rive) se brancheront dans `app/src/components/Compagnon.tsx`.
 - **Données** : un seul état (`app/src/store/`), sauvegardé sur le téléphone ; les anciennes sauvegardes sont migrées automatiquement. Logique métier dans `app/src/logique/` (tâches du jour, vie du compagnon, rythme, dates).
-- **Services** (`app/src/services/`) : connexion (bouchons à remplacer), abonnement (achat App Store à brancher), compte et RGPD (export, suppression), futur simulateur d'entretien.
+- **Services** (`app/src/services/`) : connexion (`auth/` : Supabase en mode réel, compte local en mode démo ; clés dans `app/.env`, modèle `app/.env.exemple`), abonnement (achat App Store via RevenueCat à brancher), compte et RGPD (export, suppression), futur simulateur d'entretien.
 - Avant de dire qu'une étape est terminée : `npx tsc --noEmit` et `npx eslint src` sans erreur, et parcours testé.
 
 ## 11. Décisions prises par Claude, à valider
@@ -198,10 +224,14 @@ Ces valeurs ne viennent pas de mes consignes : Claude les a choisies pour que l'
 - **Énergie** (`energie.ts`) : 30 max, câlin 5, jeu 10, Aventure du jour 20, +3 par tâche terminée, recharge complète chaque matin. Aucun document ne précise d'autres valeurs.
 - **Moments avec le compagnon** : « Câlin » et « Jouer » sont des propositions de Claude pour donner une utilité à l'énergie.
 - **Récompenses** : aventure +10 pièces, objectif pro atteint +15, « J'ai décroché ! » +50.
-- **Ziggy+** : 3 aventures par jour (contre 1 en gratuit).
-- **Shop** (`boutique.ts`) : la liste des objets et leurs prix (de 20 à 150 pièces), l'écharpe offerte, la couronne réservée à Ziggy+.
+- **Premium** : 3 aventures par jour (contre 1 en gratuit).
+- **Shop** (`boutique.ts`) : la liste des objets et leurs prix (de 20 à 150 pièces), l'écharpe offerte, la couronne réservée à Premium.
 - **Récits d'aventure** (`aventures.ts`) et **lieux de Sunnyville** : textes provisoires.
 - **Personnalité du crocodile** : « Grand cœur sous ses airs sérieux ».
+- **Série** (`serie.ts`) : un jour compte à l'ouverture de l'app ; objectifs proposés 2, 5, 7, 14 jours (5 par défaut) et leurs textes.
+- **Profil du compagnon** : les descriptions, traits et « ce qu'il aime » de chaque animal (`compagnons.ts`), les souvenirs de chaque lieu (`villes.ts`), les pronoms proposés (Il / lui, Elle, Iel).
+- **Connexion** : choix de Supabase (comptes + future sauvegarde en ligne, région Europe) et de RevenueCat pour l'abonnement.
 
 ## 12. Questions ouvertes
 Aucune question bloquante. À ajuster après tes premiers tests sur iPhone : les valeurs de la section 11.
+- **Plan « animal vivant »** (énergie 30/100 avec recharge toutes les 5 h / 3 h, animations câlin, jeu, baignade, repos, recherche de Milo, opportunités du jour, journal) : proposé, en attente de ta validation et des fichiers du Drive.

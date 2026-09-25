@@ -1,6 +1,7 @@
 /**
  * CONNEXION
- * Apple, Google ou e-mail. Les vrais services seront branchés dans src/services/auth.
+ * Apple, Google ou e-mail. Tout passe par src/services/auth :
+ * connexion réelle (Supabase) si les clés sont configurées, sinon mode démo local.
  */
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -10,7 +11,15 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Bouton, Champ, Ecran, Texte, Titre } from '@/components/base';
 import { Compagnon } from '@/components/Compagnon';
 import { couleurs, espace } from '@/config/theme';
-import { emailValide, fournisseurDisponible, seConnecter } from '@/services/auth';
+import {
+  authReelle,
+  emailValide,
+  ErreurConnexion,
+  fournisseurDisponible,
+  reinitialiserMotDePasse,
+  seConnecter,
+  type ModeConnexion,
+} from '@/services/auth';
 import { useApp } from '@/store/etat';
 import type { FournisseurAuth } from '@/store/types';
 
@@ -22,19 +31,38 @@ export default function Connexion() {
   const [email, setEmail] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
   const [erreur, setErreur] = useState('');
+  const [info, setInfo] = useState('');
+  // Création de compte, ou retour d'un utilisateur qui a déjà un compte
+  const [modeEmail, setModeEmail] = useState<ModeConnexion>(mode === 'retour' ? 'retour' : 'creation');
 
   async function connecter(f: FournisseurAuth) {
     setErreur('');
+    setInfo('');
     setEnCours(f);
     try {
-      const utilisateur = await seConnecter(f, f === 'email' ? { email, motDePasse } : undefined);
+      const utilisateur = await seConnecter(f, f === 'email' ? { email, motDePasse, mode: modeEmail } : undefined);
       dispatch({ type: 'CONNECTER', utilisateur });
       // Compte déjà configuré → accueil ; sinon on commence l'onboarding
       router.replace(etat.onboardingTermine ? '/accueil' : '/prenom');
-    } catch {
-      setErreur('La connexion n’a pas abouti. Vérifie ta connexion internet et réessaie.');
+    } catch (e) {
+      if (e instanceof ErreurConnexion) {
+        if (!e.annulee) setErreur(e.message);
+      } else {
+        setErreur('La connexion n’a pas abouti. Vérifie ta connexion internet et réessaie.');
+      }
     } finally {
       setEnCours(null);
+    }
+  }
+
+  async function motDePasseOublie() {
+    setErreur('');
+    if (!emailValide(email)) return setErreur('Saisis d’abord ton adresse e-mail.');
+    try {
+      await reinitialiserMotDePasse(email);
+      setInfo('C’est envoyé ! Regarde tes e-mails pour choisir un nouveau mot de passe.');
+    } catch (e) {
+      setErreur(e instanceof ErreurConnexion ? e.message : 'L’envoi n’a pas abouti. Réessaie.');
     }
   }
 
@@ -88,22 +116,31 @@ export default function Connexion() {
               onChangeText={setMotDePasse}
               placeholder="8 caractères minimum"
               secureTextEntry
-              autoComplete={mode === 'retour' ? 'current-password' : 'new-password'}
-              textContentType={mode === 'retour' ? 'password' : 'newPassword'}
+              autoComplete={modeEmail === 'retour' ? 'current-password' : 'new-password'}
+              textContentType={modeEmail === 'retour' ? 'password' : 'newPassword'}
             />
             <Bouton
-              titre={mode === 'retour' ? 'Me connecter' : 'Créer mon compte'}
+              titre={modeEmail === 'retour' ? 'Me connecter' : 'Créer mon compte'}
               desactive={!emailPret}
               chargement={enCours === 'email'}
               onPress={() => connecter('email')}
             />
+            <Bouton
+              titre={modeEmail === 'retour' ? 'Pas encore de compte ? En créer un' : 'Déjà un compte ? Me connecter'}
+              variante="texte"
+              onPress={() => setModeEmail(modeEmail === 'retour' ? 'creation' : 'retour')}
+            />
+            {modeEmail === 'retour' && authReelle() && (
+              <Bouton titre="Mot de passe oublié ?" variante="texte" onPress={motDePasseOublie} />
+            )}
           </View>
         )}
 
         {erreur ? <Text style={styles.erreur}>{erreur}</Text> : null}
+        {info ? <Text style={styles.info}>{info}</Text> : null}
       </View>
 
-      <Text style={styles.note}>Version de test : ton compte reste sur ce téléphone pour l’instant.</Text>
+      {!authReelle() && <Text style={styles.note}>Version de test : ton compte reste sur ce téléphone pour l’instant.</Text>}
     </Ecran>
   );
 }
@@ -112,5 +149,6 @@ const styles = StyleSheet.create({
   haut: { alignItems: 'center', gap: espace.s, paddingTop: espace.l, paddingBottom: espace.s },
   email: { gap: espace.m, paddingTop: espace.s },
   erreur: { color: couleurs.danger, fontWeight: '600', textAlign: 'center' },
+  info: { color: couleurs.saugeFonce, fontWeight: '700', textAlign: 'center' },
   note: { fontSize: 12, color: couleurs.brunDoux, textAlign: 'center' },
 });

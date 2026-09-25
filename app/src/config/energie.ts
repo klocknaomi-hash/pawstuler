@@ -22,7 +22,7 @@ export const COUT = {
 } as const;
 
 /** Nombre d'aventures possibles par jour. */
-export const AVENTURES_PAR_JOUR = { gratuit: 1, ziggyPlus: 3 } as const;
+export const AVENTURES_PAR_JOUR = { gratuit: 1, premium: 3 } as const;
 
 /** Pièces gagnées au retour d'une aventure. */
 export const PIECES_AVENTURE = 10;
