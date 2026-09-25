@@ -1,0 +1,64 @@
+/**
+ * LES VILLES
+ * Une ville n'est pas un simple fond d'écran : c'est l'univers où le compagnon vit,
+ * se déplace, visite des lieux et avance dans sa propre carrière.
+ * Les images sont déclarées dans src/assets/registre.ts.
+ */
+
+export type VilleId = 'clairebourg' | 'sunnyville';
+export type Ambiance = 'campagne' | 'urbaine';
+
+/** Un lieu de la ville : un endroit où le compagnon peut aller, et parfois postuler. */
+export type Lieu = {
+  id: string;
+  nom: string;
+  metier?: string; // le poste que le compagnon peut y viser
+};
+
+export type Ville = {
+  id: VilleId;
+  nom: string;
+  ambiance: Ambiance;
+  accroche: string;
+  couleur: string; // couleur de la carte tant que l'illustration manque
+  lieux: Lieu[];
+  /** Nom définitif choisi (sinon nom provisoire, à confirmer). */
+  nomDefinitif?: boolean;
+};
+
+export const VILLES: Ville[] = [
+  {
+    id: 'clairebourg',
+    nom: 'Clairebourg',
+    nomDefinitif: true,
+    ambiance: 'campagne',
+    accroche: 'Une petite ville française, son lac, ses chemins fleuris et ses commerces.',
+    couleur: '#A9C68E',
+    lieux: [
+      { id: 'boulangerie', nom: 'Boulangerie Mercier', metier: 'Apprenti boulanger' },
+      { id: 'librairie', nom: 'Librairie des Tilleuls', metier: 'Libraire junior' },
+      { id: 'studio', nom: 'Studio Hibou', metier: 'Aide photographe' },
+      { id: 'agence', nom: 'Agence Tamaris', metier: 'Assistant de voyage' },
+      { id: 'cafe', nom: 'Café du Lac', metier: 'Barista' },
+      { id: 'parc', nom: 'Le parc et son ponton' },
+    ],
+  },
+  {
+    id: 'sunnyville',
+    nom: 'Sunnyville',
+    nomDefinitif: true,
+    ambiance: 'urbaine',
+    accroche: 'La grande ville : ses rues animées, ses bureaux et ses transports.',
+    couleur: '#8EC5D6',
+    // Lieux provisoires, à affiner avec les illustrations de la ville
+    lieux: [
+      { id: 'bureaux', nom: 'Les bureaux du centre', metier: 'Assistant de projet' },
+      { id: 'startup', nom: 'Start-up Pixel', metier: 'Designer junior' },
+      { id: 'agence-com', nom: 'Agence de communication', metier: 'Chargé de communication' },
+      { id: 'cafe-metro', nom: 'Le café du métro', metier: 'Barista' },
+      { id: 'parc-urbain', nom: 'Le parc urbain' },
+    ],
+  },
+];
+
+export const villeParId = (id: VilleId) => VILLES.find((v) => v.id === id) ?? VILLES[0];

@@ -1,116 +1,166 @@
 # Pawstuler — Directive projet pour Claude Code
 
-## 0. PHASE 0 : ANALYSE ET PLANIFICATION (avant tout code)
+## 0. OÙ EN EST LE PROJET
 
-**I want to build the same features as the Finch: Self-Care Pet app, as an iOS app, adapted to job and apprenticeship search. Can you break down the features and the screens that I need to build? I want to plan this out before we build anything.**
+- **Phase 0 (analyse et plan) : terminée et validée.** Stack choisie : **Expo (React Native)**, pour tester sur iPhone avec Expo Go, sans Mac.
+- **Maquette HTML** (`maquette/`) : première exploration visuelle, ne plus la faire évoluer. La référence est désormais l'app.
+- **App Expo** (`app/`) : application complète et fonctionnelle (données sur le téléphone) : démarrage, tâches, pièces, énergie, aventures, candidatures, Shop, ville, « J'ai décroché ! », aventure professionnelle, Compte, Ziggy+ (voir section 10).
+- Prochaines étapes : brancher les illustrations et animations Dimini, puis les vrais services (connexion, paiement App Store, notifications, compte en ligne).
 
-Concrètement, avant d'écrire la moindre ligne de code :
+Avant tout gros changement : proposer un plan et attendre ma validation (section 8).
 
-1. **Décompose l'appli Finch** : liste toutes ses fonctionnalités et tous ses écrans, de l'onboarding aux réglages.
-2. **Pour chaque fonctionnalité de Finch**, indique si on la **garde**, l'**adapte** à la recherche d'emploi ou la **supprime**, en t'appuyant sur les sections 1 à 9 ci-dessous.
-3. **Liste les écrans de Pawstuler** : nom, rôle, contenu principal et navigation entre écrans (une arborescence simple).
-4. **Recommande la stack technique iOS** : compare au moins Expo (React Native) et SwiftUI natif.
-5. **Propose un découpage en étapes** (V1 puis V2), avec une appli qui fonctionne à la fin de chaque étape.
-6. **Attends ma validation** avant de coder quoi que ce soit.
+**Où se trouve le travail :** tout est sur la branche `claude/youthful-hopper-ls2cpi`. La branche `main` contient encore la toute première version de ce fichier, tant que la branche n'y est pas fusionnée.
 
 ---
 
 ## 1. Le projet en une phrase
-Pawstuler, c'est **Finch pour la recherche d'emploi et d'alternance** : une app iOS qui combine un tableau de suivi de candidatures et un petit compagnon animal qui gagne de l'énergie et part en aventure quand l'utilisateur avance dans sa recherche.
+Pawstuler, c'est **Finch pour la recherche d'emploi** : une app iOS où l'on suit ses candidatures et accomplit des tâches du jour, accompagné d'un petit compagnon animal qui vit dans sa propre ville et cherche, lui aussi, son job.
+
+Ce n'est pas une app de candidatures avec un animal ajouté par-dessus : compagnon, tâches, candidatures, récompenses, ville et progression forment **un seul écosystème**.
+Message clé : **« Tu n'as pas à gérer ta recherche d'emploi seul. Ton compagnon avance avec toi. »**
 
 ## 2. Pourquoi
-Chercher un emploi ou une alternance est long, solitaire et démotivant. Les gens suivent leurs candidatures dans des tableaux Excel froids. Pawstuler rend ce suivi beau, simple et motivant, et accompagne émotionnellement l'utilisateur face aux refus.
+Chercher un emploi est long, solitaire et démotivant. Les gens suivent leurs candidatures dans des tableaux Excel froids. Pawstuler rend ce suivi beau, simple et motivant, et accompagne émotionnellement l'utilisateur face aux refus.
 
-Cible : étudiants et jeunes actifs de 18 à 35 ans, en France. App entièrement en français, avec tutoiement.
+Cible : étudiants et jeunes actifs de 18 à 35 ans, en France. App entièrement en français, avec tutoiement. Ton positif, rassurant, motivant et moderne, jamais « outil RH froid ».
 
 ## 3. Principes non négociables
-1. **On récompense l'effort, jamais le résultat.** Un refus ne fait jamais perdre d'énergie ni de progression. Enregistrer un refus rapporte même de l'énergie et un badge « courage ».
-2. **Aucune culpabilisation.** Le compagnon ne meurt jamais, ne tombe jamais malade et n'est jamais triste à cause de l'absence de l'utilisateur. Les streaks sont bienveillants.
-3. **Plafonds quotidiens.** Certaines tâches ont un plafond d'énergie par jour, pour encourager la régularité et non le spam (voir section 6).
-4. **Simplicité.** Si une fonctionnalité complique l'app sans servir la boucle principale, elle attend la V2.
+1. **On récompense l'effort, jamais le résultat.** Un refus ne fait jamais rien perdre.
+2. **Aucune culpabilisation.** Le compagnon ne meurt jamais, ne tombe jamais malade et n'est jamais triste à cause de l'absence de l'utilisateur. Les séries (streaks) sont bienveillantes.
+3. **Confiance, pas surveillance.** L'utilisateur déclare lui-même ses tâches terminées. Il peut cocher, décocher (la récompense est alors reprise) et supprimer une tâche.
+4. **Les pièces se gagnent, elles ne s'achètent jamais** avec de l'argent.
+5. **La version gratuite est vraiment utile** : Ziggy+ enrichit l'expérience, il ne débloque pas l'essentiel.
+6. **Simplicité.** Si une fonctionnalité complique l'app sans servir la boucle principale, elle attend.
 
 ## 4. Les compagnons
-L'utilisateur choisit un compagnon parmi cinq. Chacun arrive avec un nom proposé, que l'utilisateur peut **garder ou changer** à l'onboarding, puis à tout moment dans les réglages.
+L'utilisateur choisit **un compagnon parmi 4**. Chacun a ses illustrations, ses animations, ses réactions, un nom proposé (modifiable à l'onboarding puis dans les réglages) et pourra être personnalisé.
 
 | Animal | Nom proposé | Personnalité |
 |---|---|---|
 | 🦊 Renard | **Ziggy** | Curieux et débrouillard, un peu perdu au début mais plein de ressources |
 | 🐱 Chat | **Mochi** | Calme, observateur, un brin perfectionniste |
-| 🐶 Chien | **Waffle** | Enthousiaste et loyal, ton meilleur supporter |
-| 🦦 Loutre | **Kiwi** | Sociable, elle connaît tout le monde en ville |
-| 🐰 Lapin | **Nugget** | Un peu stressé mais courageux |
+| 🐊 Crocodile | **Milo** | Grand cœur sous ses airs sérieux *(personnalité proposée par Claude)* |
+| 🐰 Lapin | **Nala** | Un peu stressé mais courageux |
 
-## 5. Fonctionnalités principales
+Le crocodile remplace le chien pour avoir des silhouettes bien différentes. Le renard Ziggy reste le personnage de référence ; l'utilisateur choisit l'un des quatre et lui donne le prénom qu'il veut.
 
-### 5.1 Onboarding
-- Scène d'arrivée du compagnon, à la manière de Finch (voir section 9 pour le script du renard). Les autres animaux suivent la même structure, avec des répliques adaptées à leur personnalité.
-- Choix du profil : **Emploi** ou **Alternance**. Ce choix ajoute des tâches spécifiques (voir section 6), le reste du parcours est identique.
-- Prénom de l'utilisateur et nom du compagnon (modifiable).
-- Critères optionnels : poste recherché, ville, et pour l'alternance le rythme et la date de rentrée.
+**Poses de chaque compagnon** (une image chacune, remplacées plus tard par des animations) : salut, neutre, content, excité, dort, réconfort, fier, aventure, célébration.
 
-### 5.2 Tableau de candidatures
-Une fiche par candidature, avec les champs suivants :
-- Entreprise, intitulé du poste, lien de l'annonce, date d'envoi
-- Type : candidature sur offre ou spontanée
-- Statuts (oui/non) : **Candidature envoyée**, **Relance faite**, **Entretien obtenu**
-- **Réponse** : En attente / Refus / Décroché !
-- **Note** libre : ce qui s'est dit en entretien, nom du recruteur, ressenti
+**Il est toujours vivant** : il respire, se promène dans sa ville et réagit dès qu'une tâche est cochée. **Il vit à son rythme** : heure de réveil et de coucher réglables dans Compte › Paramètres (8 h – 22 h par défaut) ; en dehors, il dort (on peut quand même avancer, il découvre les progrès au réveil).
 
-Le tableau doit être beau et lisible, comme les tableaux de suivi qu'on voit sur TikTok, mais en plus agréable. Il faut pouvoir filtrer par statut.
+## 5. Le parcours et les fonctionnalités
 
-Relance : un rappel est proposé automatiquement à J+7 après l'envoi s'il n'y a pas de réponse (notification locale).
+### 5.1 Parcours complet
+Présentation → Connexion → Onboarding (prénom → objectif → choix de l'animal → œuf → naissance → prénom du compagnon → ville) → Accueil → Tâches → Récompenses → Pièces → Shop → Personnalisation → Candidatures → Progression → Aventures en ville → 🎉 J'ai décroché → 💼 Mon aventure professionnelle → Objectifs / progression → 🔎 Nouvelle recherche éventuelle.
 
-### 5.3 Tâches du jour et énergie
-L'utilisateur coche des tâches, et chacune rapporte de l'énergie. Quand la jauge du jour atteint **30 points**, le compagnon part en aventure.
+**Navigation : 5 onglets** — Accueil · Candidatures · Shop · Clairebourg (la ville du compagnon) · Compte.
 
-Quand l'utilisateur met à jour une candidature dans le tableau (envoi, relance, entretien, réponse), la tâche correspondante est validée automatiquement et l'énergie est attribuée. Pas de double saisie.
+### 5.2 Présentation
+Un seul écran court avant tout : l'animal, une phrase d'accroche, 4 points (tâches du jour, candidatures, pièces et personnalisation, compagnon qui vit et cherche avec toi).
 
-### 5.4 Le compagnon et les aventures
-- Le compagnon vit dans une **petite ville cosy, Clairbourg** (nom provisoire), et **il cherche lui aussi son job** : il postule dans une boutique, une agence, une boulangerie, un studio… Son histoire est le miroir de celle de l'utilisateur.
-- Une aventure = un court récit (2 ou 3 phrases) de sa journée dans la ville, avec une récompense aléatoire : un accessoire ou une tenue.
-- Accessoires thématiques : mini-tenue d'entretien, cravate, sac à dos d'alternant, lunettes, badge d'entreprise…
-- Quand l'utilisateur passe une réponse en **« Décroché ! »**, le compagnon décroche aussi son job, avec une grande animation de célébration.
-- Après un refus, le compagnon envoie un message réconfortant, par exemple : « Leur perte. On en envoie une autre ensemble ? 🐾 »
+### 5.3 Connexion
+Apple, Google, e-mail/mot de passe. Pour l'instant, chaque méthode crée un compte local sur le téléphone ; les vrais services se branchent dans `app/src/services/auth` sans toucher aux écrans.
 
-## 6. Tâches et énergie
+### 5.4 Onboarding
+1. **Prénom** : « Comment tu t'appelles ? »
+2. **Objectif** : Emploi, puis type de contrat facultatif et multiple (CDI, CDD, Stage, Alternance, Freelance). Sert à personnaliser les tâches.
+3. **Choix de l'animal** parmi les 4, très visuel.
+4. **Œuf** : œuf intact → il tremble légèrement → première fissure → plusieurs fissures → il s'ouvre → l'animal apparaît → petite animation de bienvenue. L'utilisateur touche l'œuf pour avancer. Élément magique assumé, pour tous les animaux.
+5. **Prénom du compagnon** : son nom s'affiche en grand, « Comment veux-tu l'appeler ? », « Saisis son prénom », prérempli avec le nom proposé.
+6. **Ville** : « Où veux-tu commencer ton aventure ? », une carte par ville (voir 5.8), puis l'accueil.
 
-| Étape | Tâche | Énergie | Plafond/jour |
-|---|---|---|---|
-| Se préparer | Mettre à jour mon CV | +10 | 1 |
-| | Rédiger ou adapter ma lettre de motivation | +10 | 2 |
-| | Mettre à jour mon profil LinkedIn | +10 | 1 |
-| | Définir mes critères (poste, ville, rythme) | +5 | 1 |
-| Chercher | Faire 20 min de recherche d'offres | +5 | 2 |
-| | Sauvegarder une offre intéressante | +2 | 5 |
-| | Repérer une entreprise cible (sans offre) | +5 | 3 |
-| Candidater | Envoyer une candidature | +10 | 5 |
-| | Envoyer une candidature spontanée | +15 | 3 |
-| | Adapter mon CV à une offre précise | +5 | 3 |
-| Relancer | Relancer une entreprise | +10 | 5 |
-| Réseau | Écrire à un contact, ancien élève ou recruteur | +10 | 3 |
-| | Aller à un salon ou un job dating | +20 | 1 |
-| Entretien | Décrocher un entretien 🎉 | +20 | aucun |
-| | Préparer mon entretien | +15 | aucun |
-| | Passer l'entretien | +25 | aucun |
-| | Envoyer un mail de remerciement | +5 | aucun |
-| | Noter mon debrief | +5 | aucun |
-| Réponse | Enregistrer un refus (+ badge courage) | +10 | aucun |
-| | Décrocher le poste | Célébration spéciale | — |
-| Moral | Faire une pause / sortir prendre l'air / fêter une petite victoire | +3 chacune | 3 au total |
+### 5.5 Accueil et tâches du jour
+L'accueil est simple : le compagnon dans sa ville, puis **« Tes tâches du jour »**, sans accumulation de widgets.
+- Chaque matin, l'app propose ~5 tâches : relances à faire, tâches de démarrage jamais faites (CV, critères, LinkedIn), une tâche liée au contrat, puis des tâches variées. Plus tard, elles pourront être générées par l'IA.
+- L'utilisateur peut créer ses propres tâches (elles restent d'un jour à l'autre tant qu'elles ne sont pas faites).
+- Boucle : **tâche → validation → animation → pièces**.
 
-**Tâches supplémentaires si profil Alternance :**
-- Vérifier le calendrier et le rythme de l'école : +5 (1/jour)
-- Demander de l'aide au service relations entreprises de l'école : +10 (1/jour)
-- Envoyer les documents du contrat à l'école : +15 (une fois l'alternance trouvée)
+### 5.5 bis Énergie ⚡ et Aventure du jour
+- **L'énergie n'est pas une monnaie** : c'est la capacité du compagnon à vivre des moments dans la journée (ex. ⚡ 30/30).
+- Elle se dépense : câlin (5), jeu (10), **Aventure du jour** (20). Elle revient au maximum chaque matin, et chaque tâche terminée en redonne 3 (reprises si on décoche). Réglages dans `app/src/config/energie.ts`.
+- **Aventure du jour** : un court récit dans un lieu de la ville, en miroir du parcours de l'utilisateur, + 10 pièces. Gratuit : 1 par jour, puis « Nouvelle aventure demain ». Ziggy+ : jusqu'à 3 par jour.
 
-Toutes ces valeurs doivent être centralisées dans **un seul fichier de configuration**, pour pouvoir les ajuster facilement.
+### 5.5 ter Pièces 🪙 (portefeuille)
+- Gagnées gratuitement avec les tâches (et les aventures, les objectifs pro, « J'ai décroché ! »). **Jamais remises à zéro** : elles s'accumulent.
+- **Plafond : 50 pièces gagnées par jour** (tâches, aventures, objectifs). Au-delà, les tâches se cochent toujours, sans pièce en plus, avec un message bienveillant. Le compteur « x/50 aujourd'hui » est affiché sur l'accueil. Le bonus « J'ai décroché ! » n'est pas plafonné.
+- Dépensées dans le Shop : le solde est **réellement débité** (confirmation avec solde avant / après).
+- **Un seul solde**, identique partout (accueil, Shop, Compte › Portefeuille avec l'historique des gains et dépenses).
 
-## 7. Univers visuel (provisoire)
-Le visuel définitif sera travaillé plus tard, en partant du personnage lui-même (voir la demande de la V2 ci-dessous). En attendant, comme point de départ :
-- Style **kawaii mais pas enfantin**, formes rondes, ambiance cosy.
-- Palette de base : pastels chauds (crème, pêche, sauge) + **une couleur d'accent vive (corail) réservée aux victoires** (entretien obtenu, poste décroché). Cette palette est un point de départ, à ajuster une fois le style du compagnon défini.
-- Typographie arrondie et lisible.
-- Toutes les couleurs, polices et espacements doivent être centralisés dans un fichier de thème, pour pouvoir changer l'identité visuelle sans toucher au reste.
+### 5.6 Candidatures
+Un vrai suivi de candidatures, mais simple et dans notre univers, jamais un gros tableau Excel.
+- Fiche : entreprise, poste, lien, contact, date d'envoi, statut, note.
+- Statuts : À envoyer → Envoyée → Relancée → Entretien → Offre reçue, ou Refus.
+- Recherche rapide, filtres par statut, compteurs (envoyées, entretiens, à relancer).
+- **Liées aux tâches** : relance proposée 7 jours après l'envoi sans réponse ; enregistrer une candidature envoyée ou une relance coche automatiquement la tâche correspondante (pas de double saisie).
+- Fiche détaillée : statut, date d'entretien, note, **historique** des statuts, archivage (jamais de suppression automatique).
+- Après un refus, le compagnon envoie un message réconfortant : « Leur perte. On en envoie une autre ensemble ? 🐾 »
+
+### 5.7 Shop
+Dans la navigation entre Candidatures et Clairebourg. Chapeaux, vêtements, accessoires, objets, achetés avec les pièces. Un premier objet est offert. Certains objets sont réservés à Ziggy+.
+
+### 5.8 Les villes
+2 villes :
+- **Clairebourg** (campagne, nom écrit exactement ainsi) : petite ville française fictive, illustrée — boulangerie, librairie, studio, agence, café, parc.
+- **Sunnyville** (grande ville) : immeubles, bureaux, commerces, transports. Elle s'affiche « Bientôt » tant que son illustration n'existe pas ; ses lieux actuels (bureaux, start-up, agence de com, café du métro, parc) sont provisoires.
+L'architecture permet d'ajouter d'autres villes plus tard dans `app/src/config/villes.ts`.
+
+**Une ville n'est pas un fond d'écran.** Le compagnon doit pouvoir s'y déplacer, visiter des lieux, vivre des événements, rencontrer des personnages et progresser professionnellement, **en miroir de l'utilisateur** : l'utilisateur a un entretien → le compagnon aussi, dans un lieu de sa ville ; l'utilisateur décroche un poste → le compagnon aussi, avec une grande célébration.
+
+### 5.9 Ziggy+ (freemium)
+- **Gratuit** : onboarding, animal, ville, tâches du jour et tâches perso, candidatures, pièces, progression, boutique et personnalisation de base, premières recommandations.
+- **Ziggy+** : animations et interactions en plus, vêtements et événements exclusifs, plus de contenu en ville, personnalisation avancée, recommandations et analyses poussées, aide avancée CV/offres/entretiens.
+- **Essai gratuit de 7 jours**, puis **5,99 €/mois** ou **39,99 €/an**. Renouvellement automatique selon les conditions de l'App Store, sauf résiliation. Aucune formulation ambiguë.
+- Rappels dans l'app : « Ton essai Ziggy+ se termine dans 3 jours. », puis « … demain. »
+- Ne jamais présenter Ziggy+ comme « payer pour avoir le suivi de candidatures ».
+
+### 5.10 🎉 « J'ai décroché ! » et 💼 Mon aventure professionnelle
+- Depuis une candidature (entretien ou offre) ou depuis l'onglet Candidatures : grande célébration, le compagnon décroche lui aussi un poste dans sa ville (+50 pièces).
+- **L'app n'est pas terminée : un nouveau chapitre commence.** Aucune candidature n'est supprimée ; l'utilisateur choisit de les garder telles quelles ou de les archiver.
+- **Mon aventure professionnelle** : 🏢 entreprise, 💼 poste, 📅 premier jour, 🎯 objectifs personnels (ajout libre, +15 pièces quand atteints), 📈 progression.
+- **Les tâches changent de contexte** (même moteur) : préparer son premier jour, objectifs du premier mois, découvrir son environnement, bilan de la première semaine, compétence à développer, point sur sa progression…
+- **Retour à la recherche plus tard** : « Recommencer une recherche » ouvre un nouveau parcours ; l'historique (postes, candidatures), le compagnon et les pièces sont conservés.
+
+### 5.11 Compte
+Une vraie section : Mon profil (prénom, compagnon, ville, contrat), Mon portefeuille, Mon parcours pro, Paramètres (notifications, rythme du compagnon), Confidentialité (données, RGPD, export), Abonnement Ziggy+, déconnexion (les données restent sur le téléphone) et suppression du compte.
+
+### 5.12 Simulateur d'entretien (version future, ne pas développer maintenant)
+À partir d'une offre (entreprise, lien, description), l'IA mène un entretien vocal de 15 à 30 min, rebondit et donne un retour. Deux modes : **Ziggy** (rassurant, ludique) et **Recruteur** (réaliste, exigeant). Fonctionnalité premium, pensée à terme pour iPad et ordinateur. La forme des données est déjà prévue dans `app/src/services/futur/`.
+
+## 6. Tâches et pièces
+Chaque tâche rapporte des **pièces** (valeurs ci-dessous, réglables dans `app/src/config/taches.ts`, un seul fichier).
+
+| Catégorie | Tâche | Pièces |
+|---|---|---|
+| Se préparer | Mettre à jour ton CV | 10 |
+| | Définir tes critères de recherche | 5 |
+| | Mettre à jour ton profil LinkedIn | 10 |
+| | Adapter ta lettre de motivation | 10 |
+| Chercher | Faire 20 min de recherche d'offres | 5 |
+| | Sauvegarder une offre intéressante | 2 |
+| | Repérer une entreprise qui te plaît | 5 |
+| Candidater | Envoyer une candidature | 10 |
+| | Envoyer 5 candidatures | 40 |
+| | Envoyer une candidature spontanée | 15 |
+| Relancer | Relancer une candidature (7 jours après l'envoi) | 10 |
+| Réseau | Ajouter un contact | 5 |
+| | Appeler un recruteur | 15 |
+| | Écrire à un ancien élève | 10 |
+| Entretien | Préparer ton entretien | 15 |
+| | Envoyer un mail de remerciement | 5 |
+| Moral | Faire une vraie pause | 3 |
+| Tâche perso | Créée par l'utilisateur | 5 |
+
+**Plafond : 50 pièces gagnées par jour** (voir 5.5 ter).
+
+**Après « J'ai décroché ! » (contexte pro) :** préparer ton premier jour (10), définir tes objectifs du premier mois (10), découvrir ton nouvel environnement (5), prendre un café avec un collègue (5), préparer une présentation (15), bilan de ta première semaine (10), choisir une compétence à développer (10), faire le point sur ta progression (10). Objectif pro atteint : 15.
+
+**Selon le contrat recherché :** Alternance → vérifier le rythme de l'école (5) ; Alternance ou Stage → contacter le service relations entreprises (10) ; Freelance → mettre à jour son portfolio (10).
+
+## 7. Univers visuel
+- Style **kawaii mais pas enfantin**, formes rondes, ambiance cosy, typographie arrondie (SF Pro Rounded).
+- **Palette tirée de Ziggy et de Clairebourg** : crème (fond), saumon du pelage (couleur de marque), brun du contour (texte), sauge, bleu du lac, or pour les pièces. **Corail vif réservé aux grandes victoires** (entretien, poste décroché).
+- Toutes les couleurs, polices et espacements sont dans `app/src/config/theme.ts`.
+- **Illustrations** : créées avec Dimini (et ChatGPT/Gemini pour les premières). Ce sont la source principale : ne jamais les remplacer par des illustrations génériques quand les fichiers existent. Fond transparent, sans contour blanc.
 
 ## 8. Comment travailler avec moi
 - Je ne suis pas développeuse professionnelle : **explique simplement** ce que tu fais et pourquoi, sans jargon inutile.
@@ -118,27 +168,39 @@ Le visuel définitif sera travaillé plus tard, en partant du personnage lui-mê
 - Avance **étape par étape**, avec une app qui fonctionne à la fin de chaque étape.
 - À la fin de chaque étape, dis-moi **comment tester** sur mon iPhone.
 - Pose-moi une question si un choix produit n'est pas couvert par ce fichier, au lieu de deviner.
-- Code propre et commenté, composants réutilisables.
+- Code propre et commenté (en français), composants réutilisables.
+- Ma maquette et mes références donnent une direction, pas une version définitive : garde ce qui marche, adapte pour que le parcours soit cohérent et fonctionnel.
 
-## 9. Script d'onboarding : le renard (Ziggy)
-Scène sous forme de bulles de dialogue, un écran à la fois, avec des boutons de réponse.
+## 9. Script d'onboarding de Ziggy (répliques)
+À utiliser comme bulles de dialogue pendant l'onboarding (pas encore intégré). Les autres animaux suivent la même structure, avec des répliques adaptées à leur personnalité.
 
-1. *(Un petit train arrive en gare de Clairbourg. Un renardeau descend avec une valise trop grande pour lui.)*
-   🦊 « Oh ! Bonjour ! Pardon, je suis un peu perdu… C'est bien ici, Clairbourg ? La ville où on trouve son premier vrai job ? »
-   → *Oui, bienvenue !* / *On va le découvrir ensemble*
+1. *(Un petit train arrive en gare de Clairebourg. Un renardeau descend avec une valise trop grande pour lui.)* 🦊 « Oh ! Bonjour ! Pardon, je suis un peu perdu… C'est bien ici, Clairebourg ? La ville où on trouve son premier vrai job ? »
 2. 🦊 « Ouf ! Moi, c'est Ziggy. Enfin… c'est comme ça qu'on m'appelle. Si tu préfères un autre nom, je suis preneur ! »
-   → *Champ de texte prérempli avec « Ziggy »*
 3. 🦊 « Et toi, comment tu t'appelles ? »
-   → *Champ prénom*
 4. 🦊 « Enchanté, [prénom] ! Moi, je suis venu ici pour trouver ma place. Et toi, tu cherches quoi ? »
-   → *Un emploi* / *Une alternance*
-5. Réponse adaptée :
-   - Alternance : 🦊 « Une alternance ?! Comme moi ! On va pouvoir réviser nos CV ensemble. »
-   - Emploi : 🦊 « Un emploi ! Alors on est deux à chercher. Ça tombe bien, je n'aime pas chercher tout seul. »
-6. 🦊 « Je vais te dire un secret… chercher tout seul, ça me fait un peu peur. Mais à deux, c'est différent. »
-7. 🦊 « Voilà comment ça marche : chaque fois que tu avances, une candidature, une relance, un entretien, tu me donnes de l'énergie. Et avec cette énergie, je pars explorer Clairbourg et postuler de mon côté ! »
-8. 🦊 « Et les refus ? Pas de panique. Chaque "non" compte aussi. Ça veut dire qu'on a osé. »
-9. 🦊 « Le jour où tu décroches ton poste… moi aussi, je décroche le mien. Promis ? »
-   → *Promis ! 🐾*
-10. 🦊 « Allez, on commence doucement : ajoute ta première candidature… ou juste une offre qui te plaît. »
-    → *Ouverture du tableau de candidatures*
+5. 🦊 « Je vais te dire un secret… chercher tout seul, ça me fait un peu peur. Mais à deux, c'est différent. »
+6. 🦊 « Chaque fois que tu avances, une candidature, une relance, un entretien, je le sens. Et moi aussi, je pars postuler de mon côté ! »
+7. 🦊 « Et les refus ? Pas de panique. Chaque "non" compte aussi. Ça veut dire qu'on a osé. »
+8. 🦊 « Le jour où tu décroches ton poste… moi aussi, je décroche le mien. Promis ? » → *Promis ! 🐾*
+9. 🦊 « Allez, on commence doucement : ajoute ta première candidature… ou juste une offre qui te plaît. »
+
+## 10. Architecture technique (app/)
+- **Expo SDK 57, Expo Router, TypeScript.** Routes dans `app/src/app/` : `(demarrage)/` (présentation, connexion, onboarding), `(onglets)/` (accueil, candidatures, boutique = Shop, ville, compte), `candidature/[id]`, `compte/*` (profil, parametres, confidentialite, portefeuille), et les fenêtres `aventure`, `decroche`, `aventure-pro`, `nouvelle-candidature`, `ziggy-plus`.
+- **Réglages** dans `app/src/config/` : `theme`, `taches`, `energie`, `aventures`, `compagnons`, `villes`, `boutique`, `abonnement`, `candidatures`.
+- **Illustrations** : un seul registre, `app/src/illustrations/registre.ts`. Fichiers dans `app/assets/` (`compagnons/<animal>/<pose>.png`, `oeufs/`, `villes/<ville>/portrait.jpg` et `paysage.jpg`). Une image manquante affiche un visuel de secours. Les animations définitives (Lottie ou Rive) se brancheront dans `app/src/components/Compagnon.tsx`.
+- **Données** : un seul état (`app/src/store/`), sauvegardé sur le téléphone ; les anciennes sauvegardes sont migrées automatiquement. Logique métier dans `app/src/logique/` (tâches du jour, vie du compagnon, rythme, dates).
+- **Services** (`app/src/services/`) : connexion (bouchons à remplacer), abonnement (achat App Store à brancher), compte et RGPD (export, suppression), futur simulateur d'entretien.
+- Avant de dire qu'une étape est terminée : `npx tsc --noEmit` et `npx eslint src` sans erreur, et parcours testé.
+
+## 11. Décisions prises par Claude, à valider
+Ces valeurs ne viennent pas de mes consignes : Claude les a choisies pour que l'app fonctionne. Elles sont toutes réglables dans `app/src/config/`.
+- **Énergie** (`energie.ts`) : 30 max, câlin 5, jeu 10, Aventure du jour 20, +3 par tâche terminée, recharge complète chaque matin. Aucun document ne précise d'autres valeurs.
+- **Moments avec le compagnon** : « Câlin » et « Jouer » sont des propositions de Claude pour donner une utilité à l'énergie.
+- **Récompenses** : aventure +10 pièces, objectif pro atteint +15, « J'ai décroché ! » +50.
+- **Ziggy+** : 3 aventures par jour (contre 1 en gratuit).
+- **Shop** (`boutique.ts`) : la liste des objets et leurs prix (de 20 à 150 pièces), l'écharpe offerte, la couronne réservée à Ziggy+.
+- **Récits d'aventure** (`aventures.ts`) et **lieux de Sunnyville** : textes provisoires.
+- **Personnalité du crocodile** : « Grand cœur sous ses airs sérieux ».
+
+## 12. Questions ouvertes
+Aucune question bloquante. À ajuster après tes premiers tests sur iPhone : les valeurs de la section 11.

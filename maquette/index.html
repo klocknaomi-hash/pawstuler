@@ -1,0 +1,858 @@
+<title>Pawstuler Maquette</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* ============================================================
+   THÈME PAWSTULER — toutes les couleurs, polices et espacements
+   sont ici (CLAUDE.md §7). Palette tirée des illustrations de Ziggy.
+   ============================================================ */
+:root{
+  --page:#F1E4D8;          /* fond autour du téléphone */
+  --creme:#FFF6EC;         /* fond de l'app (ventre de Ziggy) */
+  --carte:#FFFFFF;
+  --saumon:#F2906B;        /* pelage de Ziggy : couleur principale */
+  --saumon-clair:#FDE4D7;
+  --renard-fonce:#C4583A;  /* boutons, texte sur fond clair */
+  --brun:#5E3A2C;          /* contour de Ziggy : texte principal */
+  --brun-doux:#8A6B5E;
+  --sauge:#A9C68E;
+  --sauge-clair:#EAF1DF;
+  --sauge-fonce:#557A45;
+  --lac:#8EC5D6;
+  --lac-clair:#E1F1F5;
+  --corail:#FF4F5E;        /* réservé aux victoires (entretien, poste décroché) */
+  --corail-clair:#FFE2E4;
+  --ligne:#EEDCCB;
+  --ombre:0 6px 18px rgba(94,58,44,.10);
+
+  --f-titre:"Fredoka","Nunito",ui-rounded,"SF Pro Rounded",system-ui,sans-serif;
+  --f-texte:"Nunito",ui-rounded,"SF Pro Rounded",system-ui,sans-serif;
+
+  --r-s:10px; --r-m:16px; --r-l:24px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--page);color:var(--brun);font-family:var(--f-texte)}
+body{padding-inline:16px;padding-block:20px 32px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid var(--lac);outline-offset:2px}
+
+/* ---------- Bandeau de revue (hors app) ---------- */
+.revue{max-width:420px;margin:0 auto 14px;display:grid;gap:10px}
+.revue h1{font-family:var(--f-titre);font-weight:600;font-size:22px;margin:0;text-wrap:balance}
+.revue p{margin:0;font-size:13px;color:var(--brun-doux);line-height:1.45}
+.puces{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.puces button{flex:none;border:1px solid var(--ligne);background:var(--carte);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700}
+.puces button.demo{background:var(--sauge-clair);border-color:transparent;color:var(--sauge-fonce)}
+
+/* ---------- Téléphone ---------- */
+.phone{position:relative;margin:0 auto;width:min(390px,100%);height:min(844px,calc(100dvh - 40px));min-height:640px;
+  background:var(--creme);border-radius:46px;overflow:hidden;
+  box-shadow:0 0 0 10px #2E211C,0 0 0 11px #4a372f,0 30px 60px rgba(60,35,25,.3)}
+@media (max-width:440px){.phone{border-radius:28px;box-shadow:0 0 0 6px #2E211C,0 20px 40px rgba(60,35,25,.25)}}
+.statut{position:absolute;inset:0 0 auto;height:48px;z-index:30;display:flex;justify-content:space-between;align-items:center;padding:6px 28px 0;font-weight:800;font-size:15px;pointer-events:none}
+.statut .ic{display:flex;gap:5px;align-items:center}
+.ecran{position:absolute;inset:0 0 82px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+.ecran::-webkit-scrollbar{display:none}
+.pad{padding:0 18px 24px}
+
+/* ---------- Barre d'onglets ---------- */
+.onglets{position:absolute;inset:auto 0 0;height:82px;background:var(--carte);border-top:1px solid var(--ligne);display:grid;grid-template-columns:repeat(4,1fr);padding:8px 8px 22px;z-index:20}
+.onglets button{border:0;background:none;display:grid;justify-items:center;gap:3px;font-size:11px;font-weight:700;color:var(--brun-doux)}
+.onglets svg{width:26px;height:26px}
+.onglets button[aria-current="page"]{color:var(--renard-fonce)}
+.onglets button[aria-current="page"] .fond{fill:var(--saumon-clair)}
+
+/* ---------- Titres ---------- */
+.entete{padding:58px 18px 10px}
+.entete h2{font-family:var(--f-titre);font-weight:600;font-size:28px;margin:0;line-height:1.1}
+.entete p{margin:4px 0 0;color:var(--brun-doux);font-size:14px}
+.section-titre{font-family:var(--f-titre);font-weight:600;font-size:19px;margin:22px 0 10px}
+
+/* ---------- Ziggy (illustration ou dessin de secours) ---------- */
+.ziggy{display:block}
+.ziggy img,.ziggy svg{width:100%;height:auto;display:block}
+@media (prefers-reduced-motion:no-preference){
+  .respire{animation:respire 3.2s ease-in-out infinite;transform-origin:50% 100%}
+  @keyframes respire{50%{transform:translateY(-4px) scale(1.01)}}
+  .saut{animation:saut .6s ease-out}
+  @keyframes saut{40%{transform:translateY(-18px)}}
+}
+
+/* ---------- Accueil : scène ---------- */
+.scene{position:relative;height:390px;overflow:hidden;background:var(--lac-clair)}
+.scene .decor,.scene .decor img,.scene .decor svg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 88%}
+.scene .ziggy{position:absolute;left:50%;bottom:34px;width:150px;transform:translateX(-50%)}
+.bulle{position:absolute;top:62px;left:16px;right:16px;background:var(--carte);border-radius:18px;padding:10px 14px;font-weight:700;font-size:14px;line-height:1.35;box-shadow:var(--ombre)}
+.bulle::after{content:"";position:absolute;bottom:-8px;left:50%;width:16px;height:16px;background:var(--carte);transform:rotate(45deg);border-radius:3px}
+.bulle b{color:var(--renard-fonce)}
+.date-accueil{position:absolute;top:48px;left:0;right:0;text-align:center;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--brun);opacity:0}
+
+/* ---------- Jauge d'énergie ---------- */
+.jauge{position:relative;margin:-28px 14px 0;background:var(--carte);border-radius:var(--r-l);padding:14px 16px;box-shadow:var(--ombre);z-index:2}
+.jauge-haut{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.jauge-haut strong{font-family:var(--f-titre);font-weight:600;font-size:16px}
+.jauge-haut span{font-variant-numeric:tabular-nums;font-weight:800;font-size:15px}
+.piste{position:relative;height:16px;border-radius:999px;background:var(--saumon-clair);margin:10px 0 6px;overflow:hidden}
+.remplissage{height:100%;border-radius:999px;background:linear-gradient(90deg,#F7AE8D,var(--saumon));transition:width .5s cubic-bezier(.3,1.4,.5,1)}
+.piste i{position:absolute;top:3px;bottom:3px;width:2px;background:rgba(255,255,255,.8);border-radius:2px}
+.jauge small{display:block;font-size:12.5px;color:var(--brun-doux);font-weight:600}
+.btn{border:0;border-radius:999px;padding:13px 18px;font-weight:800;font-size:15px;background:var(--renard-fonce);color:#fff;width:100%}
+.btn.second{background:var(--saumon-clair);color:var(--renard-fonce)}
+.btn.sauge{background:var(--sauge-fonce)}
+.btn.victoire{background:var(--corail)}
+.jauge .btn{margin-top:12px}
+@media (prefers-reduced-motion:no-preference){.pulse{animation:pulse 1.6s ease-in-out infinite}@keyframes pulse{50%{box-shadow:0 0 0 8px rgba(242,144,107,.25)}}}
+
+/* ---------- Tâches ---------- */
+.etape{background:var(--carte);border-radius:var(--r-m);margin-bottom:10px;border:1px solid var(--ligne)}
+.etape summary{list-style:none;display:flex;justify-content:space-between;align-items:center;padding:13px 14px;font-weight:800;font-size:15px;cursor:pointer}
+.etape summary::-webkit-details-marker{display:none}
+.etape summary .meta{font-size:12px;font-weight:700;color:var(--brun-doux);display:flex;align-items:center;gap:6px}
+.etape summary .fleche{transition:transform .2s}
+.etape[open] summary .fleche{transform:rotate(90deg)}
+.tache{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--ligne);padding:11px 14px}
+.coche{width:26px;height:26px;border-radius:50%;border:2.5px solid var(--ligne);display:grid;place-items:center}
+.tache.faite .coche{background:var(--sauge);border-color:var(--sauge)}
+.tache .nom{font-weight:700;font-size:14px;line-height:1.3}
+.tache .sous{display:block;font-size:12px;color:var(--brun-doux);font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+.gain{font-weight:800;font-size:13px;color:var(--renard-fonce);background:var(--saumon-clair);border-radius:999px;padding:4px 9px;white-space:nowrap}
+.tache.plafond{opacity:.55}
+.tache.auto .coche{border-style:dashed}
+.tache.auto .gain{background:var(--lac-clair);color:#2F6D80}
+
+/* ---------- Toast ---------- */
+.toast{position:absolute;left:14px;right:14px;top:54px;z-index:60;background:var(--brun);color:#fff;border-radius:16px;padding:12px 14px;font-weight:700;font-size:14px;display:flex;gap:10px;align-items:center;box-shadow:var(--ombre);transition:transform .3s,opacity .3s}
+.toast.cache{transform:translateY(-20px);opacity:0;pointer-events:none}
+.toast.victoire{background:var(--corail)}
+.toast b{font-variant-numeric:tabular-nums}
+
+/* ---------- Candidatures ---------- */
+.filtres{display:flex;gap:6px;overflow-x:auto;padding:4px 18px 12px;scrollbar-width:none}
+.filtres::-webkit-scrollbar{display:none}
+.filtres button{flex:none;border:1px solid var(--ligne);background:var(--carte);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:800}
+.filtres button[aria-pressed="true"]{background:var(--brun);color:#fff;border-color:var(--brun)}
+.filtres button span{font-variant-numeric:tabular-nums;opacity:.7;margin-left:3px}
+.fiche{display:block;width:100%;text-align:left;background:var(--carte);border:1px solid var(--ligne);border-radius:var(--r-m);padding:14px;margin-bottom:10px}
+.fiche-haut{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.fiche h3{margin:0;font-size:16px;font-weight:800}
+.fiche .poste{font-size:13.5px;color:var(--brun-doux);font-weight:600;margin-top:2px}
+.etiq{font-size:11.5px;font-weight:800;border-radius:999px;padding:3px 8px;white-space:nowrap}
+.etiq.offre{background:var(--lac-clair);color:#2F6D80}
+.etiq.spont{background:var(--sauge-clair);color:var(--sauge-fonce)}
+.etapes-fiche{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px}
+.pas{font-size:11.5px;font-weight:800;text-align:center;padding:6px 4px;border-radius:10px;background:#F7EFE7;color:#B9A396}
+.pas.ok{background:var(--sauge-clair);color:var(--sauge-fonce)}
+.pas.ok.entretien{background:var(--corail-clair);color:#C92F3D}
+.fiche-bas{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12.5px;font-weight:700;color:var(--brun-doux)}
+.reponse{font-weight:800;border-radius:999px;padding:3px 9px}
+.reponse.attente{background:#F7EFE7;color:var(--brun-doux)}
+.reponse.refus{background:#EDE7F4;color:#6A5A86}
+.reponse.decroche{background:var(--corail);color:#fff}
+.relance{color:var(--renard-fonce)}
+.relance.due{background:var(--saumon-clair);border-radius:999px;padding:3px 9px}
+.fab{position:absolute;right:18px;bottom:98px;z-index:15;width:58px;height:58px;border-radius:50%;border:0;background:var(--renard-fonce);color:#fff;box-shadow:0 8px 20px rgba(196,88,58,.4);display:grid;place-items:center}
+.vide{text-align:center;padding:30px 20px;color:var(--brun-doux);font-weight:600}
+
+/* ---------- Feuilles (sheets) et plein écran ---------- */
+.voile{position:absolute;inset:0;z-index:40;background:rgba(46,33,28,.35);display:flex;align-items:flex-end}
+.feuille{width:100%;max-height:90%;overflow-y:auto;background:var(--creme);border-radius:28px 28px 0 0;padding:10px 18px 30px}
+.poignee{width:40px;height:5px;border-radius:5px;background:var(--ligne);margin:0 auto 12px}
+.feuille h3{font-family:var(--f-titre);font-weight:600;font-size:22px;margin:0}
+.feuille .poste{color:var(--brun-doux);font-weight:600;margin:2px 0 14px}
+.bloc{background:var(--carte);border-radius:var(--r-m);border:1px solid var(--ligne);margin-bottom:12px}
+.ligne-toggle{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 14px;border-top:1px solid var(--ligne);font-weight:700;font-size:14.5px}
+.ligne-toggle:first-child{border-top:0}
+.ligne-toggle small{display:block;font-weight:600;color:var(--brun-doux);font-size:12px}
+.interrupteur{flex:none;width:50px;height:30px;border-radius:999px;border:0;background:#E6D8CB;position:relative;transition:background .2s}
+.interrupteur::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s}
+.interrupteur[aria-checked="true"]{background:var(--sauge-fonce)}
+.interrupteur[aria-checked="true"]::after{transform:translateX(20px)}
+.segment{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;background:#F3E8DD;border-radius:14px;padding:4px}
+.segment button{border:0;background:none;border-radius:10px;padding:9px 4px;font-weight:800;font-size:13.5px}
+.segment button[aria-pressed="true"]{background:var(--carte);box-shadow:0 1px 4px rgba(94,58,44,.15)}
+.segment button.dec[aria-pressed="true"]{background:var(--corail);color:#fff}
+.label{font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--brun-doux);margin:16px 0 6px}
+.champ{width:100%;border:1px solid var(--ligne);background:var(--carte);border-radius:12px;padding:12px;font:inherit;font-weight:600;color:var(--brun)}
+textarea.champ{min-height:84px;resize:vertical;line-height:1.4}
+.infos{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;padding:12px 14px;font-size:13.5px}
+.infos dt{color:var(--brun-doux);font-weight:700}
+.infos dd{margin:0;font-weight:700;overflow-wrap:anywhere}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+
+.plein{position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:60px 26px 40px;gap:14px}
+.plein.aventure{background:linear-gradient(#CFE8EA,#FBE3D4)}
+.plein.reconfort{background:#F4EEF8}
+.plein.fete{background:var(--corail-clair);overflow:hidden}
+.plein .ziggy{width:190px}
+.plein h3{font-family:var(--f-titre);font-weight:600;font-size:26px;margin:0;text-wrap:balance}
+.plein p{margin:0;font-size:15.5px;line-height:1.5;font-weight:600;max-width:32ch}
+.recit{background:var(--carte);border-radius:var(--r-l);padding:16px;text-align:left;box-shadow:var(--ombre);width:100%}
+.recit p{max-width:none}
+.recompense{display:flex;align-items:center;gap:12px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--ligne);font-weight:800}
+.recompense .obj{width:48px;height:48px;border-radius:14px;background:var(--saumon-clair);display:grid;place-items:center;flex:none}
+.recompense small{display:block;color:var(--brun-doux);font-weight:700;font-size:12px}
+.plein .actions{display:grid;gap:8px;width:100%;margin-top:6px}
+.confetti{position:absolute;top:-20px;width:9px;height:14px;border-radius:3px}
+@media (prefers-reduced-motion:no-preference){
+  .confetti{animation:tombe linear infinite}
+  @keyframes tombe{to{transform:translateY(900px) rotate(540deg)}}
+  .marche{animation:marche 2.2s ease-in-out forwards}
+  @keyframes marche{0%{transform:translateX(0)}100%{transform:translateX(130%)}}
+}
+.points{display:flex;gap:6px;justify-content:center}
+.points i{width:8px;height:8px;border-radius:50%;background:var(--saumon);opacity:.3}
+@media (prefers-reduced-motion:no-preference){.points i{animation:pt 1s infinite}.points i:nth-child(2){animation-delay:.2s}.points i:nth-child(3){animation-delay:.4s}@keyframes pt{50%{opacity:1}}}
+
+/* ---------- Clairbourg ---------- */
+.miroir{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.compteur{background:var(--carte);border:1px solid var(--ligne);border-radius:var(--r-m);padding:12px 14px}
+.compteur small{font-size:12px;font-weight:800;color:var(--brun-doux);text-transform:uppercase;letter-spacing:.05em}
+.compteur strong{display:block;font-family:var(--f-titre);font-weight:600;font-size:26px;font-variant-numeric:tabular-nums}
+.compteur span{font-size:12.5px;font-weight:600;color:var(--brun-doux)}
+.bandeau-ville{position:relative;height:170px;border-radius:var(--r-l);overflow:hidden;margin:4px 0 0}
+.bandeau-ville .vue{height:100%}
+.bandeau-ville img,.bandeau-ville svg{width:100%;height:100%;object-fit:cover;object-position:50% 42%;display:block}
+.lieu{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:center;padding:12px 14px;border-top:1px solid var(--ligne)}
+.lieu:first-child{border-top:0}
+.lieu .pic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--sauge-clair)}
+.lieu b{display:block;font-size:14.5px}
+.lieu span{font-size:12.5px;font-weight:700;color:var(--brun-doux)}
+.lieu .etat-entretien{color:#C92F3D}
+.journal{position:relative;padding-left:18px}
+.journal::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:var(--ligne)}
+.entree{position:relative;background:var(--carte);border:1px solid var(--ligne);border-radius:var(--r-m);padding:12px 14px;margin-bottom:10px}
+.entree::before{content:"";position:absolute;left:-18px;top:16px;width:12px;height:12px;border-radius:50%;background:var(--saumon);border:2px solid var(--creme)}
+.entree time{font-size:12px;font-weight:800;color:var(--brun-doux);text-transform:uppercase;letter-spacing:.05em}
+.entree p{margin:4px 0 0;font-size:14px;line-height:1.45;font-weight:600}
+.entree .gagne{margin-top:8px;font-size:12.5px;font-weight:800;color:var(--renard-fonce)}
+
+/* ---------- Moi ---------- */
+.profil{display:grid;grid-template-columns:110px 1fr;gap:14px;align-items:center;background:var(--carte);border:1px solid var(--ligne);border-radius:var(--r-l);padding:14px}
+.profil .ziggy{width:110px}
+.profil h3{font-family:var(--f-titre);font-weight:600;font-size:24px;margin:0}
+.profil p{margin:2px 0 0;font-size:13.5px;color:var(--brun-doux);font-weight:600;line-height:1.4}
+.porte{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.porte span{font-size:11.5px;font-weight:800;background:var(--saumon-clair);color:var(--renard-fonce);border-radius:999px;padding:3px 8px}
+.garde-robe{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.objet{border:1px solid var(--ligne);background:var(--carte);border-radius:var(--r-m);padding:10px 6px;display:grid;justify-items:center;gap:6px;font-size:12px;font-weight:800;text-align:center;line-height:1.2}
+.objet .obj{width:52px;height:52px;border-radius:14px;background:var(--saumon-clair);display:grid;place-items:center}
+.objet[aria-pressed="true"]{border:2px solid var(--renard-fonce);padding:9px 5px}
+.objet.verrou{opacity:.5}
+.objet.verrou .obj{background:#F3E8DD}
+.objet small{font-weight:700;color:var(--brun-doux);font-size:11px}
+.badges{display:flex;gap:10px}
+.badge{flex:1;background:var(--carte);border:1px solid var(--ligne);border-radius:var(--r-m);padding:12px;display:flex;gap:10px;align-items:center}
+.badge .med{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:#EDE7F4;flex:none}
+.badge b{display:block;font-size:14px}
+.badge span{font-size:12px;font-weight:700;color:var(--brun-doux)}
+.reglage{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-top:1px solid var(--ligne);font-weight:700;font-size:14.5px}
+.reglage:first-child{border-top:0}
+.reglage input{border:0;background:none;text-align:right;font:inherit;font-weight:800;color:var(--renard-fonce);width:50%;padding:4px}
+.reglage .segment{width:190px}
+.danger{color:#B3261E}
+.note-maquette{font-size:12px;color:var(--brun-doux);font-weight:600;text-align:center;margin-top:18px;line-height:1.45}
+</style>
+
+<section class="revue" aria-label="Revue de maquette">
+  <h1>Pawstuler · maquette cliquable</h1>
+  <p>Étape 0 : Accueil et les 4 onglets. Coche des tâches, ouvre une candidature, remplis la jauge pour envoyer Ziggy en aventure. Les données sont des exemples.</p>
+  <div class="puces" role="toolbar" aria-label="Raccourcis">
+    <button data-aller="accueil">Accueil</button>
+    <button data-aller="candidatures">Candidatures</button>
+    <button data-aller="clairbourg">Clairbourg</button>
+    <button data-aller="moi">Moi</button>
+    <button class="demo" id="demo-jauge">Remplir la jauge</button>
+    <button class="demo" id="demo-matin">Nouveau matin</button>
+  </div>
+</section>
+
+<div class="phone" id="phone">
+  <div class="statut" aria-hidden="true"><span>9:41</span><span class="ic">
+    <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="currentColor"/><rect x="5" y="5" width="3" height="7" rx="1" fill="currentColor"/><rect x="10" y="2.5" width="3" height="9.5" rx="1" fill="currentColor"/><rect x="15" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg>
+    <svg width="26" height="12" viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3.5" fill="none" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="16" height="8" rx="2" fill="currentColor"/><rect x="24" y="4" width="1.5" height="4" rx=".7" fill="currentColor" opacity=".5"/></svg>
+  </span></div>
+
+  <main class="ecran" id="ecran-accueil"></main>
+  <main class="ecran" id="ecran-candidatures" hidden></main>
+  <main class="ecran" id="ecran-clairbourg" hidden></main>
+  <main class="ecran" id="ecran-moi" hidden></main>
+
+  <button class="fab" id="fab" hidden aria-label="Ajouter une candidature">
+    <svg width="26" height="26" viewBox="0 0 26 26"><path d="M13 5v16M5 13h16" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>
+  </button>
+
+  <nav class="onglets" aria-label="Onglets">
+    <button data-onglet="accueil" aria-current="page">
+      <svg viewBox="0 0 26 26"><path class="fond" d="M4 12 13 4l9 8v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 4 21Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M10.5 22.5v-6h5v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Accueil</button>
+    <button data-onglet="candidatures">
+      <svg viewBox="0 0 26 26"><rect class="fond" x="4.5" y="4" width="17" height="19" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 10h8M9 14h8M9 18h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Candidatures</button>
+    <button data-onglet="clairbourg">
+      <svg viewBox="0 0 26 26"><path class="fond" d="M3 22V13l5-4 5 4v9Z M13 22V9l5-4 5 4v13Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M2 22h22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Clairbourg</button>
+    <button data-onglet="moi">
+      <svg viewBox="0 0 26 26"><ellipse class="fond" cx="13" cy="16.5" rx="5.5" ry="4.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="6.5" cy="10.5" r="2.2" fill="currentColor"/><circle cx="10.5" cy="6.5" r="2.2" fill="currentColor"/><circle cx="15.5" cy="6.5" r="2.2" fill="currentColor"/><circle cx="19.5" cy="10.5" r="2.2" fill="currentColor"/></svg>Moi</button>
+  </nav>
+
+  <div class="toast cache" id="toast" role="status" aria-live="polite"></div>
+  <div id="calque"></div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIGURATION DES TÂCHES — CLAUDE.md §6 (un seul endroit à modifier)
+   cap = plafond par jour (null = aucun) ; auto = validée depuis le tableau
+   ============================================================ */
+const JAUGE_AVENTURE = 30;
+const TACHES = [
+  {id:"cv",          etape:"Se préparer", nom:"Mettre à jour mon CV", e:10, cap:1},
+  {id:"lettre",      etape:"Se préparer", nom:"Rédiger ou adapter ma lettre de motivation", e:10, cap:2},
+  {id:"linkedin",    etape:"Se préparer", nom:"Mettre à jour mon profil LinkedIn", e:10, cap:1},
+  {id:"criteres",    etape:"Se préparer", nom:"Définir mes critères (poste, ville, rythme)", e:5, cap:1},
+  {id:"recherche",   etape:"Chercher",    nom:"Faire 20 min de recherche d'offres", e:5, cap:2},
+  {id:"offre",       etape:"Chercher",    nom:"Sauvegarder une offre intéressante", e:2, cap:5, auto:true},
+  {id:"cible",       etape:"Chercher",    nom:"Repérer une entreprise cible (sans offre)", e:5, cap:3},
+  {id:"envoi",       etape:"Candidater",  nom:"Envoyer une candidature", e:10, cap:5, auto:true},
+  {id:"spontanee",   etape:"Candidater",  nom:"Envoyer une candidature spontanée", e:15, cap:3, auto:true},
+  {id:"cvcible",     etape:"Candidater",  nom:"Adapter mon CV à une offre précise", e:5, cap:3},
+  {id:"relance",     etape:"Relancer",    nom:"Relancer une entreprise", e:10, cap:5, auto:true},
+  {id:"contact",     etape:"Réseau",      nom:"Écrire à un contact, ancien élève ou recruteur", e:10, cap:3},
+  {id:"salon",       etape:"Réseau",      nom:"Aller à un salon ou un job dating", e:20, cap:1},
+  {id:"entretien",   etape:"Entretien",   nom:"Décrocher un entretien", e:20, cap:null, auto:true, victoire:true},
+  {id:"prepa",       etape:"Entretien",   nom:"Préparer mon entretien", e:15, cap:null},
+  {id:"passer",      etape:"Entretien",   nom:"Passer l'entretien", e:25, cap:null},
+  {id:"merci",       etape:"Entretien",   nom:"Envoyer un mail de remerciement", e:5, cap:null},
+  {id:"debrief",     etape:"Entretien",   nom:"Noter mon debrief", e:5, cap:null},
+  {id:"refus",       etape:"Réponse",     nom:"Enregistrer un refus (+ badge courage)", e:10, cap:null, auto:true},
+  {id:"pause",       etape:"Moral",       nom:"Faire une pause", e:3, groupe:"moral"},
+  {id:"air",         etape:"Moral",       nom:"Sortir prendre l'air", e:3, groupe:"moral"},
+  {id:"victoire",    etape:"Moral",       nom:"Fêter une petite victoire", e:3, groupe:"moral"},
+  {id:"calendrier",  etape:"Alternance",  nom:"Vérifier le calendrier et le rythme de l'école", e:5, cap:1, alternance:true},
+  {id:"sre",         etape:"Alternance",  nom:"Demander de l'aide au service relations entreprises", e:10, cap:1, alternance:true},
+];
+const PLAFONDS_GROUPES = {moral:3};
+const ETAPES = ["Se préparer","Chercher","Candidater","Relancer","Réseau","Entretien","Réponse","Moral","Alternance"];
+const RELANCE_JOURS = 7;
+
+/* Accessoires gagnés en aventure (CLAUDE.md §5.4) */
+const ACCESSOIRES = [
+  {id:"lunettes", nom:"Lunettes rondes"},
+  {id:"cravate",  nom:"Cravate du lundi"},
+  {id:"sac",      nom:"Sac à dos d'alternant"},
+  {id:"badge",    nom:"Badge d'entreprise"},
+  {id:"tenue",    nom:"Mini-tenue d'entretien"},
+];
+
+/* Récits d'aventure : Ziggy cherche son job à Clairbourg */
+const RECITS = [
+  {lieu:"Agence Tamaris", etat:"Candidature déposée",
+   texte:"{nom} s'est entraîné à se présenter au bord du lac : « Bonjour, je suis {nom}, curieux et débrouillard. » Les canards ont applaudi. Il a ensuite déposé son CV à l'agence Tamaris, le cœur battant."},
+  {lieu:"Studio Hibou", etat:"Relancé, le hibou a noté son nom",
+   texte:"Au studio Hibou, {nom} a relancé le directeur, un vieux hibou un peu dur d'oreille. Il a dû répéter trois fois, mais le hibou a noté son nom ! Sur le chemin du retour, un paquet l'attendait sur le ponton."},
+  {lieu:"Librairie des Tilleuls", etat:"Entretien vendredi",
+   texte:"{nom} a aidé la libraire à ranger une pile de romans tombée par terre. Elle lui a proposé de revenir vendredi pour un vrai entretien. Il est reparti en sautillant jusqu'aux tulipes."},
+];
+
+/* ============================================================
+   ÉTAT DE LA MAQUETTE (données d'exemple)
+   ============================================================ */
+const AUJOURDHUI = new Date(2026, 8, 25);
+const etat = {
+  prenom: "Naomi",
+  nom: "Ziggy",
+  profil: "alternance",
+  onglet: "accueil",
+  energie: 18,
+  aventureFaite: false,
+  faits: {cv:1, recherche:1, pause:1},     // compteur du jour par tâche
+  ouvertes: new Set(["Candidater","Relancer","Se préparer"]),
+  filtre: "toutes",
+  recitIndex: 0,
+  possede: ["lunettes"],
+  porte: ["lunettes"],
+  courage: 1,
+  relanceNotif: true,
+  poseTemp: null,
+  candidatures: [
+    {id:1, entreprise:"Atelier Nuage", poste:"Chargé·e de communication en alternance", lien:"welcometothejungle.com", type:"offre", date:"2026-09-18", envoyee:true, relancee:false, entretien:false, reponse:"attente", note:""},
+    {id:2, entreprise:"Maison Coquelicot", poste:"Assistant·e marketing", lien:"", type:"spont", date:"2026-09-22", envoyee:true, relancee:false, entretien:false, reponse:"attente", note:"Envoyée à la responsable marketing, Claire."},
+    {id:3, entreprise:"Studio Ardoise", poste:"Community manager en alternance", lien:"hellowork.com", type:"offre", date:"2026-09-10", envoyee:true, relancee:true, entretien:true, reponse:"attente", note:"Entretien mardi 30/09 à 14 h avec Léa (RH). Préparer 2 exemples de posts."},
+    {id:4, entreprise:"Groupe Hélia", poste:"Chargé·e de projet digital", lien:"indeed.fr", type:"offre", date:"2026-09-02", envoyee:true, relancee:true, entretien:false, reponse:"refus", note:"Refus par mail, profil très bien mais poste pourvu en interne."},
+    {id:5, entreprise:"Librairie Les Pages", poste:"Chargé·e d'animation réseaux sociaux", lien:"jobteaser.com", type:"offre", date:"", envoyee:false, relancee:false, entretien:false, reponse:"attente", note:"Offre sauvegardée, candidature avant le 5/10."},
+  ],
+  lieux: [
+    {nom:"Boulangerie Mercier", poste:"Apprenti boulanger", etat:"CV déposé mardi"},
+    {nom:"Agence Tamaris", poste:"Assistant de voyage", etat:"Pas encore visitée"},
+    {nom:"Studio Hibou", poste:"Aide photographe", etat:"Candidature envoyée"},
+    {nom:"Librairie des Tilleuls", poste:"Libraire junior", etat:"Pas encore visitée"},
+  ],
+  journal: [
+    {date:"Jeudi 24 septembre", texte:"{nom} a envoyé sa candidature au studio Hibou, en glissant une photo du lac au coucher du soleil. « Ça montre que j'ai l'œil », a-t-il dit.", gain:"Lunettes rondes"},
+    {date:"Mardi 22 septembre", texte:"Premier jour à Clairbourg ! {nom} a déposé son CV à la boulangerie Mercier. Madame Mercier lui a offert un croissant encore chaud.", gain:null},
+  ],
+};
+
+/* ============================================================
+   ILLUSTRATIONS : fichiers de maquette/illustrations/ si présents,
+   sinon dessin de secours dans le même style.
+   ============================================================ */
+const POSES = ["neutre","content","excite","dort","reconfort","fier","aventure","celebration"];
+const dispo = {};
+function sonder(nom, fichier){
+  const img = new Image();
+  img.onload = () => { dispo[nom] = fichier; rendre(); };
+  img.src = fichier;
+}
+POSES.forEach(p => sonder(p, `illustrations/ziggy-${p}.png`));
+sonder("decor", "illustrations/decor-jardin-lac.png");
+
+function ziggy(pose, classe=""){
+  const f = dispo[pose] || dispo.neutre;
+  const alt = `${etat.nom} le renard`;
+  if (f) return `<span class="ziggy ${classe}"><img src="${f}" alt="${esc(alt)}"></span>`;
+  return `<span class="ziggy ${classe}" role="img" aria-label="${esc(alt)}">${renardSVG(pose)}</span>`;
+}
+function renardSVG(pose){
+  const yeux = (pose==="content"||pose==="celebration")
+    ? `<path d="M72 94q8-9 16 0M112 94q8-9 16 0" fill="none" stroke="#5E3A2C" stroke-width="3.5" stroke-linecap="round"/>`
+    : pose==="dort"
+    ? `<path d="M72 92q8 7 16 0M112 92q8 7 16 0" fill="none" stroke="#5E3A2C" stroke-width="3.5" stroke-linecap="round"/>`
+    : `<circle cx="80" cy="92" r="7" fill="#5E3A2C"/><circle cx="120" cy="92" r="7" fill="#5E3A2C"/><circle cx="82.5" cy="89.5" r="2.3" fill="#fff"/><circle cx="122.5" cy="89.5" r="2.3" fill="#fff"/>`;
+  const bras = (pose==="excite"||pose==="celebration")
+    ? `<ellipse cx="58" cy="130" rx="10" ry="21" transform="rotate(35 58 130)"/><ellipse cx="142" cy="130" rx="10" ry="21" transform="rotate(-35 142 130)"/>`
+    : `<ellipse cx="68" cy="162" rx="10" ry="21" transform="rotate(15 68 162)"/><ellipse cx="132" cy="162" rx="10" ry="21" transform="rotate(-15 132 162)"/>`;
+  return `<svg viewBox="0 0 200 232" aria-hidden="true">
+  <ellipse cx="100" cy="222" rx="52" ry="7" fill="#5E3A2C" opacity=".12"/>
+  <g stroke="#5E3A2C" stroke-width="3.5" stroke-linejoin="round" fill="#F2906B">
+    <path d="M126 196c52 4 70-44 52-84-8-16-22-18-26-10 14 30 2 64-30 72z"/>
+    <path d="M178 112c-8-16-22-18-26-10 6 10 10 22 10 30 8-6 14-12 16-20z" fill="#FFF3E6"/>
+    <ellipse cx="82" cy="208" rx="14" ry="12"/><ellipse cx="118" cy="208" rx="14" ry="12"/>
+    <ellipse cx="100" cy="166" rx="38" ry="42"/>
+    ${bras}
+    <path d="M60 80 50 20q2-7 9-3l36 34z"/><path d="M140 80l10-60q-2-7-9-3l-36 34z"/>
+    <ellipse cx="100" cy="88" rx="56" ry="45"/>
+  </g>
+  <ellipse cx="100" cy="174" rx="23" ry="29" fill="#FFF3E6"/>
+  <path d="M63 66 58 32l24 20zM137 66l5-34-24 20z" fill="#FFF3E6"/>
+  <path d="M46 98q20-8 38 4 16 8 32 0 18-12 38-4-8 32-54 34-46-2-54-34z" fill="#FFF3E6"/>
+  ${yeux}
+  <ellipse cx="100" cy="104" rx="6.5" ry="4.8" fill="#5E3A2C"/>
+  <path d="M91 112q4.5 5 9 0 4.5 5 9 0" fill="none" stroke="#5E3A2C" stroke-width="3" stroke-linecap="round"/>
+  <ellipse cx="66" cy="108" rx="7" ry="4" fill="#F7A98F" opacity=".7"/><ellipse cx="134" cy="108" rx="7" ry="4" fill="#F7A98F" opacity=".7"/>
+</svg>`;
+}
+function decor(classe="decor"){
+  if (dispo.decor) return `<div class="${classe}"><img src="${dispo.decor}" alt=""></div>`;
+  return `<div class="${classe}"><svg viewBox="0 0 390 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs><linearGradient id="ciel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#BFE0E6"/><stop offset=".55" stop-color="#FBDCCB"/></linearGradient></defs>
+  <rect width="390" height="420" fill="url(#ciel)"/>
+  <g fill="#fff" opacity=".9"><ellipse cx="80" cy="60" rx="46" ry="14"/><ellipse cx="300" cy="44" rx="54" ry="15"/></g>
+  <path d="M0 170q90-50 200-10t190-20v260H0z" fill="#B7D19B"/>
+  <path d="M0 200q120-40 230 0t160-10v230H0z" fill="#A6C585"/>
+  <g><rect x="40" y="150" width="54" height="42" fill="#FCE9D2"/><path d="M34 152l33-30 33 30z" fill="#E0714F"/><rect x="60" y="170" width="12" height="22" fill="#C98A5A"/>
+     <rect x="262" y="146" width="66" height="46" fill="#FCE9D2"/><path d="M255 148l40-34 40 34z" fill="#E0714F"/><rect x="270" y="160" width="46" height="8" fill="#F2906B" opacity=".7"/></g>
+  <g fill="#7FA66A"><circle cx="20" cy="170" r="26"/><circle cx="130" cy="176" r="20"/><circle cx="366" cy="166" r="28"/></g>
+  <path d="M0 250q195-40 390 0v170H0z" fill="#9BC47E"/>
+  <ellipse cx="238" cy="300" rx="190" ry="54" fill="#8EC5D6"/>
+  <g stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".6"><path d="M190 290h40M260 312h50M150 318h26"/></g>
+  <path d="M0 360q195-30 390 0v60H0z" fill="#8DBA70"/>
+  <g><circle cx="30" cy="376" r="7" fill="#F48C6E"/><circle cx="60" cy="392" r="6" fill="#FFF3E6"/><circle cx="340" cy="378" r="8" fill="#A99BE0"/><circle cx="364" cy="398" r="6" fill="#F7C94C"/><circle cx="310" cy="400" r="6" fill="#F48C6E"/></g>
+</svg></div>`;
+}
+const ICONES_OBJ = {
+  lunettes:`<svg width="34" height="20" viewBox="0 0 34 20"><circle cx="9" cy="10" r="7" fill="none" stroke="#5E3A2C" stroke-width="2.5"/><circle cx="25" cy="10" r="7" fill="none" stroke="#5E3A2C" stroke-width="2.5"/><path d="M16 9h2" stroke="#5E3A2C" stroke-width="2.5"/></svg>`,
+  cravate:`<svg width="20" height="34" viewBox="0 0 20 34"><path d="M6 2h8l-2 6 5 18-7 6-7-6 5-18z" fill="#557A45" stroke="#5E3A2C" stroke-width="2" stroke-linejoin="round"/></svg>`,
+  sac:`<svg width="30" height="30" viewBox="0 0 30 30"><rect x="4" y="8" width="22" height="19" rx="6" fill="#EFD3A8" stroke="#5E3A2C" stroke-width="2"/><path d="M10 8V6a5 5 0 0 1 10 0v2" fill="none" stroke="#5E3A2C" stroke-width="2"/><rect x="10" y="15" width="10" height="6" rx="2" fill="#F2906B" stroke="#5E3A2C" stroke-width="1.5"/></svg>`,
+  badge:`<svg width="26" height="32" viewBox="0 0 26 32"><path d="M13 1v6" stroke="#5E3A2C" stroke-width="2"/><rect x="2" y="7" width="22" height="24" rx="4" fill="#fff" stroke="#5E3A2C" stroke-width="2"/><circle cx="13" cy="16" r="4" fill="#F2906B"/><path d="M7 25h12" stroke="#5E3A2C" stroke-width="2" stroke-linecap="round"/></svg>`,
+  tenue:`<svg width="32" height="30" viewBox="0 0 32 30"><path d="M8 3l8 7 8-7 6 5-3 20H5L2 8z" fill="#8EC5D6" stroke="#5E3A2C" stroke-width="2" stroke-linejoin="round"/><path d="M16 10v18" stroke="#5E3A2C" stroke-width="2"/></svg>`,
+};
+
+/* ============================================================
+   OUTILS
+   ============================================================ */
+const $ = s => document.querySelector(s);
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+const tx = s => s.replaceAll("{nom}", esc(etat.nom));
+function joursDepuis(iso){ if(!iso) return null; const d=new Date(iso+"T00:00:00"); return Math.round((AUJOURDHUI-d)/864e5); }
+function dateCourte(iso){ if(!iso) return "Pas encore envoyée"; return new Date(iso+"T00:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"short"}); }
+const tache = id => TACHES.find(t=>t.id===id);
+const tachesVisibles = () => TACHES.filter(t=>!t.alternance || etat.profil==="alternance");
+
+function plafondAtteint(t){
+  if (t.groupe){ const total = TACHES.filter(x=>x.groupe===t.groupe).reduce((s,x)=>s+(etat.faits[x.id]||0),0); return total >= PLAFONDS_GROUPES[t.groupe]; }
+  return t.cap!=null && (etat.faits[t.id]||0) >= t.cap;
+}
+
+/* Valider une tâche : compte toujours l'effort, l'énergie seulement sous le plafond */
+function valider(id){
+  const t = tache(id);
+  const bloque = plafondAtteint(t);
+  etat.faits[id] = (etat.faits[id]||0) + 1;
+  if (bloque){
+    toast(`C'est noté ! Plafond du jour atteint pour « ${t.nom} », donc pas d'énergie en plus. Reviens demain.`);
+  } else {
+    const avant = etat.energie;
+    etat.energie += t.e;
+    toast(`<b>+${t.e} ⚡</b> ${esc(t.nom)}`, t.victoire);
+    etat.poseTemp = t.victoire ? "fier" : "content";
+    setTimeout(()=>{etat.poseTemp=null; if(etat.onglet==="accueil") rendreAccueil();}, 1800);
+    if (avant < JAUGE_AVENTURE && etat.energie >= JAUGE_AVENTURE && !etat.aventureFaite)
+      setTimeout(()=>toast(`La jauge est pleine ! ${esc(etat.nom)} est prêt pour l'aventure.`), 2200);
+  }
+  rendre();
+}
+
+let minuterieToast;
+function toast(html, victoire=false){
+  const el = $("#toast");
+  el.innerHTML = html; el.classList.toggle("victoire", !!victoire); el.classList.remove("cache");
+  clearTimeout(minuterieToast); minuterieToast = setTimeout(()=>el.classList.add("cache"), 2600);
+}
+
+/* ============================================================
+   ACCUEIL
+   ============================================================ */
+function phraseZiggy(){
+  const n = esc(etat.nom);
+  if (etat.aventureFaite) return `Quelle journée ! Je t'ai tout raconté dans <b>Clairbourg</b>. Demain matin, on repart de zéro, ensemble.`;
+  if (etat.energie >= JAUGE_AVENTURE) return `J'ai plein d'énergie ! On part explorer <b>Clairbourg</b> ?`;
+  const due = etat.candidatures.find(c=>c.envoyee && !c.relancee && c.reponse==="attente" && joursDepuis(c.date)>=RELANCE_JOURS);
+  if (due) return `Psst, ${esc(etat.prenom)}… <b>${esc(due.entreprise)}</b> n'a pas répondu depuis ${joursDepuis(due.date)} jours. On les relance ?`;
+  return `Bonjour ${esc(etat.prenom)} ! Chaque petit pas me donne de l'énergie. On commence par quoi ?`;
+}
+function poseAccueil(){
+  if (etat.poseTemp) return etat.poseTemp;
+  if (etat.aventureFaite) return "dort";
+  if (etat.energie >= JAUGE_AVENTURE) return "excite";
+  return "neutre";
+}
+function rendreAccueil(){
+  const e = Math.min(etat.energie, JAUGE_AVENTURE);
+  const pleine = etat.energie >= JAUGE_AVENTURE;
+  let bas;
+  if (etat.aventureFaite) bas = `<small>Aventure du jour terminée. ${esc(etat.nom)} se repose. La jauge revient à 0 demain matin, et tes tâches comptent toujours.</small>`;
+  else if (pleine) bas = `<button class="btn pulse" id="partir">Envoyer ${esc(etat.nom)} à l'aventure</button>`;
+  else bas = `<small>Encore ${JAUGE_AVENTURE-e} points pour que ${esc(etat.nom)} parte à l'aventure.</small>`;
+
+  const groupes = ETAPES.map(nomEtape => {
+    const liste = tachesVisibles().filter(t=>t.etape===nomEtape);
+    if (!liste.length) return "";
+    const gagne = liste.reduce((s,t)=>s+(etat.faits[t.id]||0),0);
+    const lignes = liste.map(t=>{
+      const n = etat.faits[t.id]||0;
+      const plafond = plafondAtteint(t);
+      const capTxt = t.groupe ? `${TACHES.filter(x=>x.groupe===t.groupe).reduce((s,x)=>s+(etat.faits[x.id]||0),0)}/${PLAFONDS_GROUPES[t.groupe]} pour les pauses`
+                   : t.cap==null ? (n? `Fait ${n} fois aujourd'hui` : "Sans plafond") : `${n}/${t.cap} aujourd'hui`;
+      const sous = t.auto ? "Se coche tout seul depuis le tableau" : (plafond ? "Plafond atteint, merci pour l'effort !" : capTxt);
+      return `<button class="tache ${n?"faite":""} ${plafond&&!t.auto?"plafond":""} ${t.auto?"auto":""}" data-tache="${t.id}">
+        <span class="coche">${n?`<svg width="14" height="12" viewBox="0 0 14 12"><path d="M1.5 6.5 5 10l7.5-8.5" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`:""}</span>
+        <span><span class="nom">${esc(t.nom)}</span><span class="sous">${sous}</span></span>
+        <span class="gain">+${t.e}</span></button>`;
+    }).join("");
+    return `<details class="etape" data-etape="${nomEtape}" ${etat.ouvertes.has(nomEtape)?"open":""}>
+      <summary><span>${nomEtape}</span><span class="meta">${gagne? `${gagne} faite${gagne>1?"s":""}`:""}<svg class="fleche" width="8" height="12" viewBox="0 0 8 12"><path d="M1.5 1.5 6 6l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></summary>
+      ${lignes}</details>`;
+  }).join("");
+
+  $("#ecran-accueil").innerHTML = `
+    <div class="scene">${decor()}
+      <div class="bulle">${phraseZiggy()}</div>
+      ${ziggy(poseAccueil(), etat.poseTemp?"saut":"respire")}
+    </div>
+    <div class="jauge">
+      <div class="jauge-haut"><strong>Énergie de ${esc(etat.nom)}</strong><span>${e} / ${JAUGE_AVENTURE} ⚡</span></div>
+      <div class="piste" role="progressbar" aria-valuemin="0" aria-valuemax="${JAUGE_AVENTURE}" aria-valuenow="${e}" aria-label="Énergie du jour">
+        <div class="remplissage" style="width:${e/JAUGE_AVENTURE*100}%"></div><i style="left:33.3%"></i><i style="left:66.6%"></i></div>
+      ${bas}
+    </div>
+    <div class="pad">
+      <h3 class="section-titre">Tes tâches du jour</h3>
+      ${groupes}
+      <p class="note-maquette">Vendredi 25 septembre · profil ${etat.profil==="alternance"?"Alternance":"Emploi"}</p>
+    </div>`;
+  const b = $("#partir"); if (b) b.onclick = lancerAventure;
+}
+
+/* ============================================================
+   AVENTURE (1 par jour)
+   ============================================================ */
+function lancerAventure(){
+  $("#calque").innerHTML = `<div class="plein aventure" role="dialog" aria-label="Départ en aventure">
+    <div style="width:100%;overflow:hidden">${ziggy("aventure","marche")}</div>
+    <h3>${esc(etat.nom)} part explorer Clairbourg…</h3>
+    <div class="points"><i></i><i></i><i></i></div></div>`;
+  $("#calque .ziggy").style.width = "170px";
+  setTimeout(retourAventure, 2400);
+}
+function retourAventure(){
+  const r = RECITS[etat.recitIndex % RECITS.length]; etat.recitIndex++;
+  const restants = ACCESSOIRES.filter(a=>!etat.possede.includes(a.id));
+  const gain = restants.length ? restants[Math.floor(Math.random()*restants.length)] : null;
+  if (gain) etat.possede.push(gain.id);
+  const lieu = etat.lieux.find(l=>l.nom===r.lieu); if (lieu) lieu.etat = r.etat;
+  etat.journal.unshift({date:"Aujourd'hui", texte:r.texte, gain: gain?gain.nom:null});
+  etat.aventureFaite = true;
+  $("#calque").innerHTML = `<div class="plein aventure" role="dialog" aria-label="Retour d'aventure">
+    ${ziggy("content","saut")}
+    <h3>${esc(etat.nom)} est rentré !</h3>
+    <div class="recit"><p>${tx(r.texte)}</p>
+      ${gain?`<div class="recompense"><span class="obj">${ICONES_OBJ[gain.id]}</span><span><small>Il a trouvé</small>${esc(gain.nom)}</span></div>`:""}</div>
+    <div class="actions"><button class="btn" id="porter">${gain?"L'essayer tout de suite":"Merci Ziggy !"}</button>
+    <button class="btn second" id="fermer">Retour au jardin</button></div></div>`;
+  $("#porter").onclick = ()=>{ if(gain && !etat.porte.includes(gain.id)) etat.porte.push(gain.id); fermer(); aller(gain?"moi":"accueil"); };
+  $("#fermer").onclick = fermer;
+  rendre();
+}
+function fermer(){ $("#calque").innerHTML = ""; rendre(); }
+
+/* ============================================================
+   CANDIDATURES
+   ============================================================ */
+const FILTRES = [
+  ["toutes","Toutes", c=>true],
+  ["aenvoyer","À envoyer", c=>!c.envoyee],
+  ["envoyees","Envoyées", c=>c.envoyee],
+  ["relancees","Relancées", c=>c.relancee],
+  ["entretien","Entretien", c=>c.entretien],
+  ["attente","En attente", c=>c.envoyee && c.reponse==="attente"],
+  ["refus","Refus", c=>c.reponse==="refus"],
+  ["decroche","Décroché !", c=>c.reponse==="decroche"],
+];
+function infoRelance(c){
+  if (!c.envoyee || c.relancee || c.reponse!=="attente") return "";
+  const reste = RELANCE_JOURS - joursDepuis(c.date);
+  return reste<=0 ? `<span class="relance due">Relance à faire</span>` : `<span class="relance">Relance dans ${reste} j</span>`;
+}
+function rendreCandidatures(){
+  const f = FILTRES.find(x=>x[0]===etat.filtre);
+  const liste = etat.candidatures.filter(f[2]);
+  const rep = {attente:"En attente", refus:"Refus", decroche:"Décroché !"};
+  $("#ecran-candidatures").innerHTML = `
+    <div class="entete"><h2>Candidatures</h2><p>${etat.candidatures.filter(c=>c.envoyee).length} envoyées · ${etat.candidatures.filter(c=>c.entretien).length} entretien · ${etat.courage} refus encaissé${etat.courage>1?"s":""} avec courage</p></div>
+    <div class="filtres" role="toolbar" aria-label="Filtrer par statut">${FILTRES.map(([id,lab,fn])=>`<button data-filtre="${id}" aria-pressed="${id===etat.filtre}">${lab}<span>${etat.candidatures.filter(fn).length}</span></button>`).join("")}</div>
+    <div class="pad">${liste.length? liste.map(c=>`
+      <button class="fiche" data-fiche="${c.id}">
+        <div class="fiche-haut"><div><h3>${esc(c.entreprise)}</h3><div class="poste">${esc(c.poste)}</div></div>
+          <span class="etiq ${c.type}">${c.type==="offre"?"Sur offre":"Spontanée"}</span></div>
+        <div class="etapes-fiche">
+          <span class="pas ${c.envoyee?"ok":""}">Envoyée</span><span class="pas ${c.relancee?"ok":""}">Relancée</span><span class="pas ${c.entretien?"ok entretien":""}">Entretien</span></div>
+        <div class="fiche-bas"><span>${c.envoyee?"Envoyée le "+dateCourte(c.date):"Offre sauvegardée"}</span>
+          ${c.envoyee? (infoRelance(c) || `<span class="reponse ${c.reponse}">${rep[c.reponse]}</span>`) : `<span class="relance">À envoyer</span>`}</div>
+      </button>`).join("") : `<p class="vide">Rien ici pour l'instant. Ça viendra !</p>`}
+    </div>`;
+}
+
+function ouvrirFiche(id){
+  const c = etat.candidatures.find(x=>x.id===id);
+  const toggle = (cle, titre, sous) => `<div class="ligne-toggle"><span>${titre}<small>${sous}</small></span>
+     <button class="interrupteur" role="switch" aria-checked="${c[cle]}" data-cle="${cle}" aria-label="${titre}"></button></div>`;
+  $("#calque").innerHTML = `<div class="voile" id="voile"><div class="feuille" role="dialog" aria-label="Fiche ${esc(c.entreprise)}">
+    <div class="poignee"></div>
+    <h3>${esc(c.entreprise)}</h3><p class="poste">${esc(c.poste)}</p>
+    <div class="bloc"><dl class="infos">
+      <dt>Type</dt><dd>${c.type==="offre"?"Candidature sur offre":"Candidature spontanée"}</dd>
+      <dt>Envoi</dt><dd>${dateCourte(c.date)}</dd>
+      <dt>Annonce</dt><dd>${c.lien?esc(c.lien):"—"}</dd></dl></div>
+    <div class="bloc">
+      ${toggle("envoyee","Candidature envoyée", c.type==="offre"?"+10 ⚡":"+15 ⚡")}
+      ${toggle("relancee","Relance faite","+10 ⚡")}
+      ${toggle("entretien","Entretien obtenu","+20 ⚡, une victoire !")}
+    </div>
+    <p class="label">Réponse</p>
+    <div class="segment" role="group" aria-label="Réponse">
+      <button data-rep="attente" aria-pressed="${c.reponse==="attente"}">En attente</button>
+      <button data-rep="refus" aria-pressed="${c.reponse==="refus"}">Refus</button>
+      <button class="dec" data-rep="decroche" aria-pressed="${c.reponse==="decroche"}">Décroché !</button></div>
+    <p class="label"><label for="note-${c.id}">Note</label></p>
+    <textarea class="champ" id="note-${c.id}" placeholder="Ce qui s'est dit, le nom du recruteur, ton ressenti…">${esc(c.note)}</textarea>
+    <div class="duo"><button class="btn second" id="fermer-fiche">Fermer</button><button class="btn" id="ok-fiche">Enregistrer</button></div>
+  </div></div>`;
+  const sauverNote = ()=>{ c.note = $(`#note-${c.id}`).value; };
+  $("#voile").onclick = e=>{ if(e.target.id==="voile"){ sauverNote(); fermer(); } };
+  $("#fermer-fiche").onclick = ()=>{ sauverNote(); fermer(); };
+  $("#ok-fiche").onclick = ()=>{ sauverNote(); fermer(); toast("Fiche enregistrée"); };
+  document.querySelectorAll("#calque .interrupteur").forEach(b=>b.onclick=()=>{
+    const cle = b.dataset.cle; c[cle] = !c[cle]; b.setAttribute("aria-checked", c[cle]);
+    if (!c[cle]) return;                   // décocher ne retire jamais d'énergie
+    c.recu = c.recu || {};
+    if (c.recu[cle]) return;               // pas de double énergie pour la même fiche
+    c.recu[cle] = true;
+    if (cle==="envoyee"){ if(!c.date) c.date="2026-09-25"; valider(c.type==="offre"?"envoi":"spontanee"); }
+    if (cle==="relancee") valider("relance");
+    if (cle==="entretien") valider("entretien");
+  });
+  document.querySelectorAll("#calque [data-rep]").forEach(b=>b.onclick=()=>{
+    const r = b.dataset.rep; if (r===c.reponse) return;
+    sauverNote(); c.reponse = r;
+    if (r==="refus"){ valider("refus"); etat.courage++; ecranReconfort(c); }
+    else if (r==="decroche"){ ecranFete(c); }
+    else ouvrirFiche(c.id);
+  });
+}
+
+function ouvrirAjout(){
+  let type="offre", envoyee=false;
+  $("#calque").innerHTML = `<div class="voile" id="voile"><form class="feuille" id="form-ajout" role="dialog" aria-label="Nouvelle candidature">
+    <div class="poignee"></div><h3>Nouvelle candidature</h3>
+    <p class="label"><label for="a-ent">Entreprise</label></p><input class="champ" id="a-ent" required placeholder="Ex. Studio Ardoise">
+    <p class="label"><label for="a-poste">Poste</label></p><input class="champ" id="a-poste" placeholder="Ex. Chargé·e de communication en alternance">
+    <p class="label"><label for="a-lien">Lien de l'annonce</label></p><input class="champ" id="a-lien" placeholder="Ex. welcometothejungle.com/…">
+    <p class="label">Type</p>
+    <div class="segment" id="a-type"><button type="button" data-v="offre" aria-pressed="true">Sur offre</button><button type="button" data-v="spont" aria-pressed="false">Spontanée</button></div>
+    <div class="bloc" style="margin-top:14px"><div class="ligne-toggle"><span>Déjà envoyée ?<small id="a-gain">Sinon, elle est gardée comme offre sauvegardée (+2 ⚡)</small></span>
+      <button type="button" class="interrupteur" role="switch" aria-checked="false" id="a-env" aria-label="Déjà envoyée"></button></div></div>
+    <div class="duo"><button type="button" class="btn second" id="a-annuler">Annuler</button><button class="btn" type="submit">Ajouter</button></div>
+  </form></div>`;
+  const majGain = ()=>{ $("#a-gain").textContent = envoyee ? (type==="offre"?"+10 ⚡ pour l'envoi":"+15 ⚡ pour une spontanée") : "Sinon, elle est gardée comme offre sauvegardée (+2 ⚡)"; };
+  document.querySelectorAll("#a-type button").forEach(b=>b.onclick=()=>{ type=b.dataset.v; document.querySelectorAll("#a-type button").forEach(x=>x.setAttribute("aria-pressed", x===b)); majGain(); });
+  $("#a-env").onclick = ()=>{ envoyee=!envoyee; $("#a-env").setAttribute("aria-checked", envoyee); majGain(); };
+  $("#a-annuler").onclick = fermer;
+  $("#voile").onclick = e=>{ if(e.target.id==="voile") fermer(); };
+  $("#form-ajout").onsubmit = e=>{
+    e.preventDefault();
+    const ent = $("#a-ent").value.trim(); if(!ent) return;
+    const c = {id:Date.now(), entreprise:ent, poste:$("#a-poste").value.trim()||"Poste à préciser", lien:$("#a-lien").value.trim(), type, date: envoyee?"2026-09-25":"", envoyee, relancee:false, entretien:false, reponse:"attente", note:"", recu:{envoyee}};
+    etat.candidatures.unshift(c); etat.filtre="toutes"; fermer();
+    valider(envoyee ? (type==="offre"?"envoi":"spontanee") : "offre");
+  };
+  $("#a-ent").focus();
+}
+
+function ecranReconfort(c){
+  $("#calque").innerHTML = `<div class="plein reconfort" role="dialog" aria-label="Message de ${esc(etat.nom)}">
+    ${ziggy("reconfort")}
+    <h3>« Leur perte. On en envoie une autre ensemble ? 🐾 »</h3>
+    <p>Tu as osé postuler chez ${esc(c.entreprise)}, et ça compte. Ce refus ne te fait rien perdre.</p>
+    <div class="badge" style="width:100%"><span class="med">${medaille()}</span><span><b>Badge courage ×${etat.courage}</b><span>+10 ⚡ pour avoir enregistré ce refus</span></span></div>
+    <div class="actions"><button class="btn" id="r-ajout">Ajouter une candidature</button><button class="btn second" id="r-plus-tard">Plus tard</button></div></div>`;
+  $("#r-ajout").onclick = ()=>{ aller("candidatures"); ouvrirAjout(); };
+  $("#r-plus-tard").onclick = fermer;
+}
+function ecranFete(c){
+  const couleurs = ["#FF4F5E","#F2906B","#A9C68E","#8EC5D6","#F7C94C","#A99BE0"];
+  const conf = Array.from({length:36},(_,i)=>`<i class="confetti" style="left:${(i*37)%100}%;background:${couleurs[i%6]};animation-duration:${2.4+(i%5)*.5}s;animation-delay:${-(i%7)*.4}s"></i>`).join("");
+  $("#calque").innerHTML = `<div class="plein fete" role="dialog" aria-label="Poste décroché">${conf}
+    ${ziggy("celebration")}
+    <h3>Tu as décroché ton poste chez ${esc(c.entreprise)} !</h3>
+    <p>Et ${esc(etat.nom)} aussi : il est pris comme apprenti à la <b>Boulangerie Mercier</b>. Vous l'avez fait, ensemble.</p>
+    <div class="actions"><button class="btn victoire" id="f-ok">On fête ça ! 🎉</button></div></div>`;
+  $("#f-ok").onclick = ()=>{ fermer(); aller("clairbourg"); };
+  etat.lieux[0].etat = "Embauché ! 🎉";
+  etat.journal.unshift({date:"Aujourd'hui", texte:`Grande nouvelle à Clairbourg : {nom} a décroché son job à la boulangerie Mercier, le même jour que toi chez ${esc(c.entreprise)} !`, gain:null});
+}
+function medaille(){ return `<svg width="22" height="26" viewBox="0 0 22 26"><path d="M6 1h10l-3 8H9z" fill="#A99BE0"/><circle cx="11" cy="16" r="8" fill="#F7C94C" stroke="#5E3A2C" stroke-width="2"/><path d="m11 12 1.3 2.6 2.8.4-2 2 .5 2.8-2.6-1.4-2.6 1.4.5-2.8-2-2 2.8-.4z" fill="#fff"/></svg>`; }
+
+/* ============================================================
+   CLAIRBOURG
+   ============================================================ */
+function rendreClairbourg(){
+  const toi = etat.candidatures.filter(c=>c.envoyee).length;
+  const lui = etat.lieux.filter(l=>l.etat!=="Pas encore visitée").length;
+  $("#ecran-clairbourg").innerHTML = `
+    <div class="entete"><h2>Clairbourg</h2><p>La petite ville où ${esc(etat.nom)} cherche son job, en même temps que toi.</p></div>
+    <div class="pad">
+      <div class="bandeau-ville">${decor("vue")}</div>
+      <h3 class="section-titre">Vous deux, cette semaine</h3>
+      <div class="miroir">
+        <div class="compteur"><small>Toi</small><strong>${toi}</strong><span>candidatures envoyées</span></div>
+        <div class="compteur"><small>${esc(etat.nom)}</small><strong>${lui}</strong><span>lieux où il a postulé</span></div>
+      </div>
+      <h3 class="section-titre">La recherche de ${esc(etat.nom)}</h3>
+      <div class="bloc">${etat.lieux.map(l=>`<div class="lieu"><span class="pic">${iconeLieu(l.nom)}</span>
+        <span><b>${esc(l.nom)}</b><span class="${/Entretien|Embauché/.test(l.etat)?"etat-entretien":""}">${esc(l.poste)} · ${esc(l.etat)}</span></span></div>`).join("")}</div>
+      <h3 class="section-titre">Carnet d'aventures</h3>
+      <div class="journal">${etat.journal.map(j=>`<article class="entree"><time>${esc(j.date)}</time><p>${tx(j.texte)}</p>${j.gain?`<div class="gagne">Trouvé : ${esc(j.gain)}</div>`:""}</article>`).join("")}</div>
+    </div>`;
+}
+function iconeLieu(nom){
+  if (/Boulangerie/.test(nom)) return `<svg width="26" height="20" viewBox="0 0 26 20"><path d="M2 14c0-7 5-12 11-12s11 5 11 12c0 2-2 4-4 4H6c-2 0-4-2-4-4z" fill="#EFC08A" stroke="#5E3A2C" stroke-width="2"/><path d="M9 6l2 5M15 5l1 6" stroke="#5E3A2C" stroke-width="2" stroke-linecap="round"/></svg>`;
+  if (/Agence/.test(nom)) return `<svg width="24" height="24" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="3" fill="#8EC5D6" stroke="#5E3A2C" stroke-width="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" fill="none" stroke="#5E3A2C" stroke-width="2"/></svg>`;
+  if (/Studio/.test(nom)) return `<svg width="26" height="22" viewBox="0 0 26 22"><rect x="2" y="5" width="22" height="15" rx="4" fill="#F2906B" stroke="#5E3A2C" stroke-width="2"/><circle cx="13" cy="12.5" r="4.5" fill="#fff" stroke="#5E3A2C" stroke-width="2"/><rect x="8" y="1.5" width="8" height="4" rx="1.5" fill="#5E3A2C"/></svg>`;
+  return `<svg width="24" height="22" viewBox="0 0 24 22"><path d="M12 5C9 2 5 2 2 3v16c3-1 7-1 10 2 3-3 7-3 10-2V3c-3-1-7-1-10 2z" fill="#fff" stroke="#5E3A2C" stroke-width="2" stroke-linejoin="round"/><path d="M12 5v16" stroke="#5E3A2C" stroke-width="2"/></svg>`;
+}
+
+/* ============================================================
+   MOI
+   ============================================================ */
+const PERSONNALITES = {Ziggy:"Renard curieux et débrouillard, un peu perdu au début mais plein de ressources."};
+function rendreMoi(){
+  const portes = ACCESSOIRES.filter(a=>etat.porte.includes(a.id));
+  $("#ecran-moi").innerHTML = `
+    <div class="entete"><h2>Moi</h2><p>${esc(etat.prenom)}, profil ${etat.profil==="alternance"?"Alternance":"Emploi"}</p></div>
+    <div class="pad">
+      <div class="profil">${ziggy("fier")}
+        <div><h3>${esc(etat.nom)}</h3><p>${PERSONNALITES.Ziggy}</p>
+        <div class="porte">${portes.length?portes.map(a=>`<span>${esc(a.nom)}</span>`).join(""):`<span>Rien sur le dos</span>`}</div></div></div>
+      <h3 class="section-titre">Garde-robe</h3>
+      <div class="garde-robe">${ACCESSOIRES.map(a=>{
+        const ok = etat.possede.includes(a.id);
+        return `<button class="objet ${ok?"":"verrou"}" data-objet="${a.id}" aria-pressed="${etat.porte.includes(a.id)}" ${ok?"":"aria-disabled=\"true\""}>
+          <span class="obj">${ok?ICONES_OBJ[a.id]:`<svg width="18" height="22" viewBox="0 0 18 22"><rect x="2" y="9" width="14" height="11" rx="3" fill="#D8C6B6"/><path d="M5 9V6a4 4 0 0 1 8 0v3" fill="none" stroke="#D8C6B6" stroke-width="2.5"/></svg>`}</span>
+          ${ok?esc(a.nom):"À trouver"}<small>${ok?(etat.porte.includes(a.id)?"Porté":"Porter"):"En aventure"}</small></button>`;}).join("")}</div>
+      <h3 class="section-titre">Badges</h3>
+      <div class="badges">
+        <div class="badge"><span class="med">${medaille()}</span><span><b>Courage ×${etat.courage}</b><span>Un refus, c'est avoir osé</span></span></div>
+        <div class="badge"><span class="med" style="background:var(--sauge-clair)"><svg width="22" height="22" viewBox="0 0 22 22"><path d="M11 2c3 4 6 6 6 10a6 6 0 0 1-12 0c0-2 1-4 3-5 0 2 1 3 2 3 0-3-1-5 1-8z" fill="#F2906B" stroke="#5E3A2C" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span><b>4 jours actifs</b><span>cette semaine, sans pression</span></span></div>
+      </div>
+      <h3 class="section-titre">Réglages</h3>
+      <div class="bloc">
+        <label class="reglage" for="r-nom">Nom du compagnon<input id="r-nom" value="${esc(etat.nom)}" maxlength="16" autocomplete="off"></label>
+        <label class="reglage" for="r-prenom">Ton prénom<input id="r-prenom" value="${esc(etat.prenom)}" maxlength="20" autocomplete="off"></label>
+        <div class="reglage">Je cherche
+          <div class="segment" role="group" aria-label="Profil"><button data-profil="emploi" aria-pressed="${etat.profil==="emploi"}">Emploi</button><button data-profil="alternance" aria-pressed="${etat.profil==="alternance"}">Alternance</button></div></div>
+        <div class="reglage"><span>Rappel de relance à J+7<small style="display:block;font-weight:600;color:var(--brun-doux);font-size:12px">Notification si pas de réponse</small></span>
+          <button class="interrupteur" role="switch" id="r-notif" aria-checked="${etat.relanceNotif}" aria-label="Rappel de relance"></button></div>
+        <button class="reglage danger" style="width:100%;border-left:0;border-right:0;border-bottom:0;background:none;text-align:left" id="r-effacer">Effacer mes données</button>
+      </div>
+      <p class="note-maquette">Maquette : les images de Ziggy et du décor se chargent depuis maquette/illustrations/ une fois ajoutées.</p>
+    </div>`;
+  $("#r-nom").onchange = e=>{ const v=e.target.value.trim(); if(v){ etat.nom=v; toast(`Ton compagnon s'appelle maintenant ${esc(v)}`); rendre(); } };
+  $("#r-prenom").onchange = e=>{ const v=e.target.value.trim(); if(v){ etat.prenom=v; rendre(); } };
+  document.querySelectorAll("[data-profil]").forEach(b=>b.onclick=()=>{ etat.profil=b.dataset.profil; etat.ouvertes.add("Alternance"); toast(etat.profil==="alternance"?"Les tâches alternance sont ajoutées à ton accueil":"Profil Emploi : les tâches alternance sont retirées"); rendre(); });
+  $("#r-notif").onclick = ()=>{ etat.relanceNotif=!etat.relanceNotif; rendre(); };
+  $("#r-effacer").onclick = ()=>toast("Dans l'app, une confirmation sera demandée avant d'effacer.");
+  document.querySelectorAll("[data-objet]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.objet; if(!etat.possede.includes(id)){ toast(`${esc(etat.nom)} le trouvera peut-être lors d'une prochaine aventure.`); return; }
+    etat.porte = etat.porte.includes(id) ? etat.porte.filter(x=>x!==id) : [...etat.porte,id]; rendre();
+  });
+}
+
+/* ============================================================
+   NAVIGATION ET RENDU
+   ============================================================ */
+function aller(onglet){
+  etat.onglet = onglet;
+  ["accueil","candidatures","clairbourg","moi"].forEach(o=>{ $("#ecran-"+o).hidden = o!==onglet; });
+  document.querySelectorAll("[data-onglet]").forEach(b=>{ if(b.dataset.onglet===onglet) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
+  $("#fab").hidden = onglet!=="candidatures";
+  $("#ecran-"+onglet).scrollTop = 0;
+  rendre();
+}
+function rendre(){
+  const fn = {accueil:rendreAccueil, candidatures:rendreCandidatures, clairbourg:rendreClairbourg, moi:rendreMoi}[etat.onglet];
+  const el = $("#ecran-"+etat.onglet); const y = el.scrollTop;
+  fn(); el.scrollTop = y;
+}
+
+document.addEventListener("click", e=>{
+  const t = e.target.closest("[data-tache]");
+  if (t){ const tc = tache(t.dataset.tache);
+    if (tc.auto){ toast("Cette tâche se valide toute seule quand tu mets à jour une candidature."); aller("candidatures"); }
+    else valider(tc.id); return; }
+  const o = e.target.closest("[data-onglet]"); if (o){ aller(o.dataset.onglet); return; }
+  const a = e.target.closest("[data-aller]"); if (a){ fermer(); aller(a.dataset.aller); return; }
+  const f = e.target.closest("[data-filtre]"); if (f){ etat.filtre=f.dataset.filtre; rendre(); return; }
+  const fi = e.target.closest("[data-fiche]"); if (fi){ ouvrirFiche(+fi.dataset.fiche); return; }
+});
+document.addEventListener("toggle", e=>{
+  const d = e.target; if (!d.matches || !d.matches("details[data-etape]")) return;
+  d.open ? etat.ouvertes.add(d.dataset.etape) : etat.ouvertes.delete(d.dataset.etape);
+}, true);
+$("#fab").onclick = ouvrirAjout;
+$("#demo-jauge").onclick = ()=>{ fermer(); etat.energie = Math.max(etat.energie, JAUGE_AVENTURE); etat.aventureFaite=false; aller("accueil"); };
+$("#demo-matin").onclick = ()=>{ fermer(); etat.energie=0; etat.faits={}; etat.aventureFaite=false; aller("accueil"); toast("Nouveau matin : la jauge repart de 0."); };
+
+aller("accueil");
+</script>
