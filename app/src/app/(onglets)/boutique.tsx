@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bouton } from '@/components/base';
 import { Compagnon } from '@/components/Compagnon';
 import { CompteurPieces, IconePiece } from '@/components/Pieces';
-import { CATALOGUE_BOUTIQUE, LIBELLES_TYPES, type ObjetBoutique, type TypeObjet } from '@/config/boutique';
+import { CATALOGUE_BOUTIQUE, LIBELLES_TYPES, catalogueDe, type ObjetBoutique, type TypeObjet } from '@/config/boutique';
 import { arrondis, couleurs, espace, polices } from '@/config/theme';
 import { imageObjet } from '@/illustrations/registre';
 import { aPremium } from '@/services/abonnement';
@@ -25,7 +25,8 @@ export default function Shop() {
   const [type, setType] = useState<TypeObjet | 'tout'>('tout');
   const [achat, setAchat] = useState<ObjetBoutique | null>(null);
   const portes = CATALOGUE_BOUTIQUE.filter((o) => etat.equipe.includes(o.id));
-  const catalogue = CATALOGUE_BOUTIQUE.filter((o) => type === 'tout' || o.type === type);
+  // Seuls les objets prévus pour cet animal (les vêtements illustrés arrivent animal par animal)
+  const catalogue = catalogueDe(etat.compagnon?.espece ?? 'renard').filter((o) => type === 'tout' || o.type === type);
 
   function toucher(o: ObjetBoutique) {
     if (etat.inventaire.includes(o.id)) return dispatch({ type: 'EQUIPER', objetId: o.id });

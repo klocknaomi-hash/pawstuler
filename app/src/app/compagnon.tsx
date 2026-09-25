@@ -14,7 +14,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ecran, Pastille } from '@/components/base';
 import { Compagnon } from '@/components/Compagnon';
 import { BadgeSerie } from '@/components/Serie';
-import { CATALOGUE_BOUTIQUE } from '@/config/boutique';
+import { catalogueDe } from '@/config/boutique';
 import { LIBELLES_PRONOMS, accorder, compagnonParId } from '@/config/compagnons';
 import { OBJECTIFS_SERIE } from '@/config/serie';
 import { arrondis, couleurs, espace, ombre, polices } from '@/config/theme';
@@ -49,7 +49,7 @@ export default function ProfilCompagnon() {
 
   // Collection : objets du Shop possédés + souvenirs des lieux découverts
   const decouverts = new Map(etat.decouvertes.filter((d) => d.villeId === ville.id).map((d) => [d.lieuId, d.le]));
-  const objets = CATALOGUE_BOUTIQUE.map((o) => ({ id: o.id, nom: o.nom, emoji: o.emoji, possede: etat.inventaire.includes(o.id) }));
+  const objets = catalogueDe(compagnon.espece).map((o) => ({ id: o.id, nom: o.nom, emoji: o.emoji, possede: etat.inventaire.includes(o.id) }));
   const souvenirs = ville.lieux.map((l) => ({ id: l.id, nom: l.souvenir.nom, emoji: l.souvenir.emoji, possede: decouverts.has(l.id) }));
   const nbPossedes = [...objets, ...souvenirs].filter((x) => x.possede).length;
 
