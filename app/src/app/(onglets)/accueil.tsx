@@ -20,6 +20,7 @@ import { LigneTache } from '@/components/LigneTache';
 import { CompteurPieces, IconePiece } from '@/components/Pieces';
 import { BadgeSerie } from '@/components/Serie';
 import type { Pose } from '@/config/compagnons';
+import { PREMIER_PAS } from '@/config/dialogues';
 import { COUT, ENERGIE_PAR_TACHE } from '@/config/energie';
 import { PLAFOND_PIECES_JOUR } from '@/config/taches';
 import { arrondis, couleurs, espace, ombre, polices } from '@/config/theme';
@@ -133,6 +134,8 @@ export default function Accueil() {
     if (serieReprise && faites === 0) return `Content de te revoir ${prenom} ! On repart ensemble, à ton rythme 🐾`;
     if (toutFait) return 'Bravo, tout est fait pour aujourd’hui !';
     if (faites > 0) return `Déjà ${faites} de faite${faites > 1 ? 's' : ''}. On continue ?`;
+    // Tant qu'aucune candidature n'est enregistrée, le compagnon propose le tout premier pas
+    if (etat.contexte === 'recherche' && etat.candidatures.length === 0) return PREMIER_PAS;
     return `Bonjour ${prenom} ! On commence par quoi aujourd’hui ?`;
   }
   const bulle = moment?.texte ?? messageDuJour();
