@@ -13,12 +13,14 @@ import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, Vi
 import Animated, { FadeOutUp, SlideInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Compagnon } from '@/components/Compagnon';
+import { Compagnon, type Geste } from '@/components/Compagnon';
+import { BallonJeu, CoeursCalin, Zzz } from '@/components/Effets';
 import { JaugeEnergie } from '@/components/Energie';
 import { LigneTache } from '@/components/LigneTache';
 import { CompteurPieces, IconePiece } from '@/components/Pieces';
 import { BadgeSerie } from '@/components/Serie';
 import type { Pose } from '@/config/compagnons';
+import { PREMIER_PAS } from '@/config/dialogues';
 import { COUT, ENERGIE_PAR_TACHE } from '@/config/energie';
 import { PLAFOND_PIECES_JOUR } from '@/config/taches';
 import { arrondis, couleurs, espace, ombre, polices } from '@/config/theme';
@@ -42,6 +44,10 @@ export default function Accueil() {
   const [moment, setMoment] = useState<{ pose: Pose; texte: string } | null>(null);
   const [gains, setGains] = useState<{ cle: number; pieces: number }[]>([]);
   const [saisie, setSaisie] = useState<string | null>(null);
+  // Petit mouvement en cours (câlin, jeu) et effet visuel qui l'accompagne
+  const [geste, setGeste] = useState<Geste | undefined>(undefined);
+  const [effet, setEffet] = useState<{ type: 'calin' | 'jeu' | 'zzz'; cle: number } | null>(null);
+  const compteurGestes = useRef(0);
   const compteurGains = useRef(0);
   const minuterieMoment = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -107,7 +113,17 @@ export default function Accueil() {
     if (etat.energie < COUT[type])
       return reagir('reconfort', `Je n’ai plus assez d’énergie… Chaque tâche terminée m’en redonne ${ENERGIE_PAR_TACHE} ⚡.`);
     dispatch({ type: 'INTERAGIR', moment: type });
+    jouerGeste(type);
     reagir(type === 'calin' ? 'content' : 'excite', type === 'calin' ? 'Merci, ça fait du bien !' : 'Encore une partie ? 😄');
+  }
+
+  /** Lance le mouvement du compagnon et son effet (cœurs, ballon, zzz), qui s'efface tout seul. */
+  function jouerGeste(type: 'calin' | 'jeu' | 'zzz') {
+    compteurGestes.current += 1;
+    const cle = compteurGestes.current;
+    if (type !== 'zzz') setGeste({ type, cle });
+    setEffet({ type, cle });
+    setTimeout(() => setEffet((e) => (e?.cle === cle ? null : e)), 2400);
   }
 
   /** Ce que dit le compagnon : réaction du moment, sommeil, série, puis avancée des tâches. */
@@ -118,6 +134,8 @@ export default function Accueil() {
     if (serieReprise && faites === 0) return `Content de te revoir ${prenom} ! On repart ensemble, à ton rythme 🐾`;
     if (toutFait) return 'Bravo, tout est fait pour aujourd’hui !';
     if (faites > 0) return `Déjà ${faites} de faite${faites > 1 ? 's' : ''}. On continue ?`;
+    // Tant qu'aucune candidature n'est enregistrée, le compagnon propose le tout premier pas
+    if (etat.contexte === 'recherche' && etat.candidatures.length === 0) return PREMIER_PAS;
     return `Bonjour ${prenom} ! On commence par quoi aujourd’hui ?`;
   }
   const bulle = moment?.texte ?? messageDuJour();
@@ -155,8 +173,22 @@ export default function Accueil() {
             <Text style={styles.bulleTexte}>{bulle}</Text>
           </View>
           <View style={styles.sol}>
-            <Pressable onPress={() => !dort && interagir('calin')} accessibilityRole="button" accessibilityLabel={`Câliner ${compagnon.nom}`}>
-              <Compagnon espece={compagnon.espece} pose={pose} taille={150} promenade={!dort && !moment} reaction={reaction} equipe={etat.equipe} />
+            {effet?.type === 'calin' && <CoeursCalin key={effet.cle} />}
+            {effet?.type === 'jeu' && <BallonJeu key={effet.cle} />}
+            {effet?.type === 'zzz' && <Zzz key={effet.cle} />}
+            <Pressable
+              onPress={() => (dort ? jouerGeste('zzz') : interagir('calin'))}
+              accessibilityRole="button"
+              accessibilityLabel={dort ? `${compagnon.nom} dort` : `Câliner ${compagnon.nom}`}>
+              <Compagnon
+                espece={compagnon.espece}
+                pose={pose}
+                taille={150}
+                promenade={!dort && !moment}
+                reaction={reaction}
+                geste={geste}
+                equipe={etat.equipe}
+              />
             </Pressable>
             {gains.filter((g) => g.pieces > 0).map((g) => (
               <Animated.View key={g.cle} entering={SlideInDown.duration(250)} exiting={FadeOutUp.duration(700)} style={styles.gainVolant}>

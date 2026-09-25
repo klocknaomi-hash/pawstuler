@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
 import { couleurs, polices } from '@/config/theme';
+import { synchroniserRappels } from '@/services/rappels';
 import { FournisseurApp, useApp } from '@/store/etat';
 
 SplashScreen.preventAutoHideAsync();
@@ -20,7 +21,14 @@ const avecEntete = (title: string) => ({
 });
 
 function Navigation() {
-  const { pret } = useApp();
+  const { etat, pret } = useApp();
+
+  // Rappels sur le téléphone : remis à jour peu après chaque changement (candidature, paramètres…)
+  useEffect(() => {
+    if (!pret) return;
+    const minuterie = setTimeout(() => synchroniserRappels(etat).catch(() => {}), 1500);
+    return () => clearTimeout(minuterie);
+  }, [etat, pret]);
 
   // On garde l'écran de lancement tant que les données du téléphone ne sont pas relues
   useEffect(() => {
@@ -47,6 +55,8 @@ function Navigation() {
       <Stack.Screen name="compte/portefeuille" options={avecEntete('Portefeuille')} />
       <Stack.Screen name="compagnon" options={avecEntete('Mon compagnon')} />
       <Stack.Screen name="premium" options={{ presentation: 'modal' }} />
+      {/* Textes légaux : en fenêtre, pour s'ouvrir aussi par-dessus l'écran d'abonnement */}
+      <Stack.Screen name="legal/[doc]" options={{ ...avecEntete('Informations'), presentation: 'modal' }} />
     </Stack>
   );
 }

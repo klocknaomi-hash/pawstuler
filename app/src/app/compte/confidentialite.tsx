@@ -3,6 +3,7 @@
  * Ce que l'app garde, où, et les droits de l'utilisateur, avec les actions correspondantes.
  * Texte à faire relire avant publication (mentions légales, contact du responsable).
  */
+import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Bouton, Ecran, SousTitre } from '@/components/base';
@@ -19,7 +20,7 @@ const SECTIONS = [
   {
     titre: 'Où elles sont gardées',
     texte:
-      'Pour l’instant, toutes tes données restent sur ce téléphone. Elles ne sont ni vendues ni partagées. Elles servent uniquement à faire fonctionner l’app et à te proposer des tâches adaptées.',
+      'Tes données sont enregistrées sur ce téléphone. Si tu crées un compte en ligne, il est géré par Supabase, sur des serveurs situés dans l’Union européenne. Tes données ne sont jamais vendues : elles servent uniquement à faire fonctionner l’app.',
   },
   {
     titre: 'Tes droits',
@@ -40,7 +41,8 @@ export default function Confidentialite() {
       ))}
       <Bouton titre="Exporter mes données" variante="secondaire" onPress={() => exporterDonnees(etat)} />
       <Text style={styles.note}>La suppression du compte se fait depuis la page Compte, en bas de la liste.</Text>
-      <Text style={styles.note}>Les coordonnées du responsable des données seront indiquées ici avant la publication de l’app.</Text>
+      <Bouton titre="Politique de confidentialité" variante="texte" onPress={() => router.push('/legal/confidentialite')} />
+      <Bouton titre="Conditions d’utilisation" variante="texte" onPress={() => router.push('/legal/conditions')} />
     </Ecran>
   );
 }

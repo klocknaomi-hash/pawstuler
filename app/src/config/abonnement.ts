@@ -78,9 +78,3 @@ export const INCLUS_PREMIUM = [
 /** Mention légale affichée en bas de l'écran d'abonnement (exigée par l'App Store). */
 export const MENTION_RENOUVELLEMENT =
   "Le paiement est débité sur ton compte Apple à la confirmation de l'achat ou, pour l'annuel, à la fin de l'essai gratuit. L'abonnement se renouvelle automatiquement au même prix, sauf résiliation au moins 24 h avant la fin de la période en cours. Tu peux gérer ou résilier ton abonnement à tout moment dans Réglages › ton nom › Abonnements. L'essai gratuit n'est proposé qu'une seule fois.";
-
-/** Liens obligatoires sur l'écran d'abonnement. */
-export const LIENS_LEGAUX = {
-  /** Conditions d'utilisation : contrat de licence standard d'Apple (à remplacer par tes CGU si tu en rédiges). */
-  conditions: 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
-};

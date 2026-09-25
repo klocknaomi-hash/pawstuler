@@ -19,6 +19,7 @@ export default function LayoutDemarrage() {
       {/* L'éclosion ne se rejoue pas en revenant en arrière */}
       <Stack.Screen name="oeuf" options={{ gestureEnabled: false, animation: 'fade' }} />
       <Stack.Screen name="nom-compagnon" options={{ gestureEnabled: false }} />
+      <Stack.Screen name="rencontre" options={{ gestureEnabled: false, animation: 'fade' }} />
       <Stack.Screen name="ville-depart" />
       <Stack.Screen name="serie" />
     </Stack>

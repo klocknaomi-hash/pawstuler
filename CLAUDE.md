@@ -7,7 +7,8 @@
 - **App Expo** (`app/`) : application complète et fonctionnelle (données sur le téléphone) : démarrage, tâches, pièces, énergie, aventures, candidatures, Shop, ville, « J'ai décroché ! », aventure professionnelle, Compte, Pawstuler Premium (voir section 10).
 - **Illustrations du Drive branchées** : les 4 compagnons (9 poses chacun), l'œuf propre à chaque animal (5 étapes), Clairebourg (lac pour l'accueil, centre-ville pour l'onglet ville) et Sunnyville (place à la fontaine).
 - **Ajouts récents** : connexion réelle prête à brancher (Supabase, voir `docs/connexion-et-abonnement.md`), écran d'abonnement **Pawstuler Premium**, objectif de série 🐾 à l'onboarding avec badge sur l'accueil, page de profil du compagnon, **garde-robe « Tenues complètes »** du chat (55 tenues) et du crocodile (43 tenues).
-- Prochaines étapes : brancher les clés (connexion, RevenueCat), les animations Dimini, puis les vrais services (connexion, paiement App Store, notifications, compte en ligne).
+- **Finitions faites** : petits mouvements du compagnon (câlin, jeu, gestes spontanés), rappels sur le téléphone, rencontre avec le compagnon (dialogues d'onboarding), icône de l'app, brouillons de textes légaux.
+- Prochaines étapes : tes tests sur iPhone et l'ajustement des valeurs (section 11), puis les services en ligne avec **Supabase seul** (choix validé : pas de Neon ni de Drizzle) : connexion, sauvegarde en ligne, paiement RevenueCat, publication (EAS).
 
 Avant tout gros changement : proposer un plan et attendre ma validation (section 8).
 
@@ -48,12 +49,12 @@ Le crocodile remplace le chien pour avoir des silhouettes bien différentes. Le 
 
 **Poses de chaque compagnon** (une image chacune, remplacées plus tard par des animations) : salut, neutre, content, excité, dort, réconfort, fier, aventure, célébration.
 
-**Il est toujours vivant** : il respire, se promène dans sa ville et réagit dès qu'une tâche est cochée. **Il vit à son rythme** : heure de réveil et de coucher réglables dans Compte › Paramètres (8 h – 22 h par défaut) ; en dehors, il dort (on peut quand même avancer, il découvre les progrès au réveil).
+**Il est toujours vivant** : il respire, se promène dans sa ville, fait de petits gestes tout seul (petit bond, balancement, étirement) et réagit dès qu'une tâche est cochée. **Câlin** : il se blottit et des cœurs s'envolent. **Jouer** : il sautille et un ballon rebondit. Endormi, le toucher fait apparaître des « z z z ». Le tout dans `Compagnon.tsx` et `Effets.tsx`, en attendant les animations Dimini. **Il vit à son rythme** : heure de réveil et de coucher réglables dans Compte › Paramètres (8 h – 22 h par défaut) ; en dehors, il dort (on peut quand même avancer, il découvre les progrès au réveil).
 
 ## 5. Le parcours et les fonctionnalités
 
 ### 5.1 Parcours complet
-Présentation → Connexion → Onboarding (prénom → objectif → choix de l'animal → œuf → naissance → prénom du compagnon → ville → objectif de série) → Accueil → Tâches → Récompenses → Pièces → Shop → Personnalisation → Candidatures → Progression → Aventures en ville → 🎉 J'ai décroché → 💼 Mon aventure professionnelle → Objectifs / progression → 🔎 Nouvelle recherche éventuelle.
+Présentation → Connexion → Onboarding (prénom → objectif → choix de l'animal → œuf → naissance → prénom du compagnon → rencontre → ville → objectif de série) → Accueil → Tâches → Récompenses → Pièces → Shop → Personnalisation → Candidatures → Progression → Aventures en ville → 🎉 J'ai décroché → 💼 Mon aventure professionnelle → Objectifs / progression → 🔎 Nouvelle recherche éventuelle.
 
 **Navigation : 5 onglets** — Accueil · Candidatures · Shop · Clairebourg (la ville du compagnon) · Compte.
 
@@ -73,6 +74,7 @@ Apple, Google, e-mail/mot de passe (création de compte, connexion, mot de passe
 3. **Choix de l'animal** parmi les 4, très visuel.
 4. **Œuf** : œuf intact → il tremble légèrement → première fissure → plusieurs fissures → il s'ouvre → l'animal apparaît → petite animation de bienvenue. L'utilisateur touche l'œuf pour avancer. Élément magique assumé, pour tous les animaux.
 5. **Prénom du compagnon** : son nom s'affiche en grand, « Comment veux-tu l'appeler ? », « Saisis son prénom », prérempli avec le nom proposé.
+5 bis. **La rencontre** : le compagnon se présente en 6 bulles (d'après le script de la section 9, adapté à chaque animal), puis « Promis ! 🐾 ». Bouton « Passer ». Répliques dans `app/src/config/dialogues.ts`. Sur l'accueil, tant qu'aucune candidature n'existe, il propose le premier pas (réplique 9).
 6. **Ville** : « Où veux-tu commencer ton aventure ? », une carte par ville (voir 5.8).
 7. **Objectif de série** 🐾 : « Ton petit objectif de série », au choix 2, 5 (par défaut), 7 ou 14 jours d'affilée. Ton bienveillant : « Chaque petite série compte », « Pas de pression : si tu fais une pause, ta série recommence simplement. Tu ne perds rien. » Puis l'accueil.
 
@@ -143,8 +145,15 @@ L'architecture permet d'ajouter d'autres villes plus tard dans `app/src/config/v
 - **Les tâches changent de contexte** (même moteur) : préparer son premier jour, objectifs du premier mois, découvrir son environnement, bilan de la première semaine, compétence à développer, point sur sa progression…
 - **Retour à la recherche plus tard** : « Recommencer une recherche » ouvre un nouveau parcours ; l'historique (postes, candidatures), le compagnon et les pièces sont conservés.
 
+### 5.10 bis Rappels sur le téléphone
+Notifications **locales** (programmées par le téléphone, sans serveur, `app/src/services/rappels.ts`), réglables dans Compte › Paramètres :
+- **Tâches du jour** : chaque matin, une heure après le réveil du compagnon.
+- **Relances** : 7 jours après l'envoi d'une candidature restée « envoyée ».
+- **Essai Premium** : 3 jours puis 1 jour avant la fin, avec le prix.
+- Jamais pendant que le compagnon dort, toujours bienveillants. Si l'iPhone les a coupées, Paramètres explique comment les réactiver.
+
 ### 5.11 Compte
-Une vraie section : Mon profil (prénom, compagnon, ville, contrat), Mon portefeuille, Mon parcours pro, Paramètres (notifications, rythme du compagnon), Confidentialité (données, RGPD, export), Abonnement Pawstuler Premium, **Profil du compagnon**, déconnexion (les données restent sur le téléphone) et suppression du compte.
+Une vraie section : Mon profil (prénom, compagnon, ville, contrat), Mon portefeuille, Mon parcours pro, Paramètres (rappels, rythme du compagnon), Confidentialité (données, RGPD, export, politique de confidentialité et conditions d'utilisation), Abonnement Pawstuler Premium, **Profil du compagnon**, déconnexion (les données restent sur le téléphone) et suppression du compte.
 
 ### 5.11 bis Profil du compagnon
 Une vraie page (`app/src/app/compagnon.tsx`), ouverte depuis le badge de série de l'accueil ou Compte › « Profil de [nom] » :
@@ -192,6 +201,7 @@ Chaque tâche rapporte des **pièces** (valeurs ci-dessous, réglables dans `app
 - Style **kawaii mais pas enfantin**, formes rondes, ambiance cosy, typographie arrondie (SF Pro Rounded).
 - **Palette tirée de Ziggy et de Clairebourg** : crème (fond), saumon du pelage (couleur de marque), brun du contour (texte), sauge, bleu du lac, or pour les pièces. **Corail vif réservé aux grandes victoires** (entretien, poste décroché).
 - Toutes les couleurs, polices et espacements sont dans `app/src/config/theme.ts`.
+- **Icône de l'app** : Ziggy qui fait coucou, sur fond crème (`app/assets/images/`, écran de lancement compris).
 - **Illustrations** : créées avec Dimini (et ChatGPT/Gemini pour les premières). Ce sont la source principale : ne jamais les remplacer par des illustrations génériques quand les fichiers existent. Fond transparent, sans contour blanc.
 
 ## 8. Comment travailler avec moi
@@ -217,8 +227,8 @@ Chaque tâche rapporte des **pièces** (valeurs ci-dessous, réglables dans `app
 9. 🦊 « Allez, on commence doucement : ajoute ta première candidature… ou juste une offre qui te plaît. »
 
 ## 10. Architecture technique (app/)
-- **Expo SDK 57, Expo Router, TypeScript.** Routes dans `app/src/app/` : `(demarrage)/` (présentation, connexion, onboarding), `(onglets)/` (accueil, candidatures, boutique = Shop, ville, compte), `candidature/[id]`, `compte/*` (profil, parametres, confidentialite, portefeuille), `compagnon` (profil du compagnon), et les fenêtres `aventure`, `decroche`, `aventure-pro`, `nouvelle-candidature`, `premium` (abonnement). L'onboarding se termine par `(demarrage)/serie`.
-- **Réglages** dans `app/src/config/` : `theme`, `taches`, `energie`, `aventures`, `compagnons`, `villes`, `boutique`, `abonnement`, `candidatures`, `serie`.
+- **Expo SDK 57, Expo Router, TypeScript.** Routes dans `app/src/app/` : `(demarrage)/` (présentation, connexion, onboarding), `(onglets)/` (accueil, candidatures, boutique = Shop, ville, compte), `candidature/[id]`, `compte/*` (profil, parametres, confidentialite, portefeuille), `compagnon` (profil du compagnon), `legal/[doc]` (confidentialité, conditions), et les fenêtres `aventure`, `decroche`, `aventure-pro`, `nouvelle-candidature`, `premium` (abonnement). L'onboarding se termine par `(demarrage)/serie`.
+- **Réglages** dans `app/src/config/` : `theme`, `taches`, `energie`, `aventures`, `compagnons`, `villes`, `boutique`, `abonnement`, `candidatures`, `serie`, `dialogues`, `legal`.
 - **Illustrations** : un seul registre, `app/src/illustrations/registre.ts`. Fichiers dans `app/assets/` : `compagnons/<animal>/<pose>.png` ; `oeufs/<animal>-1-intact.png`, `-2-fissure`, `-3-craquele`, `-eclosion`, `-ne` ; `villes/<ville>/portrait.jpg` (accueil), `paysage.jpg` (cartes) et `centre.jpg` (onglet ville, facultatif) ; `tenues/<animal>/<id>.png` (compagnon habillé, id = celui du catalogue `boutique.ts`). Ce que le Shop propose à chaque animal est calculé dans `app/src/logique/garderobe.ts`. Une image manquante affiche un visuel de secours. Les animations définitives (Lottie ou Rive) se brancheront dans `app/src/components/Compagnon.tsx`.
 - **Données** : un seul état (`app/src/store/`), sauvegardé sur le téléphone ; les anciennes sauvegardes sont migrées automatiquement. Logique métier dans `app/src/logique/` (tâches du jour, vie du compagnon, rythme, dates).
 - **Services** (`app/src/services/`) : connexion (`auth/` : Supabase en mode réel, compte local en mode démo ; clés dans `app/.env`, modèle `app/.env.exemple`), abonnement (achat App Store via RevenueCat à brancher), compte et RGPD (export, suppression), futur simulateur d'entretien.
@@ -236,6 +246,9 @@ Ces valeurs ne viennent pas de mes consignes : Claude les a choisies pour que l'
 - **Série** (`serie.ts`) : un jour compte à l'ouverture de l'app ; objectifs proposés 2, 5, 7, 14 jours (5 par défaut) et leurs textes.
 - **Profil du compagnon** : les descriptions, traits et « ce qu'il aime » de chaque animal (`compagnons.ts`), les souvenirs de chaque lieu (`villes.ts`), les pronoms proposés (Il / lui, Elle, Iel).
 - **Connexion** : choix de Supabase (comptes + future sauvegarde en ligne, région Europe) et de RevenueCat pour l'abonnement.
+- **Dialogues** de la rencontre pour Mochi, Milo et Nala (`dialogues.ts`), adaptés du script de Ziggy.
+- **Rappels** : heures (réveil + 1 h, 10 h) et textes (`rappels.ts`).
+- **Textes légaux** (`legal.ts` et `docs/legal/`) : brouillons à faire relire ; les « [À COMPLÉTER] » attendent tes coordonnées. Âge minimum proposé : 15 ans.
 
 ## 12. Questions ouvertes
 Aucune question bloquante. À ajuster après tes premiers tests sur iPhone : les valeurs de la section 11.

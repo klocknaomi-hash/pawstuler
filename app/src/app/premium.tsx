@@ -9,7 +9,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Bouton, Ecran, Texte, Titre } from '@/components/base';
 import { Compagnon } from '@/components/Compagnon';
@@ -18,7 +18,6 @@ import {
   INCLUS_GRATUIT,
   INCLUS_PREMIUM,
   JOURS_ESSAI,
-  LIENS_LEGAUX,
   MENTION_RENOUVELLEMENT,
   NOM_OFFRE,
   formuleParId,
@@ -165,8 +164,8 @@ export default function Premium() {
       <Text style={styles.mention}>{MENTION_RENOUVELLEMENT}</Text>
       <View style={styles.liens}>
         <Lien texte="Restaurer mes achats" onPress={restaurer} />
-        <Lien texte="Conditions d’utilisation" onPress={() => Linking.openURL(LIENS_LEGAUX.conditions)} />
-        <Lien texte="Confidentialité" onPress={() => router.push('/compte/confidentialite')} />
+        <Lien texte="Conditions d’utilisation" onPress={() => router.push('/legal/conditions')} />
+        <Lien texte="Confidentialité" onPress={() => router.push('/legal/confidentialite')} />
       </View>
     </Ecran>
   );
