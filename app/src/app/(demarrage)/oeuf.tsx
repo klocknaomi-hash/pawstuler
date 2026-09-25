@@ -29,9 +29,6 @@ import { compagnonParId } from '@/config/compagnons';
 import { couleurs, espace } from '@/config/theme';
 import { useApp } from '@/store/etat';
 
-/** Nombre de touchers avant l'éclosion (= nombre d'images d'œuf). */
-const TOUCHERS = imagesOeuf().length;
-
 type Phase = 'oeuf' | 'eclosion' | 'ne';
 
 const vibrer = (style: Haptics.ImpactFeedbackStyle) => {
@@ -42,6 +39,9 @@ export default function Oeuf() {
   const { etat } = useApp();
   const espece = etat.compagnon?.espece ?? 'renard';
   const infos = compagnonParId(espece);
+  // Chaque animal a son propre œuf ; nombre de touchers avant l'éclosion = nombre d'images d'œuf.
+  const etatsOeuf = imagesOeuf(espece);
+  const TOUCHERS = etatsOeuf.length;
 
   const [touchers, setTouchers] = useState(0);
   const [phase, setPhase] = useState<Phase>('oeuf');
@@ -103,7 +103,7 @@ export default function Oeuf() {
     transform: [{ translateY: flottement.value }, { rotate: `${rotation.value}deg` }, { scale: echelle.value }],
   }));
 
-  const imageOeuf = imagesOeuf()[Math.min(touchers, TOUCHERS - 1)];
+  const imageOeuf = etatsOeuf[Math.min(touchers, TOUCHERS - 1)];
   const eclosion = imageEclosion(espece);
   const naissance = imageNaissance(espece);
 
@@ -142,7 +142,7 @@ export default function Oeuf() {
             (eclosion ? (
               <Image source={eclosion} style={styles.image} contentFit="contain" />
             ) : (
-              <Image source={imagesOeuf()[TOUCHERS - 1]} style={styles.image} contentFit="contain" />
+              <Image source={etatsOeuf[TOUCHERS - 1]} style={styles.image} contentFit="contain" />
             ))}
           {phase === 'ne' &&
             (naissance ? (

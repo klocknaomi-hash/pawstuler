@@ -30,35 +30,100 @@ const COMPAGNONS: Record<EspeceId, Images<Pose>> = {
     aventure: require('../../assets/compagnons/renard/aventure.png'),
     celebration: require('../../assets/compagnons/renard/celebration.png'),
   },
-  chat: {},
-  crocodile: {},
-  lapin: {},
+  chat: {
+    salut: require('../../assets/compagnons/chat/salut.png'),
+    neutre: require('../../assets/compagnons/chat/neutre.png'),
+    content: require('../../assets/compagnons/chat/content.png'),
+    excite: require('../../assets/compagnons/chat/excite.png'),
+    dort: require('../../assets/compagnons/chat/dort.png'),
+    reconfort: require('../../assets/compagnons/chat/reconfort.png'),
+    fier: require('../../assets/compagnons/chat/fier.png'),
+    aventure: require('../../assets/compagnons/chat/aventure.png'),
+    celebration: require('../../assets/compagnons/chat/celebration.png'),
+  },
+  crocodile: {
+    salut: require('../../assets/compagnons/crocodile/salut.png'),
+    neutre: require('../../assets/compagnons/crocodile/neutre.png'),
+    content: require('../../assets/compagnons/crocodile/content.png'),
+    excite: require('../../assets/compagnons/crocodile/excite.png'),
+    dort: require('../../assets/compagnons/crocodile/dort.png'),
+    reconfort: require('../../assets/compagnons/crocodile/reconfort.png'),
+    fier: require('../../assets/compagnons/crocodile/fier.png'),
+    aventure: require('../../assets/compagnons/crocodile/aventure.png'),
+    celebration: require('../../assets/compagnons/crocodile/celebration.png'),
+  },
+  lapin: {
+    salut: require('../../assets/compagnons/lapin/salut.png'),
+    neutre: require('../../assets/compagnons/lapin/neutre.png'),
+    content: require('../../assets/compagnons/lapin/content.png'),
+    excite: require('../../assets/compagnons/lapin/excite.png'),
+    dort: require('../../assets/compagnons/lapin/dort.png'),
+    reconfort: require('../../assets/compagnons/lapin/reconfort.png'),
+    fier: require('../../assets/compagnons/lapin/fier.png'),
+    aventure: require('../../assets/compagnons/lapin/aventure.png'),
+    celebration: require('../../assets/compagnons/lapin/celebration.png'),
+  },
 };
 
-/** Les états de l'œuf. Les 3 premiers sont communs à tous les animaux. */
-const OEUF = {
-  etats: [
-    require('../../assets/oeufs/oeuf-1-intact.png'),
-    require('../../assets/oeufs/oeuf-2-fissure.png'),
-    require('../../assets/oeufs/oeuf-3-craquele.png'),
-  ] as ImageSourcePropType[],
-  /** L'animal qui sort de l'œuf (propre à chaque animal). */
-  eclosion: {
-    renard: require('../../assets/oeufs/renard-eclosion.png'),
-  } as Images<EspeceId>,
-  /** L'animal juste né, au milieu des coquilles. */
-  ne: {
-    renard: require('../../assets/oeufs/renard-ne.png'),
-  } as Images<EspeceId>,
+/**
+ * L'œuf de chaque animal : 3 états à toucher (intact → fissuré → craquelé),
+ * puis l'éclosion (l'animal sort la tête) et la naissance (au milieu des coquilles).
+ */
+type Oeuf = { etats: ImageSourcePropType[]; eclosion?: ImageSourcePropType; ne?: ImageSourcePropType };
+const OEUFS: Record<EspeceId, Oeuf> = {
+  renard: {
+    etats: [
+      require('../../assets/oeufs/renard-1-intact.png'),
+      require('../../assets/oeufs/renard-2-fissure.png'),
+      require('../../assets/oeufs/renard-3-craquele.png'),
+    ],
+    eclosion: require('../../assets/oeufs/renard-eclosion.png'),
+    ne: require('../../assets/oeufs/renard-ne.png'),
+  },
+  chat: {
+    etats: [
+      require('../../assets/oeufs/chat-1-intact.png'),
+      require('../../assets/oeufs/chat-2-fissure.png'),
+      require('../../assets/oeufs/chat-3-craquele.png'),
+    ],
+    eclosion: require('../../assets/oeufs/chat-eclosion.png'),
+    ne: require('../../assets/oeufs/chat-ne.png'),
+  },
+  crocodile: {
+    etats: [
+      require('../../assets/oeufs/crocodile-1-intact.png'),
+      require('../../assets/oeufs/crocodile-2-fissure.png'),
+      require('../../assets/oeufs/crocodile-3-craquele.png'),
+    ],
+    eclosion: require('../../assets/oeufs/crocodile-eclosion.png'),
+    ne: require('../../assets/oeufs/crocodile-ne.png'),
+  },
+  lapin: {
+    etats: [
+      require('../../assets/oeufs/lapin-1-intact.png'),
+      require('../../assets/oeufs/lapin-2-fissure.png'),
+      require('../../assets/oeufs/lapin-3-craquele.png'),
+    ],
+    eclosion: require('../../assets/oeufs/lapin-eclosion.png'),
+    ne: require('../../assets/oeufs/lapin-ne.png'),
+  },
 };
 
-/** Illustrations des villes : « portrait » pour l'accueil, « paysage » pour les cartes. */
-const VILLES: Record<VilleId, Images<'portrait' | 'paysage'>> = {
+/**
+ * Illustrations des villes :
+ * « portrait » pour l'accueil, « paysage » pour les cartes, « centre » pour l'onglet de la ville.
+ */
+type FormatVille = 'portrait' | 'paysage' | 'centre';
+const VILLES: Record<VilleId, Images<FormatVille>> = {
   clairebourg: {
     portrait: require('../../assets/villes/clairebourg/portrait.jpg'),
     paysage: require('../../assets/villes/clairebourg/paysage.jpg'),
+    centre: require('../../assets/villes/clairebourg/centre.jpg'),
   },
-  sunnyville: {},
+  sunnyville: {
+    portrait: require('../../assets/villes/sunnyville/portrait.jpg'),
+    paysage: require('../../assets/villes/sunnyville/paysage.jpg'),
+  },
 };
 
 /** Objets de la boutique, par id (voir src/config/boutique.ts). */
@@ -72,9 +137,11 @@ export function imageCompagnon(espece: EspeceId, pose: Pose): ImageSourcePropTyp
   return images[pose] ?? images.neutre;
 }
 
-export const imagesOeuf = () => OEUF.etats;
-export const imageEclosion = (espece: EspeceId) => OEUF.eclosion[espece];
-export const imageNaissance = (espece: EspeceId) => OEUF.ne[espece] ?? imageCompagnon(espece, 'salut');
-export const imageVille = (ville: VilleId, format: 'portrait' | 'paysage') =>
+/** Les états de l'œuf à toucher ; un animal sans œuf dessiné emprunte celui du renard. */
+export const imagesOeuf = (espece: EspeceId) => (OEUFS[espece].etats.length ? OEUFS[espece] : OEUFS.renard).etats;
+export const imageEclosion = (espece: EspeceId) => OEUFS[espece].eclosion;
+export const imageNaissance = (espece: EspeceId) => OEUFS[espece].ne ?? imageCompagnon(espece, 'salut');
+/** Image d'une ville ; si le format demandé manque, on prend le plus proche. */
+export const imageVille = (ville: VilleId, format: FormatVille) =>
   VILLES[ville][format] ?? VILLES[ville].portrait ?? VILLES[ville].paysage;
 export const imageObjet = (id: string) => BOUTIQUE[id];

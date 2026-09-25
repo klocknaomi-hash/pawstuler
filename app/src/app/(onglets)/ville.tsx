@@ -30,7 +30,7 @@ export default function Ville() {
   const { etat } = useApp();
   if (!etat.villeId || !etat.compagnon) return null;
   const ville = villeParId(etat.villeId);
-  const image = imageVille(ville.id, 'paysage');
+  const image = imageVille(ville.id, 'centre');
   const nom = etat.compagnon.nom;
   const dort = estEndormi(etat.rythme);
   const suivi = rechercheDuCompagnon(etat);
@@ -88,7 +88,7 @@ export default function Ville() {
 const styles = StyleSheet.create({
   contenu: { padding: espace.l, gap: espace.m, paddingBottom: espace.xxl },
   titre: { fontFamily: polices.titre, fontSize: 28, fontWeight: '800', color: couleurs.brun },
-  carte: { height: 210, borderRadius: arrondis.l, overflow: 'hidden', justifyContent: 'flex-end' },
+  carte: { height: 330, borderRadius: arrondis.l, overflow: 'hidden', justifyContent: 'flex-end' },
   compagnon: { alignItems: 'center', paddingBottom: 6 },
   souvenir: { backgroundColor: couleurs.carte, borderRadius: arrondis.m, borderWidth: 1, borderColor: couleurs.ligne, padding: espace.l, gap: 4 },
   souvenirTitre: { fontSize: 12, fontWeight: '800', color: couleurs.renardFonce, textTransform: 'uppercase', letterSpacing: 0.4 },

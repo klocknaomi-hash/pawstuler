@@ -5,11 +5,12 @@
 - **Phase 0 (analyse et plan) : terminée et validée.** Stack choisie : **Expo (React Native)**, pour tester sur iPhone avec Expo Go, sans Mac.
 - **Maquette HTML** (`maquette/`) : première exploration visuelle, ne plus la faire évoluer. La référence est désormais l'app.
 - **App Expo** (`app/`) : application complète et fonctionnelle (données sur le téléphone) : démarrage, tâches, pièces, énergie, aventures, candidatures, Shop, ville, « J'ai décroché ! », aventure professionnelle, Compte, Ziggy+ (voir section 10).
-- Prochaines étapes : brancher les illustrations et animations Dimini, puis les vrais services (connexion, paiement App Store, notifications, compte en ligne).
+- **Illustrations du Drive branchées** : les 4 compagnons (9 poses chacun), l'œuf propre à chaque animal (5 étapes), Clairebourg (lac pour l'accueil, centre-ville pour l'onglet ville) et Sunnyville (place à la fontaine).
+- Prochaines étapes : les animations Dimini, puis les vrais services (connexion, paiement App Store, notifications, compte en ligne).
 
 Avant tout gros changement : proposer un plan et attendre ma validation (section 8).
 
-**Où se trouve le travail :** tout est sur la branche `claude/youthful-hopper-ls2cpi`. La branche `main` contient encore la toute première version de ce fichier, tant que la branche n'y est pas fusionnée.
+**Où se trouve le travail :** la branche `main` est la référence. Chaque nouvelle étape est préparée sur la branche `claude/youthful-hopper-ls2cpi`, puis fusionnée dans `main`.
 
 ---
 
@@ -101,7 +102,7 @@ Dans la navigation entre Candidatures et Clairebourg. Chapeaux, vêtements, acce
 ### 5.8 Les villes
 2 villes :
 - **Clairebourg** (campagne, nom écrit exactement ainsi) : petite ville française fictive, illustrée — boulangerie, librairie, studio, agence, café, parc.
-- **Sunnyville** (grande ville) : immeubles, bureaux, commerces, transports. Elle s'affiche « Bientôt » tant que son illustration n'existe pas ; ses lieux actuels (bureaux, start-up, agence de com, café du métro, parc) sont provisoires.
+- **Sunnyville** (grande ville) : immeubles, bureaux, commerces, transports. Illustrée (place à la fontaine, cafés, commerces) et disponible au choix ; ses lieux actuels (bureaux, start-up, agence de com, café du métro, parc) sont provisoires. Les panneaux de son illustration sont en anglais (« To the Market », « City Library ») : à franciser dans une prochaine version de l'image.
 L'architecture permet d'ajouter d'autres villes plus tard dans `app/src/config/villes.ts`.
 
 **Une ville n'est pas un fond d'écran.** Le compagnon doit pouvoir s'y déplacer, visiter des lieux, vivre des événements, rencontrer des personnages et progresser professionnellement, **en miroir de l'utilisateur** : l'utilisateur a un entretien → le compagnon aussi, dans un lieu de sa ville ; l'utilisateur décroche un poste → le compagnon aussi, avec une grande célébration.
@@ -187,7 +188,7 @@ Chaque tâche rapporte des **pièces** (valeurs ci-dessous, réglables dans `app
 ## 10. Architecture technique (app/)
 - **Expo SDK 57, Expo Router, TypeScript.** Routes dans `app/src/app/` : `(demarrage)/` (présentation, connexion, onboarding), `(onglets)/` (accueil, candidatures, boutique = Shop, ville, compte), `candidature/[id]`, `compte/*` (profil, parametres, confidentialite, portefeuille), et les fenêtres `aventure`, `decroche`, `aventure-pro`, `nouvelle-candidature`, `ziggy-plus`.
 - **Réglages** dans `app/src/config/` : `theme`, `taches`, `energie`, `aventures`, `compagnons`, `villes`, `boutique`, `abonnement`, `candidatures`.
-- **Illustrations** : un seul registre, `app/src/illustrations/registre.ts`. Fichiers dans `app/assets/` (`compagnons/<animal>/<pose>.png`, `oeufs/`, `villes/<ville>/portrait.jpg` et `paysage.jpg`). Une image manquante affiche un visuel de secours. Les animations définitives (Lottie ou Rive) se brancheront dans `app/src/components/Compagnon.tsx`.
+- **Illustrations** : un seul registre, `app/src/illustrations/registre.ts`. Fichiers dans `app/assets/` : `compagnons/<animal>/<pose>.png` ; `oeufs/<animal>-1-intact.png`, `-2-fissure`, `-3-craquele`, `-eclosion`, `-ne` ; `villes/<ville>/portrait.jpg` (accueil), `paysage.jpg` (cartes) et `centre.jpg` (onglet ville, facultatif). Une image manquante affiche un visuel de secours. Les animations définitives (Lottie ou Rive) se brancheront dans `app/src/components/Compagnon.tsx`.
 - **Données** : un seul état (`app/src/store/`), sauvegardé sur le téléphone ; les anciennes sauvegardes sont migrées automatiquement. Logique métier dans `app/src/logique/` (tâches du jour, vie du compagnon, rythme, dates).
 - **Services** (`app/src/services/`) : connexion (bouchons à remplacer), abonnement (achat App Store à brancher), compte et RGPD (export, suppression), futur simulateur d'entretien.
 - Avant de dire qu'une étape est terminée : `npx tsc --noEmit` et `npx eslint src` sans erreur, et parcours testé.
