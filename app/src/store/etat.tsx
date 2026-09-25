@@ -13,7 +13,7 @@ import { CATALOGUE_BOUTIQUE, estPremium, objetParId } from '@/config/boutique';
 import { emailValide } from '@/config/candidatures';
 import { especeValide, type EspeceId, type Pronoms } from '@/config/compagnons';
 import { COUT, ENERGIE_PAR_TACHE, NIVEAUX_ENERGIE } from '@/config/energie';
-import { COUTS_MISSION, JOURNAL_DECROCHE, JOURNAL_REFUS, JOURS_MAX_DEPOT, PIECES_MISSION } from '@/config/missions';
+import { COUTS_MISSION, type TypeMoment, JOURNAL_DECROCHE, JOURNAL_REFUS, JOURS_MAX_DEPOT, PIECES_MISSION } from '@/config/missions';
 import { OBJECTIF_SERIE_PAR_DEFAUT } from '@/config/serie';
 import { PIECES_OBJECTIF, PIECES_TACHE_PERSO, PLAFOND_PIECES_JOUR } from '@/config/taches';
 import { VILLES, type VilleId } from '@/config/villes';
@@ -29,6 +29,7 @@ import {
   journalDepart,
   missionDansLaVille,
   missionPourCandidature,
+  momentDuCompagnon,
   missionsDisponibles,
   remplir,
   resultatADecouvrir,
@@ -107,6 +108,7 @@ export type Action =
   | { type: 'LANCER_MISSION'; id: string }
   | { type: 'EXPLORER_LA_VILLE' }
   | { type: 'DECOUVRIR_RESULTAT'; id: string }
+  | { type: 'PRENDRE_UN_MOMENT'; moment: TypeMoment }
   /* Candidatures */
   | { type: 'AJOUTER_CANDIDATURE'; candidature: NouvelleCandidature }
   | {
@@ -243,7 +245,7 @@ function partirEnMission(etat: EtatApp, mission: Mission): EtatApp {
       ? etat.missions.map((m) => (m.id === mission.id ? partie : m))
       : [partie, ...etat.missions],
     // L'exploration de la ville (ou la journée de travail) compte comme l'aventure du jour (1 par jour en gratuit, 3 en Premium)
-    ...(!mission.candidatureId && !mission.special
+    ...((mission.type === 'recherche' || mission.type === 'travail') && !mission.special
       ? {
           aventuresDuJour: etat.aventuresDuJour + 1,
           aventuresTotal: etat.aventuresTotal + 1,
@@ -519,6 +521,8 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
     case 'EXPLORER_LA_VILLE':
       if (aventuresRestantes(etat) === 0) return etat;
       return partirEnMission(etat, missionDansLaVille(etat));
+    case 'PRENDRE_UN_MOMENT':
+      return partirEnMission(etat, momentDuCompagnon(etat, action.moment));
     case 'DECOUVRIR_RESULTAT': {
       const m = etat.missions.find((x) => x.id === action.id && x.statut === 'en-cours');
       if (!m || !m.retour || Date.now() < m.retour) return etat;
@@ -540,6 +544,8 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
             }
           : {}),
       };
+      // Les moments pour souffler (repos, baignade) ne rapportent pas de pièces
+      if (PIECES_MISSION[m.type] === 0) return vue;
       return crediterDuJour(vue, gainPlafonne(etat, PIECES_MISSION[m.type]), `Mission : ${titreMission(etat, m)}`);
     }
 

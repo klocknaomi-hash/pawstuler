@@ -6,7 +6,7 @@
 - **Maquette HTML** (`maquette/`) : première exploration visuelle, ne plus la faire évoluer. La référence est désormais l'app.
 - **App Expo** (`app/`) : application complète et fonctionnelle (données sur le téléphone) : démarrage, tâches, pièces, énergie, aventures, candidatures, Shop, ville, « J'ai décroché ! », aventure professionnelle, Compte, Pawstuler Premium (voir section 10).
 - **Illustrations du Drive branchées** : les 4 compagnons (9 poses chacun), l'œuf propre à chaque animal (5 étapes), Clairebourg (lac pour l'accueil, centre-ville pour l'onglet ville) et Sunnyville (place à la fontaine).
-- **Ajouts récents** : **système miroir** (le compagnon part en mission en temps réel quand tu postules, relances ou passes un entretien, voir 5.5 ter), statut Premium / gratuit / essai avec énergie en temps réel, refonte des candidatures, connexion réelle prête à brancher (Supabase, voir `docs/connexion-et-abonnement.md`), écran d'abonnement **Pawstuler Premium**, objectif de série 🐾 à l'onboarding avec badge sur l'accueil, page de profil du compagnon, **garde-robe « Tenues complètes »** du chat (55 tenues) et du crocodile (43 tenues).
+- **Ajouts récents** : **animations des missions** (départ, trajet en temps réel, retour) et moments « Se reposer » / « Se baigner », **système miroir** (le compagnon part en mission en temps réel quand tu postules, relances ou passes un entretien, voir 5.5 ter), statut Premium / gratuit / essai avec énergie en temps réel, refonte des candidatures, connexion réelle prête à brancher (Supabase, voir `docs/connexion-et-abonnement.md`), écran d'abonnement **Pawstuler Premium**, objectif de série 🐾 à l'onboarding avec badge sur l'accueil, page de profil du compagnon, **garde-robe « Tenues complètes »** du chat (55 tenues) et du crocodile (43 tenues).
 - **Finitions faites** : petits mouvements du compagnon (câlin, jeu, gestes spontanés), rappels sur le téléphone, rencontre avec le compagnon (dialogues d'onboarding), icône de l'app, brouillons de textes légaux.
 - Prochaines étapes : tes tests sur iPhone et l'ajustement des valeurs (section 11), puis les services en ligne avec **Supabase seul** (choix validé : pas de Neon ni de Drizzle) : connexion, sauvegarde en ligne, paiement RevenueCat, publication (EAS).
 
@@ -106,9 +106,15 @@ L'accueil est simple : en haut, le badge de série 🐾 et le compteur de pièce
 - **Temps réel** : c'est le compagnon qui est occupé. Durées : dépôt 5 min, relance 5 min, exploration 10 min, entretien 15 min, travail 30 min ; énergie : 10, 10, 10, 15, 20. Pendant la mission il quitte la scène de l'accueil (« Milo est chez Boulangerie Dupain · Retour à 10 h 05 »), on ne peut ni le câliner ni lancer une autre mission ; l'app peut être fermée.
 - **Notification** à son retour, puis on **découvre** ce qu'il a vécu (résultats variés, jamais de refus décidé tout seul) : +5 pièces par mission miroir, +10 par exploration (dans le plafond de 50).
 - Les noms des lieux de la ville changent chaque jour. L'onglet ville montre « Les candidatures de [nom] » (CV déposé, entretien passé, a décroché…).
-- Fichiers : réglages et textes `app/src/config/missions.ts`, logique `app/src/logique/missions.ts`, écran `app/src/app/aventure.tsx`, section de l'accueil `app/src/components/AventureDuJour.tsx`.
+- **Animations** (en attendant les animations Dimini) :
+  - **départ** : après « Envoyer [nom] », il fait un petit bond et s'en va avec ce qu'il emporte (📄 CV, ✉️ relance, 👔 entretien, 🗺️ exploration, 💼 travail, 🧸 repos, 🛟 baignade), « Bonne route ! » ;
+  - **trajet en temps réel** (`components/Trajet.tsx`), sur l'écran de mission et dans la scène de l'accueil : une petite route de la maison 🏠 au lieu. Les premiers 20 % de la mission, il marche vers le lieu (« [nom] est en route… ») ; puis il **entre et disparaît**, et une petite animation propre à chaque type s'envole au-dessus du lieu (feuilles de CV, bulles d'entretien, loupe, z z z, éclaboussures…) ; les derniers 20 %, il ressort et rentre (« sur le chemin du retour »). App fermée puis rouverte : il reprend exactement où il en est ;
+  - **statut** partout (accueil, Aventure du jour, onglet ville) : « Milo est chez Boulangerie Dupain · Retour à 20 h 16 », « Milo est au lac », « Milo est à la maison » ;
+  - **retour** : il revient en courant dans la scène de l'accueil, « Me revoilà ! ».
+- **Moments pour souffler** (boutons sous Câlin / Jouer) : **Se reposer** à la maison (10 min, 0 ⚡) et **Se baigner** au lac à Clairebourg, à la fontaine à Sunnyville (2 min, 5 ⚡). Ce sont de vrais départs en temps réel, avec leur récit au retour (« Un moment rien que pour lui ») ; ils ne rapportent pas de pièces et ne comptent pas dans les missions ou les explorations du jour.
+- Fichiers : réglages et textes `app/src/config/missions.ts` (dont ce que le compagnon emporte et les animations sur place), logique `app/src/logique/missions.ts`, écran `app/src/app/aventure.tsx`, trajet `app/src/components/Trajet.tsx`, section de l'accueil `app/src/components/AventureDuJour.tsx`. Le lieu de baignade de chaque ville est dans `villes.ts`.
 
-### 5.5 ter Pièces 🪙 (portefeuille)
+### 5.5 quater Pièces 🪙 (portefeuille)
 - Gagnées gratuitement avec les tâches (et les aventures, les objectifs pro, « J'ai décroché ! »). **Jamais remises à zéro** : elles s'accumulent.
 - **Plafond : 50 pièces gagnées par jour** (tâches, aventures, objectifs). Au-delà, les tâches se cochent toujours, sans pièce en plus, avec un message bienveillant. Le compteur « x/50 aujourd'hui » est affiché sur l'accueil. Le bonus « J'ai décroché ! » n'est pas plafonné.
 - Dépensées dans le Shop : le solde est **réellement débité** (confirmation avec solde avant / après).
@@ -214,7 +220,7 @@ Chaque tâche rapporte des **pièces** (valeurs ci-dessous, réglables dans `app
 | Moral | Faire une vraie pause | 3 |
 | Tâche perso | Créée par l'utilisateur | 5 |
 
-**Plafond : 50 pièces gagnées par jour** (voir 5.5 ter).
+**Plafond : 50 pièces gagnées par jour** (voir 5.5 quater).
 
 **Après « J'ai décroché ! » (contexte pro) :** préparer ton premier jour (10), définir tes objectifs du premier mois (10), découvrir ton nouvel environnement (5), prendre un café avec un collègue (5), préparer une présentation (15), bilan de ta première semaine (10), choisir une compétence à développer (10), faire le point sur ta progression (10). Objectif pro atteint : 15.
 
@@ -261,7 +267,8 @@ Chaque tâche rapporte des **pièces** (valeurs ci-dessous, réglables dans `app
 Ces valeurs ne viennent pas de mes consignes : Claude les a choisies pour que l'app fonctionne. Elles sont toutes réglables dans `app/src/config/`.
 - **Énergie** (`energie.ts`) : gratuit 30 / 5 h et Premium 100 / 3 h (validé) ; câlin 5, jeu 10, +3 par tâche terminée (proposés par Claude).
 - **Missions** (`missions.ts`) : durées et coûts validés ; proposés par Claude : +10 pièces par exploration, grande tournée à 5 candidatures en 7 jours, pas de dépôt de CV pour une candidature envoyée il y a plus de 7 jours, secteurs reconnus par mots-clés, textes des missions, des résultats et du journal.
-- **Moments avec le compagnon** : « Câlin » et « Jouer » sont des propositions de Claude pour donner une utilité à l'énergie.
+- **Moments avec le compagnon** : « Câlin » et « Jouer » sont des propositions de Claude pour donner une utilité à l'énergie. « Se reposer » et « Se baigner » (durées et coûts validés) : sans pièces ni bonus d'énergie (choix de Claude, à confirmer).
+- **Animations des missions** : répartition du trajet (20 % aller, 60 % sur place, 20 % retour), objets emportés et petites animations sur place, textes « Bonne route ! », « Allez, plouf ! », « Bonne sieste ! ».
 - **Récompenses** : exploration +10 pièces, objectif pro atteint +15, « J'ai décroché ! » +50.
 - **Premium** : 3 aventures par jour (contre 1 en gratuit).
 - **Shop** (`boutique.ts`) : la liste des objets et leurs prix (de 20 à 150 pièces ; tenues de 20 à 120), l'écharpe offerte, la couronne et les tenues d'événements réservées à Premium, les noms des tenues.
@@ -279,7 +286,7 @@ Aucune question bloquante. À ajuster après tes premiers tests sur iPhone : les
 - **Plan validé le 25/09, en cours** (étapes suivantes) :
   - **B — Premium / gratuit / essai (fait le 25/09)** : statut global unique (gratuit, essai, Premium) ; énergie gratuit 30 avec recharge complète 5 h après la première dépense, Premium et essai 100 avec recharge 3 h, affichage « Énergie : 15/30 · Recharge dans 4 h 12 », plus de recharge chaque matin, +3 par tâche gardé ; toute collection d'événement Premium (tenue, chapeau, chaussures, accessoires), visible avec 🔒 ; écran « Jour X / 7 » une fois par jour d'essai (jour 7 spécial, jour 8 « Ton essai Premium est terminé 💛 ») ; rappel doux de l'essai disponible.
   - **C — Système miroir (fait le 25/09, voir 5.5 ter)** : les actions de l'utilisateur (candidature, relance, entretien, refus, décroché, objectifs, beaucoup de candidatures) créent des **missions pour le compagnon** ; lieu et métier cohérents avec le secteur ; le compagnon reprend le vrai nom de l'entreprise ; au plus 2 missions disponibles par jour, les autres étalées dans le temps (entretiens et relances prioritaires) ; **temps réel** avec heure de départ et de retour (ce sont les durées de mission **du compagnon** : c'est lui qui est occupé) ; notification au retour ; résultats variés et suites logiques, le compagnon suit le vrai parcours de l'utilisateur (jamais de refus décidé tout seul) ; lieux aux noms changeants ; « Aventure du jour » dynamique ; +5 pièces par mission (dans le plafond).
-  - **D — Animations des missions (prochaine étape)** : départ visible, trajet, arrivée, disparition, statut « Milo est à la boulangerie · Retour à 20 h 16 », retour ; une animation par type ; moments « Se reposer » (maison) et « Se baigner » (lac, fontaine à Sunnyville).
+  - **D — Animations des missions (fait le 25/09, voir 5.5 ter)** : départ visible, trajet, arrivée, disparition, statut « Milo est à la boulangerie · Retour à 20 h 16 », retour ; une animation par type ; moments « Se reposer » (maison) et « Se baigner » (lac, fontaine à Sunnyville).
   - Durées proposées : dépôt de CV 5 min, relance 5 min, recherche 10 min, entretien 15 min, travail 30 min, repos 10 min, baignade 2 min. Coûts : dépôt 10, relance 10, recherche 10, entretien 15, travail 20, baignade 5, repos 0.
 - **Plan « animal vivant »** (première version) : annulé. À la place, Claude ajoute de petits mouvements au compagnon (câlin, jeu, petits gestes) sur la base existante.
 - **Planche « Design sans titre-2 »** (dossier Tenues complètes du Drive) : vêtements seuls, sans animal. Pas utilisée pour l'instant ; pourra servir d'icônes du Shop ou de base pour les vêtements en calques.

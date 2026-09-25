@@ -9,7 +9,11 @@
  * {personne}/{Personne} = la personne du lieu, {Il}/{il}/{lui}/{e} = accords selon les pronoms.
  */
 
-export type TypeMission = 'depot' | 'relance' | 'entretien' | 'recherche' | 'travail';
+export type TypeMission = 'depot' | 'relance' | 'entretien' | 'recherche' | 'travail' | 'repos' | 'baignade';
+
+/** Les petits moments pour souffler (pas des missions de recherche : ni pièces, ni limite par jour). */
+export type TypeMoment = 'repos' | 'baignade';
+export const MOMENTS: TypeMoment[] = ['repos', 'baignade'];
 
 /** Durée de chaque mission, en minutes (le temps pendant lequel le compagnon est absent). */
 export const DUREES_MINUTES: Record<TypeMission, number> = {
@@ -18,6 +22,8 @@ export const DUREES_MINUTES: Record<TypeMission, number> = {
   entretien: 15,
   recherche: 10,
   travail: 30,
+  repos: 10,
+  baignade: 2,
 };
 
 /** Énergie dépensée au départ de la mission. */
@@ -27,6 +33,8 @@ export const COUTS_MISSION: Record<TypeMission, number> = {
   entretien: 15,
   recherche: 10,
   travail: 20,
+  repos: 0,
+  baignade: 5,
 };
 
 /** Pièces rapportées (dans le plafond du jour). La recherche garde les 10 pièces de l'ancienne « Aventure du jour ». */
@@ -36,6 +44,8 @@ export const PIECES_MISSION: Record<TypeMission, number> = {
   entretien: 5,
   recherche: 10,
   travail: 10,
+  repos: 0,
+  baignade: 0,
 };
 
 /** Au plus 2 missions « miroir » prévues par jour : les autres sont étalées sur les jours suivants. */
@@ -171,6 +181,52 @@ export const TITRES: Record<TypeMission, string> = {
   entretien: '{nom} a {lui} aussi décroché un entretien chez {lieu} !',
   recherche: '{nom} part explorer {ville}',
   travail: '{nom} part travailler chez {lieu}',
+  repos: '{nom} rentre se reposer à la maison',
+  baignade: '{nom} va se baigner {lieu}',
+};
+
+/** Où est le compagnon pendant la mission (accueil, écran de mission). */
+export const OU_EST: Record<TypeMission, string> = {
+  depot: '{nom} est chez {lieu}',
+  relance: '{nom} est chez {lieu}',
+  entretien: '{nom} est chez {lieu}',
+  recherche: '{nom} est chez {lieu}',
+  travail: '{nom} est chez {lieu}',
+  repos: '{nom} est à la maison',
+  baignade: '{nom} est {lieu}',
+};
+
+/** Bouton de départ. */
+export const BOUTON_DEPART: Record<TypeMission, string> = {
+  depot: 'Envoyer {nom}',
+  relance: 'Envoyer {nom}',
+  entretien: 'Envoyer {nom}',
+  recherche: 'Envoyer {nom}',
+  travail: 'Envoyer {nom}',
+  repos: 'Bonne sieste, {nom} !',
+  baignade: 'Allez, plouf !',
+};
+
+/** Ce que le compagnon emporte avec lui (visible pendant le départ et le trajet). */
+export const OBJET_EMPORTE: Record<TypeMission, string> = {
+  depot: '📄',
+  relance: '✉️',
+  entretien: '👔',
+  recherche: '🗺️',
+  travail: '💼',
+  repos: '🧸',
+  baignade: '🛟',
+};
+
+/** Petite animation sur place, pendant qu'il est à l'intérieur (une par type). */
+export const ANIMATION_SUR_PLACE: Record<TypeMission, string[]> = {
+  depot: ['📄', '🤝'],
+  relance: ['✉️', '☎️'],
+  entretien: ['💬', '✨'],
+  recherche: ['🔎', '👀'],
+  travail: ['💼', '⭐'],
+  repos: ['💤', '☕'],
+  baignade: ['💦', '🫧'],
 };
 
 /** Présentation de la mission, avant le départ. */
@@ -180,6 +236,8 @@ export const PRESENTATIONS: Record<TypeMission, string> = {
   entretien: 'Tu as un entretien ? {nom} aussi ! {Il} se prépare pour son entretien de {metier} chez {lieu}.',
   recherche: '{nom} a envie de découvrir de nouvelles opportunités dans sa ville.',
   travail: 'Une nouvelle journée commence pour {nom} dans son nouveau poste.',
+  repos: 'Chercher un emploi, ça fatigue aussi les compagnons. {nom} rentre souffler un peu dans sa petite maison.',
+  baignade: 'Il fait bon aujourd’hui : {nom} file se rafraîchir {lieu}.',
 };
 
 /** Ce que fait le compagnon pendant son absence. */
@@ -189,6 +247,8 @@ export const PENDANT: Record<TypeMission, string> = {
   entretien: '{nom} est en entretien chez {lieu}.',
   recherche: '{nom} explore {ville}.',
   travail: '{nom} est au travail chez {lieu}.',
+  repos: '{nom} se repose tranquillement à la maison.',
+  baignade: '{nom} barbote {lieu}.',
 };
 
 /** Journal : départ de la mission. */
@@ -198,6 +258,8 @@ export const JOURNAL_DEPART: Record<TypeMission, string> = {
   entretien: '{nom} a passé un entretien chez {lieu}.',
   recherche: '{nom} est parti{e} explorer {ville}.',
   travail: '{nom} est allé{e} travailler chez {lieu}.',
+  repos: '{nom} est rentré{e} se reposer à la maison.',
+  baignade: '{nom} est allé{e} se baigner {lieu}.',
 };
 
 /**
@@ -205,6 +267,16 @@ export const JOURNAL_DEPART: Record<TypeMission, string> = {
  * le compagnon ne connaît un refus que si toi tu en reçois un (il suit ton vrai parcours).
  */
 export const RESULTATS: Record<Exclude<TypeMission, 'recherche' | 'travail'>, string[]> = {
+  repos: [
+    '{nom} a fait une petite sieste au soleil. {Il} se sent tout{e} reposé{e} !',
+    '{nom} a bu un chocolat chaud sous un plaid en repensant à sa semaine. Ça fait du bien de souffler.',
+    '{nom} a arrosé ses plantes et rangé sa petite maison. {Il} est prêt{e} pour la suite.',
+  ],
+  baignade: [
+    '{nom} a fait la planche {lieu} en regardant les nuages. Plouf !',
+    '{nom} s’est bien rafraîchi{e} {lieu}, et a éclaboussé un canard (sans le faire exprès).',
+    '{nom} a nagé quelques longueurs {lieu}. {Il} revient tout{e} ébouriffé{e} et de bonne humeur.',
+  ],
   depot: [
     '{nom} a donné son CV à {personne} et a pris le temps de présenter son parcours. {Personne} a trouvé son profil intéressant et pourrait recontacter {nom} prochainement.',
     '{nom} a déposé son CV chez {lieu}. {Personne} lui a conseillé de repasser dans quelques jours pour prendre des nouvelles.',

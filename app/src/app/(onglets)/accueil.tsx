@@ -10,7 +10,7 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import Animated, { FadeOutUp, SlideInDown } from 'react-native-reanimated';
+import Animated, { FadeOutUp, SlideInDown, SlideInLeft, SlideOutRight } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Compagnon, type Geste } from '@/components/Compagnon';
@@ -18,11 +18,13 @@ import { AventureDuJour } from '@/components/AventureDuJour';
 import { BallonJeu, CoeursCalin, Zzz } from '@/components/Effets';
 import { JaugeEnergie } from '@/components/Energie';
 import { LigneTache } from '@/components/LigneTache';
+import { Trajet } from '@/components/Trajet';
 import { CompteurPieces, IconePiece } from '@/components/Pieces';
 import { BadgeSerie } from '@/components/Serie';
 import type { Pose } from '@/config/compagnons';
 import { PREMIER_PAS } from '@/config/dialogues';
 import { COUT, ENERGIE_PAR_TACHE } from '@/config/energie';
+import { COUTS_MISSION } from '@/config/missions';
 import { PLAFOND_PIECES_JOUR } from '@/config/taches';
 import { arrondis, couleurs, espace, ombre, polices } from '@/config/theme';
 import { villeParId } from '@/config/villes';
@@ -30,7 +32,7 @@ import { useMaintenant } from '@/hooks/useMaintenant';
 import { imageVille } from '@/illustrations/registre';
 import { jourDe } from '@/logique/dates';
 import { dureeLisible, energieDisponible, energieMax, tempsAvantRecharge } from '@/logique/energie';
-import { compagnonAbsent, heureLisible as heureMission, iconeMission, resultatADecouvrir } from '@/logique/missions';
+import { compagnonAbsent, heureLisible as heureMission, iconeMission, ouEst, resultatADecouvrir } from '@/logique/missions';
 import { estEndormi, heureLisible } from '@/logique/rythme';
 import { emploiActuel } from '@/logique/tachesDuJour';
 import { jourEssai, rappelEssai, rappelEssaiDisponible } from '@/services/abonnement';
@@ -164,7 +166,7 @@ export default function Accueil() {
   function messageDuJour(): string {
     const prenom = etat.utilisateur?.prenom ?? '';
     if (dort) return `${compagnon?.nom} dort jusqu’à ${heureLisible(etat.rythme.reveil)}. Tes progrès l’attendront au réveil.`;
-    if (absent?.retour) return `${compagnon?.nom} est chez ${absent.lieu}. Retour à ${heureMission(absent.retour)} !`;
+    if (absent?.retour) return `${ouEst(etat, absent)}. Retour à ${heureMission(absent.retour)} !`;
     if (revenu) return 'Me revoilà ! Viens voir ce que j’ai vécu 🎒';
     if (serieFetee && faites === 0) return `${etat.serie.actuelle} jours d’affilée, objectif atteint ! Merci d’être là 🐾`;
     if (serieReprise && faites === 0) return `Content de te revoir ${prenom} ! On repart ensemble, à ton rythme 🐾`;
@@ -217,25 +219,31 @@ export default function Accueil() {
             {effet?.type === 'jeu' && <BallonJeu key={effet.cle} />}
             {effet?.type === 'zzz' && <Zzz key={effet.cle} />}
             {absent?.retour ? (
+              // Parti en mission : son trajet en temps réel (aller, sur place, retour)
               <Pressable style={styles.panneau} onPress={() => router.push('/aventure')} accessibilityRole="button">
-                <Text style={styles.panneauIcone}>{iconeMission(absent)}</Text>
-                <Text style={styles.panneauTexte}>Retour à {heureMission(absent.retour)}</Text>
+                <Trajet mission={absent} espece={compagnon.espece} equipe={etat.equipe} taille={58} />
+                <Text style={styles.panneauTexte} numberOfLines={1}>
+                  {iconeMission(absent)} {ouEst(etat, absent)} · Retour à {heureMission(absent.retour)}
+                </Text>
               </Pressable>
             ) : (
-              <Pressable
-                onPress={() => (dort ? jouerGeste('zzz') : revenu ? router.push('/aventure') : interagir('calin'))}
-                accessibilityRole="button"
-                accessibilityLabel={dort ? `${compagnon.nom} dort` : `Câliner ${compagnon.nom}`}>
-                <Compagnon
-                  espece={compagnon.espece}
-                  pose={pose}
-                  taille={150}
-                  promenade={!dort && !moment}
-                  reaction={reaction}
-                  geste={geste}
-                  equipe={etat.equipe}
-                />
-              </Pressable>
+              // Quand il revient de mission, il arrive en courant depuis le bord de l'écran
+              <Animated.View entering={SlideInLeft.duration(1200)} exiting={SlideOutRight.duration(900)}>
+                <Pressable
+                  onPress={() => (dort ? jouerGeste('zzz') : revenu ? router.push('/aventure') : interagir('calin'))}
+                  accessibilityRole="button"
+                  accessibilityLabel={dort ? `${compagnon.nom} dort` : `Câliner ${compagnon.nom}`}>
+                  <Compagnon
+                    espece={compagnon.espece}
+                    pose={pose}
+                    taille={150}
+                    promenade={!dort && !moment}
+                    reaction={reaction}
+                    geste={geste}
+                    equipe={etat.equipe}
+                  />
+                </Pressable>
+              </Animated.View>
             )}
             {gains
               .filter((g) => g.pieces > 0)
@@ -257,6 +265,23 @@ export default function Accueil() {
           <View style={styles.petitsMoments}>
             <Moment icone="heart" libelle="Câlin" cout={COUT.calin} onPress={() => interagir('calin')} desactive={dort || !!absent} />
             <Moment icone="football" libelle="Jouer" cout={COUT.jeu} onPress={() => interagir('jeu')} desactive={dort || !!absent} />
+          </View>
+          {/* Moments pour souffler : il part vraiment (en temps réel), sans pièces à la clé */}
+          <View style={styles.petitsMoments}>
+            <Moment
+              icone="home"
+              libelle="Se reposer"
+              cout={COUTS_MISSION.repos}
+              onPress={() => router.push({ pathname: '/aventure', params: { moment: 'repos' } })}
+              desactive={dort || !!absent || !!revenu}
+            />
+            <Moment
+              icone="water"
+              libelle="Se baigner"
+              cout={COUTS_MISSION.baignade}
+              onPress={() => router.push({ pathname: '/aventure', params: { moment: 'baignade' } })}
+              desactive={dort || !!absent || !!revenu}
+            />
           </View>
           <AventureDuJour etat={etat} maintenant={maintenant} dort={dort} />
         </View>
@@ -464,6 +489,8 @@ const styles = StyleSheet.create({
   moments: { marginHorizontal: espace.l, marginTop: espace.m, gap: espace.s },
   // Panneau « parti en mission » à la place du compagnon
   panneau: {
+    alignSelf: 'stretch',
+    marginHorizontal: espace.m,
     alignItems: 'center',
     gap: 4,
     backgroundColor: couleurs.carte,
@@ -473,7 +500,6 @@ const styles = StyleSheet.create({
     marginBottom: espace.l,
     ...ombre,
   },
-  panneauIcone: { fontSize: 40 },
   panneauTexte: { fontWeight: '800', color: couleurs.brun },
   petitsMoments: { flexDirection: 'row', gap: espace.s },
   moment: {
