@@ -18,7 +18,7 @@ import { Platform } from 'react-native';
 import { JOURS_ESSAI } from '@/config/abonnement';
 import { JOURS_AVANT_RELANCE } from '@/config/taches';
 import { jourDe } from '@/logique/dates';
-import { compagnonAbsent } from '@/logique/missions';
+import { compagnonAbsent, estUnMoment } from '@/logique/missions';
 import { candidaturesActives } from '@/logique/tachesDuJour';
 import { essaiDisponible } from '@/services/abonnement';
 import type { EtatApp } from '@/store/types';
@@ -144,7 +144,7 @@ export async function synchroniserRappels(etat: EtatApp): Promise<Autorisation> 
   // 5. Retour de mission : le compagnon rentre, son récit l'attend (même si l'app est fermée)
   const mission = compagnonAbsent(etat);
   if (mission?.retour) {
-    await programmerLe(new Date(mission.retour), `${nom} est de retour 🎒`, `Sa mission chez ${mission.lieu} est terminée. Viens découvrir ce qui s’est passé !`);
+    await programmerLe(new Date(mission.retour), `${nom} est de retour 🎒`, estUnMoment(mission) ? 'Viens voir comment s’est passé son petit moment 💛' : `Sa mission chez ${mission.lieu} est terminée. Viens découvrir ce qui s’est passé !`);
   }
 
   return 'accordee';

@@ -23,6 +23,7 @@ import {
   jourLisible,
   missionsAVenir,
   missionsDisponibles,
+  ouEst,
   resultatADecouvrir,
   titreMission,
 } from '@/logique/missions';
@@ -53,9 +54,7 @@ export function AventureDuJour({ etat, maintenant, dort }: { etat: EtatApp; main
         <Pressable style={[styles.statut, styles.statutAbsent]} onPress={() => router.push('/aventure')} accessibilityRole="button">
           <Text style={styles.emoji}>{iconeMission(absent)}</Text>
           <View style={{ flex: 1 }}>
-            <Text style={styles.statutTitre}>
-              {nom} est chez {absent.lieu}
-            </Text>
+            <Text style={styles.statutTitre}>{ouEst(etat, absent)}</Text>
             <Text style={styles.statutSous}>Retour à {heureLisible(absent.retour)}</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={couleurs.blanc} />

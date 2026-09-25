@@ -11,12 +11,13 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Compagnon } from '@/components/Compagnon';
+import { useMaintenant } from '@/hooks/useMaintenant';
 import { arrondis, couleurs, espace, polices } from '@/config/theme';
 import { villeParId } from '@/config/villes';
 import { imageVille } from '@/illustrations/registre';
 import { LIBELLES_ETAPES, rechercheDuCompagnon, type EtapeLieu } from '@/logique/compagnon';
 import { dateLisible } from '@/logique/dates';
-import { parcoursDuCompagnon } from '@/logique/missions';
+import { compagnonAbsent, heureLisible, iconeMission, ouEst, parcoursDuCompagnon } from '@/logique/missions';
 import { estEndormi } from '@/logique/rythme';
 import { useApp } from '@/store/etat';
 
@@ -30,11 +31,14 @@ const COULEUR_ETAPE: Record<EtapeLieu, string> = {
 
 export default function Ville() {
   const { etat } = useApp();
+  const maintenant = useMaintenant();
   if (!etat.villeId || !etat.compagnon) return null;
   const ville = villeParId(etat.villeId);
   const image = imageVille(ville.id, 'centre');
   const nom = etat.compagnon.nom;
   const dort = estEndormi(etat.rythme);
+  // En mission, il n'est pas dans le centre-ville : on dit où il est
+  const absent = compagnonAbsent(etat, maintenant);
   const suivi = rechercheDuCompagnon(etat);
   const derniere = etat.derniereAventure;
   const lieuAventure = ville.lieux.find((l) => l.id === derniere?.lieuId);
@@ -48,9 +52,17 @@ export default function Ville() {
 
         <View style={[styles.carte, { backgroundColor: ville.couleur }]}>
           {image && <Image source={image} style={StyleSheet.absoluteFill} contentFit="cover" />}
-          <View style={styles.compagnon}>
-            <Compagnon espece={etat.compagnon.espece} pose={dort ? 'dort' : 'aventure'} taille={110} promenade={!dort} equipe={etat.equipe} />
-          </View>
+          {absent?.retour ? (
+            <Pressable style={styles.absent} onPress={() => router.push('/aventure')} accessibilityRole="button">
+              <Text style={styles.absentTexte}>
+                {iconeMission(absent)} {ouEst(etat, absent)} · Retour à {heureLisible(absent.retour)}
+              </Text>
+            </Pressable>
+          ) : (
+            <View style={styles.compagnon}>
+              <Compagnon espece={etat.compagnon.espece} pose={dort ? 'dort' : 'aventure'} taille={110} promenade={!dort} equipe={etat.equipe} />
+            </View>
+          )}
         </View>
 
         {derniere && (
@@ -117,6 +129,8 @@ const styles = StyleSheet.create({
   titre: { fontFamily: polices.titre, fontSize: 28, fontWeight: '800', color: couleurs.brun },
   carte: { height: 330, borderRadius: arrondis.l, overflow: 'hidden', justifyContent: 'flex-end' },
   compagnon: { alignItems: 'center', paddingBottom: 6 },
+  absent: { margin: espace.m, backgroundColor: couleurs.carte, borderRadius: arrondis.m, padding: espace.m },
+  absentTexte: { fontWeight: '800', color: couleurs.brun, textAlign: 'center' },
   souvenir: { backgroundColor: couleurs.carte, borderRadius: arrondis.m, borderWidth: 1, borderColor: couleurs.ligne, padding: espace.l, gap: 4 },
   souvenirTitre: { fontSize: 12, fontWeight: '800', color: couleurs.renardFonce, textTransform: 'uppercase', letterSpacing: 0.4 },
   souvenirTexte: { fontSize: 14.5, fontWeight: '600', color: couleurs.brun, lineHeight: 20 },

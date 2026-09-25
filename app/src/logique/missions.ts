@@ -13,6 +13,7 @@ import {
   DUREES_MINUTES,
   JOURNAL_DEPART,
   MISSIONS_PAR_JOUR,
+  OU_EST,
   PENDANT,
   PRESENTATION_GRANDE_TOURNEE,
   PRESENTATIONS,
@@ -22,6 +23,7 @@ import {
   TITRES,
   type SecteurId,
   type TypeMission,
+  type TypeMoment,
 } from '@/config/missions';
 import { villeParId, type Lieu } from '@/config/villes';
 import { jourDe, joursEntre, nouvelId } from '@/logique/dates';
@@ -149,6 +151,25 @@ export function missionDansLaVille(etat: EtatApp, special = false): Mission {
   };
 }
 
+/** Un moment pour souffler : se reposer à la maison, ou se baigner (lac, fontaine…). */
+export function momentDuCompagnon(etat: EtatApp, type: TypeMoment): Mission {
+  const aujourdhui = jourDe();
+  const ville = villeParId(etat.villeId ?? 'clairebourg');
+  return {
+    id: nouvelId(),
+    type,
+    lieu: type === 'repos' ? 'la maison' : ville.baignade.ou,
+    secteur: 'entreprise',
+    metier: '',
+    disponibleLe: aujourdhui,
+    statut: 'a-venir',
+    creeLe: aujourdhui,
+  };
+}
+
+/** Moment pour souffler (repos, baignade), et pas une mission de recherche. */
+export const estUnMoment = (m: Pick<Mission, 'type'>) => m.type === 'repos' || m.type === 'baignade';
+
 /** 5 candidatures en 7 jours : la « grande tournée » (une seule par semaine). */
 export function grandeTourneeMeritee(etat: EtatApp): boolean {
   const aujourdhui = jourDe();
@@ -189,6 +210,8 @@ const PRIORITE: Record<TypeMission, number> = {
   depot: 2,
   recherche: 3,
   travail: 3,
+  repos: 4,
+  baignade: 4,
 };
 
 /** Missions proposées aujourd'hui (au plus 2, les plus importantes d'abord : entretien, relance, dépôt). */
@@ -220,7 +243,15 @@ export const dureeMission = (m: Mission) => DUREES_MINUTES[m.type] * 60_000;
 
 /* ---------- Textes ---------- */
 
-export const iconeMission = (m: Mission) => (m.special ? '🗺️' : m.type === 'recherche' ? '🔎' : SECTEURS[m.secteur].icone);
+export function iconeMission(m: Mission): string {
+  if (m.special) return '🗺️';
+  if (m.type === 'recherche') return '🔎';
+  if (m.type === 'repos') return '🏡';
+  if (m.type === 'baignade') return m.lieu === 'à la fontaine' ? '⛲' : '🏞️';
+  return SECTEURS[m.secteur].icone;
+}
+/** « Milo est chez Boulangerie Dupain », « Milo est au lac », « Milo est à la maison ». */
+export const ouEst = (etat: EtatApp, m: Mission) => remplir(etat, OU_EST[m.type], m);
 export const titreMission = (etat: EtatApp, m: Mission) => remplir(etat, m.special ? TITRE_GRANDE_TOURNEE : TITRES[m.type], m);
 export const presentationMission = (etat: EtatApp, m: Mission) => remplir(etat, m.special ? PRESENTATION_GRANDE_TOURNEE : PRESENTATIONS[m.type], m);
 export const pendantMission = (etat: EtatApp, m: Mission) => remplir(etat, PENDANT[m.type], m);

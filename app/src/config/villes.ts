@@ -31,12 +31,15 @@ export type Ville = {
   lieux: Lieu[];
   /** Nom définitif choisi (sinon nom provisoire, à confirmer). */
   nomDefinitif?: boolean;
+  /** Où le compagnon va se baigner (« au lac », « à la fontaine »). */
+  baignade: { ou: string; icone: string };
 };
 
 export const VILLES: Ville[] = [
   {
     id: 'clairebourg',
     nom: 'Clairebourg',
+    baignade: { ou: 'au lac', icone: '🏞️' },
     nomDefinitif: true,
     ambiance: 'campagne',
     accroche: 'Une petite ville française, son lac, ses chemins fleuris et ses commerces.',
@@ -52,6 +55,7 @@ export const VILLES: Ville[] = [
   },
   {
     id: 'sunnyville',
+    baignade: { ou: 'à la fontaine', icone: '⛲' },
     nom: 'Sunnyville',
     nomDefinitif: true,
     ambiance: 'urbaine',
