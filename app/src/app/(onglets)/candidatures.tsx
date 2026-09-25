@@ -37,12 +37,12 @@ export default function Candidatures() {
     return base.filter(
       (c) =>
         (filtre === 'toutes' || c.statut === filtre) &&
-        (!q || c.entreprise.toLowerCase().includes(q) || c.poste.toLowerCase().includes(q)),
+        (!q || [c.entreprise, c.poste, c.email, c.note].some((texte) => texte?.toLowerCase().includes(q))),
     );
   }, [base, filtre, recherche]);
 
-  const envoyees = actives.filter((c) => c.statut !== 'a-envoyer').length;
-  const entretiens = actives.filter((c) => c.statut === 'entretien' || c.statut === 'offre').length;
+  const envoyees = actives.length;
+  const entretiens = actives.filter((c) => c.statut === 'entretien' || c.statut === 'decroche').length;
   const aRelancer = actives.filter((c) => relanceDue(c, aujourdhui)).length;
 
   return (
@@ -95,7 +95,7 @@ export default function Candidatures() {
           <TextInput
             value={recherche}
             onChangeText={setRecherche}
-            placeholder="Chercher une entreprise ou un poste"
+            placeholder="Chercher une entreprise, un poste, une note…"
             placeholderTextColor={couleurs.brunDoux}
             style={styles.rechercheChamp}
             accessibilityLabel="Chercher une candidature"

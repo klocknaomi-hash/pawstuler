@@ -26,8 +26,8 @@ export function rechercheDuCompagnon(etat: EtatApp): { lieu: Lieu; etape: EtapeL
   if (!etat.villeId) return [];
   const lieux = villeParId(etat.villeId).lieux.filter((l) => l.metier);
   const actives = candidaturesActives(etat);
-  const envoyees = actives.filter((c) => c.statut !== 'a-envoyer').length;
-  const entretien = actives.some((c) => c.statut === 'entretien' || c.statut === 'offre');
+  const envoyees = actives.length;
+  const entretien = actives.some((c) => c.statut === 'entretien' || c.statut === 'decroche');
   const visites = Math.min(etat.aventuresTotal, lieux.length);
 
   return lieux.map((lieu, i) => {

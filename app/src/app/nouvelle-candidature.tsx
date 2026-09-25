@@ -1,38 +1,58 @@
-/** NOUVELLE CANDIDATURE — formulaire court : l'essentiel d'abord, le reste facultatif. */
+/**
+ * NOUVELLE CANDIDATURE
+ * Comme une ligne de tableau de suivi, en plus simple : entreprise et poste (obligatoires),
+ * lien de l'offre, statut actuel (on peut reprendre une candidature déjà avancée),
+ * adresse e-mail, date d'envoi et note libre.
+ * L'historique est créé automatiquement. Si la candidature est déjà « Décroché »,
+ * la page de félicitations s'ouvre juste après.
+ */
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { Bouton, Champ, Ecran, Pastille, SousTitre, Titre } from '@/components/base';
-import { espace } from '@/config/theme';
-import { jourDe } from '@/logique/dates';
+import { Bouton, Champ, Ecran, SousTitre, Titre } from '@/components/base';
+import { ChoixStatut } from '@/components/ChoixStatut';
+import { emailValide } from '@/config/candidatures';
+import { couleurs, espace } from '@/config/theme';
+import { dateEnSaisie, jourDe, lireDateFr } from '@/logique/dates';
 import { useApp } from '@/store/etat';
+import type { StatutCandidature } from '@/store/types';
 
 export default function NouvelleCandidature() {
-  const { dispatch } = useApp();
+  const { etat, dispatch } = useApp();
   const [entreprise, setEntreprise] = useState('');
   const [poste, setPoste] = useState('');
   const [lien, setLien] = useState('');
-  const [contact, setContact] = useState('');
+  const [statut, setStatut] = useState<StatutCandidature>('envoyee');
+  const [email, setEmail] = useState('');
+  const [dateEnvoi, setDateEnvoi] = useState(dateEnSaisie(jourDe()));
   const [note, setNote] = useState('');
-  const [envoyee, setEnvoyee] = useState(true);
+  const [erreur, setErreur] = useState('');
 
   const pret = entreprise.trim().length > 0 && poste.trim().length > 0;
 
   function enregistrer() {
+    const date = dateEnvoi.trim() ? lireDateFr(dateEnvoi) : jourDe();
+    if (!date) return setErreur('Date d’envoi non reconnue. Exemple : 25/09 ou 25/09/2026.');
+    if (date > jourDe()) return setErreur('La date d’envoi ne peut pas être dans le futur.');
+    if (email.trim() && !emailValide(email)) return setErreur('Cette adresse e-mail ne semble pas complète.');
     dispatch({
       type: 'AJOUTER_CANDIDATURE',
       candidature: {
         entreprise: entreprise.trim(),
         poste: poste.trim(),
         lien: lien.trim() || undefined,
-        contact: contact.trim() || undefined,
+        email: email.trim() || undefined,
         note: note.trim() || undefined,
-        statut: envoyee ? 'envoyee' : 'a-envoyer',
-        dateEnvoi: envoyee ? jourDe() : undefined,
+        statut,
+        dateEnvoi: date,
       },
     });
     router.back();
+    // Décroché dès la création : on fête ça tout de suite
+    if (statut === 'decroche') {
+      setTimeout(() => router.push({ pathname: '/felicitations', params: { entreprise: entreprise.trim(), poste: poste.trim() } }), 350);
+    }
   }
 
   return (
@@ -40,44 +60,62 @@ export default function NouvelleCandidature() {
       defilant
       bas={
         <View style={styles.boutons}>
-          <Bouton titre="Annuler" variante="secondaire" onPress={() => router.back()} style={{ flex: 1 }} />
-          <Bouton titre="Ajouter" desactive={!pret} onPress={enregistrer} style={{ flex: 1 }} />
+          <Bouton titre="Annuler" variante="secondaire" onPress={() => router.back()} style={{ flex: 0.7 }} />
+          <Bouton titre="Ajouter la candidature" desactive={!pret} onPress={enregistrer} style={{ flex: 2 }} />
         </View>
       }>
       <Titre>Nouvelle candidature</Titre>
-      <Champ label="Entreprise" value={entreprise} onChangeText={setEntreprise} placeholder="Ex. Studio Ardoise" autoFocus />
-      <Champ label="Poste" value={poste} onChangeText={setPoste} placeholder="Ex. Chargé·e de communication" />
+      <Champ label="Entreprise" value={entreprise} onChangeText={setEntreprise} placeholder="Ex. EDF" autoFocus />
+      <Champ label="Poste" value={poste} onChangeText={setPoste} placeholder="Ex. Chargé·e de clientèle" />
+      <Champ
+        label="Lien de l’offre (facultatif)"
+        value={lien}
+        onChangeText={setLien}
+        placeholder="Colle ici le lien de l’annonce"
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="url"
+      />
 
       <View style={{ gap: espace.s }}>
-        <SousTitre>Où en es-tu ?</SousTitre>
-        <View style={styles.pastilles}>
-          <Pastille libelle="Déjà envoyée" choisi={envoyee} onPress={() => setEnvoyee(true)} />
-          <Pastille libelle="À envoyer" choisi={!envoyee} onPress={() => setEnvoyee(false)} />
-        </View>
+        <SousTitre>Où en est-elle ?</SousTitre>
+        <Text style={styles.aide}>Choisis l’étape où elle se trouve vraiment, même si tu l’as commencée ailleurs.</Text>
+        <ChoixStatut valeur={statut} onChange={setStatut} />
       </View>
 
       <Champ
-        label="Lien de l’annonce (facultatif)"
-        value={lien}
-        onChangeText={setLien}
-        placeholder="https://…"
+        label="Adresse e-mail (facultatif)"
+        value={email}
+        onChangeText={setEmail}
+        placeholder="Ex. recrutement@entreprise.com"
         autoCapitalize="none"
-        keyboardType="url"
+        autoCorrect={false}
+        keyboardType="email-address"
+        textContentType="emailAddress"
       />
-      <Champ label="Contact (facultatif)" value={contact} onChangeText={setContact} placeholder="Ex. Léa, RH" />
+      <Champ
+        label="Date d’envoi"
+        value={dateEnvoi}
+        onChangeText={setDateEnvoi}
+        placeholder="Ex. 25/09"
+        keyboardType="numbers-and-punctuation"
+      />
       <Champ
         label="Note (facultatif)"
         value={note}
         onChangeText={setNote}
-        placeholder="Ce qui t’a plu, ce qu’on t’a dit…"
+        placeholder="Ex. Vu sur LinkedIn, recommandée par Sarah…"
         multiline
         style={{ minHeight: 90, textAlignVertical: 'top' }}
       />
+      {erreur ? <Text style={styles.erreur}>{erreur}</Text> : null}
+      {etat.compagnon && <Text style={styles.aide}>{etat.compagnon.nom} suivra cette candidature avec toi 🐾</Text>}
     </Ecran>
   );
 }
 
 const styles = StyleSheet.create({
   boutons: { flexDirection: 'row', gap: espace.s },
-  pastilles: { flexDirection: 'row', gap: espace.s },
+  aide: { fontSize: 13, color: couleurs.brunDoux, fontWeight: '600', lineHeight: 18 },
+  erreur: { color: couleurs.danger, fontWeight: '700', fontSize: 13.5 },
 });

@@ -27,7 +27,7 @@ export const DOCUMENTS_LEGAUX: Record<IdDocumentLegal, DocumentLegal> = {
           "Ton prénom, et ton adresse e-mail si tu te connectes par e-mail, Apple ou Google.",
           "Ton compagnon (animal, prénom, pronoms), sa ville, ta série de jours et tes réglages (rythme du compagnon, rappels).",
           "Tes tâches, tes pièces et leur historique, les objets et tenues que tu possèdes.",
-          "Tes candidatures (entreprise, poste, lien, contact, dates, statut, notes) et tes objectifs professionnels.",
+          "Tes candidatures (entreprise, poste, lien, adresse e-mail, dates, statut, notes) et tes objectifs professionnels.",
           "Ton abonnement Pawstuler Premium (formule, dates). Tes informations de paiement ne passent jamais par nous : elles restent chez Apple."
         ]
       },
