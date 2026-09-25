@@ -6,7 +6,7 @@
 - **Maquette HTML** (`maquette/`) : première exploration visuelle, ne plus la faire évoluer. La référence est désormais l'app.
 - **App Expo** (`app/`) : application complète et fonctionnelle (données sur le téléphone) : démarrage, tâches, pièces, énergie, aventures, candidatures, Shop, ville, « J'ai décroché ! », aventure professionnelle, Compte, Pawstuler Premium (voir section 10).
 - **Illustrations du Drive branchées** : les 4 compagnons (9 poses chacun), l'œuf propre à chaque animal (5 étapes), Clairebourg (lac pour l'accueil, centre-ville pour l'onglet ville) et Sunnyville (place à la fontaine).
-- **Ajouts récents** : connexion réelle prête à brancher (Supabase, voir `docs/connexion-et-abonnement.md`), écran d'abonnement **Pawstuler Premium**, objectif de série 🐾 à l'onboarding avec badge sur l'accueil, page de profil du compagnon, **garde-robe « Tenues complètes »** du chat (55 tenues) et du crocodile (43 tenues).
+- **Ajouts récents** : **système miroir** (le compagnon part en mission en temps réel quand tu postules, relances ou passes un entretien, voir 5.5 ter), statut Premium / gratuit / essai avec énergie en temps réel, refonte des candidatures, connexion réelle prête à brancher (Supabase, voir `docs/connexion-et-abonnement.md`), écran d'abonnement **Pawstuler Premium**, objectif de série 🐾 à l'onboarding avec badge sur l'accueil, page de profil du compagnon, **garde-robe « Tenues complètes »** du chat (55 tenues) et du crocodile (43 tenues).
 - **Finitions faites** : petits mouvements du compagnon (câlin, jeu, gestes spontanés), rappels sur le téléphone, rencontre avec le compagnon (dialogues d'onboarding), icône de l'app, brouillons de textes légaux.
 - Prochaines étapes : tes tests sur iPhone et l'ajustement des valeurs (section 11), puis les services en ligne avec **Supabase seul** (choix validé : pas de Neon ni de Drizzle) : connexion, sauvegarde en ligne, paiement RevenueCat, publication (EAS).
 
@@ -94,8 +94,19 @@ L'accueil est simple : en haut, le badge de série 🐾 et le compteur de pièce
 - **L'énergie n'est pas une monnaie** : c'est la capacité du compagnon à vivre des moments. Elle ne baisse **que** quand on lui demande une action (câlin, jeu, aventure, et bientôt missions) ; consulter une page ou recevoir une notification ne coûte rien.
 - **Gratuit : 30 maximum, recharge complète 5 h** après la première dépense. **Premium et essai : 100 maximum, recharge complète 3 h.** Le compte à rebours démarre quand l'énergie passe sous le maximum ; au bout du délai, elle revient entièrement, même si l'app est fermée (heure réelle). Plus de recharge chaque matin.
 - Affichage sous la jauge : « 15/30 · Recharge dans 4 h 12 ». Action impossible faute d'énergie : explication simple (« Milo n'a plus assez d'énergie pour faire ça. Recharge complète dans 2 h 10. »).
-- Coûts actuels : câlin 5, jeu 10, **Aventure du jour** 20. Chaque tâche terminée redonne 3 (reprises si on décoche). En passant Premium, l'énergie monte tout de suite à 100. Réglages : `app/src/config/energie.ts`, calculs : `app/src/logique/energie.ts`.
-- **Aventure du jour** : un court récit dans un lieu de la ville, en miroir du parcours de l'utilisateur, + 10 pièces. Gratuit : 1 par jour, puis « Nouvelle aventure demain ». Premium : jusqu'à 3 par jour. Chaque premier passage dans un lieu l'ajoute à la « Découverte » du compagnon et lui offre un souvenir pour sa collection. (Deviendra dynamique à l'étape C.)
+- Coûts actuels : câlin 5, jeu 10, missions (voir 5.5 ter). Chaque tâche terminée redonne 3 (reprises si on décoche). En passant Premium, l'énergie monte tout de suite à 100. Réglages : `app/src/config/energie.ts`, calculs : `app/src/logique/energie.ts`.
+- **Aventure du jour** : ce sont désormais les **missions du compagnon** (5.5 ter), sur l'accueil : sa mission en cours ou son retour, les missions proposées aujourd'hui, « Explorer [ville] » (gratuit : 1 par jour, puis « Nouvelle exploration demain » ; Premium : jusqu'à 3), la prochaine mission prévue, et le **journal de [nom]** de la journée (départs, câlins, jeux, refus, décroché). Chaque premier passage dans un lieu en exploration l'ajoute à la « Découverte » du compagnon et lui offre un souvenir.
+
+### 5.5 ter Système miroir : les missions du compagnon
+- Tes actions créent des missions pour le compagnon, qui reprend **le vrai nom de l'entreprise** dans un lieu cohérent avec le secteur (🥐 boulangerie, ☕ café, 📚 librairie, 🏨 hôtel…, reconnu à partir de l'entreprise et du poste) :
+  - candidature envoyée (dans les 7 derniers jours) → **déposer son CV** ; relance → **retourner demander des nouvelles** ; entretien → **son propre entretien** (le jour du tien s'il est connu) ;
+  - refus → ses missions en attente pour ce lieu s'arrêtent, mot bienveillant dans le journal ; décroché → il décroche lui aussi ;
+  - 5 candidatures en 7 jours → **grande tournée** de la ville (bonus, une par semaine).
+- **Au plus 2 missions miroir par jour**, les plus importantes d'abord (entretien, puis relance, puis dépôt) ; les autres sont étalées sur les jours suivants (« Prochaine mission demain : … »).
+- **Temps réel** : c'est le compagnon qui est occupé. Durées : dépôt 5 min, relance 5 min, exploration 10 min, entretien 15 min, travail 30 min ; énergie : 10, 10, 10, 15, 20. Pendant la mission il quitte la scène de l'accueil (« Milo est chez Boulangerie Dupain · Retour à 10 h 05 »), on ne peut ni le câliner ni lancer une autre mission ; l'app peut être fermée.
+- **Notification** à son retour, puis on **découvre** ce qu'il a vécu (résultats variés, jamais de refus décidé tout seul) : +5 pièces par mission miroir, +10 par exploration (dans le plafond de 50).
+- Les noms des lieux de la ville changent chaque jour. L'onglet ville montre « Les candidatures de [nom] » (CV déposé, entretien passé, a décroché…).
+- Fichiers : réglages et textes `app/src/config/missions.ts`, logique `app/src/logique/missions.ts`, écran `app/src/app/aventure.tsx`, section de l'accueil `app/src/components/AventureDuJour.tsx`.
 
 ### 5.5 ter Pièces 🪙 (portefeuille)
 - Gagnées gratuitement avec les tâches (et les aventures, les objectifs pro, « J'ai décroché ! »). **Jamais remises à zéro** : elles s'accumulent.
@@ -159,6 +170,7 @@ L'architecture permet d'ajouter d'autres villes plus tard dans `app/src/config/v
 ### 5.10 bis Rappels sur le téléphone
 Notifications **locales** (programmées par le téléphone, sans serveur, `app/src/services/rappels.ts`), réglables dans Compte › Paramètres :
 - **Tâches du jour** : chaque matin, une heure après le réveil du compagnon.
+- **Retour de mission** : à l'heure exacte où le compagnon rentre.
 - **Relances** : 7 jours après l'envoi d'une candidature restée « envoyée ».
 - **Essai Premium** : 3 jours puis 1 jour avant la fin, avec le prix.
 - Jamais pendant que le compagnon dort, toujours bienveillants. Si l'iPhone les a coupées, Paramètres explique comment les réactiver.
@@ -247,9 +259,10 @@ Chaque tâche rapporte des **pièces** (valeurs ci-dessous, réglables dans `app
 
 ## 11. Décisions prises par Claude, à valider
 Ces valeurs ne viennent pas de mes consignes : Claude les a choisies pour que l'app fonctionne. Elles sont toutes réglables dans `app/src/config/`.
-- **Énergie** (`energie.ts`) : gratuit 30 / 5 h et Premium 100 / 3 h (validé) ; câlin 5, jeu 10, Aventure du jour 20, +3 par tâche terminée (proposés par Claude).
+- **Énergie** (`energie.ts`) : gratuit 30 / 5 h et Premium 100 / 3 h (validé) ; câlin 5, jeu 10, +3 par tâche terminée (proposés par Claude).
+- **Missions** (`missions.ts`) : durées et coûts validés ; proposés par Claude : +10 pièces par exploration, grande tournée à 5 candidatures en 7 jours, pas de dépôt de CV pour une candidature envoyée il y a plus de 7 jours, secteurs reconnus par mots-clés, textes des missions, des résultats et du journal.
 - **Moments avec le compagnon** : « Câlin » et « Jouer » sont des propositions de Claude pour donner une utilité à l'énergie.
-- **Récompenses** : aventure +10 pièces, objectif pro atteint +15, « J'ai décroché ! » +50.
+- **Récompenses** : exploration +10 pièces, objectif pro atteint +15, « J'ai décroché ! » +50.
 - **Premium** : 3 aventures par jour (contre 1 en gratuit).
 - **Shop** (`boutique.ts`) : la liste des objets et leurs prix (de 20 à 150 pièces ; tenues de 20 à 120), l'écharpe offerte, la couronne et les tenues d'événements réservées à Premium, les noms des tenues.
 - **Récits d'aventure** (`aventures.ts`) et **lieux de Sunnyville** : textes provisoires.
@@ -265,8 +278,8 @@ Ces valeurs ne viennent pas de mes consignes : Claude les a choisies pour que l'
 Aucune question bloquante. À ajuster après tes premiers tests sur iPhone : les valeurs de la section 11.
 - **Plan validé le 25/09, en cours** (étapes suivantes) :
   - **B — Premium / gratuit / essai (fait le 25/09)** : statut global unique (gratuit, essai, Premium) ; énergie gratuit 30 avec recharge complète 5 h après la première dépense, Premium et essai 100 avec recharge 3 h, affichage « Énergie : 15/30 · Recharge dans 4 h 12 », plus de recharge chaque matin, +3 par tâche gardé ; toute collection d'événement Premium (tenue, chapeau, chaussures, accessoires), visible avec 🔒 ; écran « Jour X / 7 » une fois par jour d'essai (jour 7 spécial, jour 8 « Ton essai Premium est terminé 💛 ») ; rappel doux de l'essai disponible.
-  - **C — Système miroir** : les actions de l'utilisateur (candidature, relance, entretien, refus, décroché, objectifs, beaucoup de candidatures) créent des **missions pour le compagnon** ; lieu et métier cohérents avec le secteur ; le compagnon reprend le vrai nom de l'entreprise ; au plus 2 missions disponibles par jour, les autres étalées dans le temps (entretiens et relances prioritaires) ; **temps réel** avec heure de départ et de retour (ce sont les durées de mission **du compagnon** : c'est lui qui est occupé) ; notification au retour ; résultats variés et suites logiques, le compagnon suit le vrai parcours de l'utilisateur (jamais de refus décidé tout seul) ; lieux aux noms changeants ; « Aventure du jour » dynamique ; +5 pièces par mission (dans le plafond).
-  - **D — Animations des missions** : départ visible, trajet, arrivée, disparition, statut « Milo est à la boulangerie · Retour à 20 h 16 », retour ; une animation par type ; moments « Se reposer » (maison) et « Se baigner » (lac, fontaine à Sunnyville).
+  - **C — Système miroir (fait le 25/09, voir 5.5 ter)** : les actions de l'utilisateur (candidature, relance, entretien, refus, décroché, objectifs, beaucoup de candidatures) créent des **missions pour le compagnon** ; lieu et métier cohérents avec le secteur ; le compagnon reprend le vrai nom de l'entreprise ; au plus 2 missions disponibles par jour, les autres étalées dans le temps (entretiens et relances prioritaires) ; **temps réel** avec heure de départ et de retour (ce sont les durées de mission **du compagnon** : c'est lui qui est occupé) ; notification au retour ; résultats variés et suites logiques, le compagnon suit le vrai parcours de l'utilisateur (jamais de refus décidé tout seul) ; lieux aux noms changeants ; « Aventure du jour » dynamique ; +5 pièces par mission (dans le plafond).
+  - **D — Animations des missions (prochaine étape)** : départ visible, trajet, arrivée, disparition, statut « Milo est à la boulangerie · Retour à 20 h 16 », retour ; une animation par type ; moments « Se reposer » (maison) et « Se baigner » (lac, fontaine à Sunnyville).
   - Durées proposées : dépôt de CV 5 min, relance 5 min, recherche 10 min, entretien 15 min, travail 30 min, repos 10 min, baignade 2 min. Coûts : dépôt 10, relance 10, recherche 10, entretien 15, travail 20, baignade 5, repos 0.
 - **Plan « animal vivant »** (première version) : annulé. À la place, Claude ajoute de petits mouvements au compagnon (câlin, jeu, petits gestes) sur la base existante.
 - **Planche « Design sans titre-2 »** (dossier Tenues complètes du Drive) : vêtements seuls, sans animal. Pas utilisée pour l'instant ; pourra servir d'icônes du Shop ou de base pour les vêtements en calques.

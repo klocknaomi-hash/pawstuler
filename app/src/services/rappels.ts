@@ -10,6 +10,7 @@
  *  - Relances : 7 jours après l'envoi d'une candidature restée sans réponse, à 10 h.
  *  - Essai Premium : 3 jours puis 1 jour avant la fin, à 10 h (transparence sur le prix).
  *  - Essai encore disponible : un rappel doux au plus tous les 4 jours, à 18 h, sans insister.
+ *  - Retour de mission : à l'heure exacte où le compagnon rentre (il a une histoire à raconter).
  */
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
@@ -17,6 +18,7 @@ import { Platform } from 'react-native';
 import { JOURS_ESSAI } from '@/config/abonnement';
 import { JOURS_AVANT_RELANCE } from '@/config/taches';
 import { jourDe } from '@/logique/dates';
+import { compagnonAbsent } from '@/logique/missions';
 import { candidaturesActives } from '@/logique/tachesDuJour';
 import { essaiDisponible } from '@/services/abonnement';
 import type { EtatApp } from '@/store/types';
@@ -137,6 +139,12 @@ export async function synchroniserRappels(etat: EtatApp): Promise<Autorisation> 
       'Tes 7 jours d’essai Premium t’attendent ✨',
       `Quand tu veux, sans pression. ${nom} est prêt à te montrer tout ce qu’il sait faire.`,
     );
+  }
+
+  // 5. Retour de mission : le compagnon rentre, son récit l'attend (même si l'app est fermée)
+  const mission = compagnonAbsent(etat);
+  if (mission?.retour) {
+    await programmerLe(new Date(mission.retour), `${nom} est de retour 🎒`, `Sa mission chez ${mission.lieu} est terminée. Viens découvrir ce qui s’est passé !`);
   }
 
   return 'accordee';

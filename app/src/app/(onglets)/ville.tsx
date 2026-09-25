@@ -1,7 +1,8 @@
 /**
  * LA VILLE DU COMPAGNON (Clairebourg par défaut)
  * Son univers : ses lieux, sa propre recherche d'emploi (miroir de celle de l'utilisateur),
- * son poste une fois embauché, et le souvenir de sa dernière aventure.
+ * ses propres candidatures (mêmes entreprises que les tiennes), son poste une fois embauché,
+ * et le souvenir de sa dernière aventure.
  * Base prévue pour la suite : déplacements, événements, rencontres, progression.
  */
 import { Image } from 'expo-image';
@@ -15,6 +16,7 @@ import { villeParId } from '@/config/villes';
 import { imageVille } from '@/illustrations/registre';
 import { LIBELLES_ETAPES, rechercheDuCompagnon, type EtapeLieu } from '@/logique/compagnon';
 import { dateLisible } from '@/logique/dates';
+import { parcoursDuCompagnon } from '@/logique/missions';
 import { estEndormi } from '@/logique/rythme';
 import { useApp } from '@/store/etat';
 
@@ -36,6 +38,8 @@ export default function Ville() {
   const suivi = rechercheDuCompagnon(etat);
   const derniere = etat.derniereAventure;
   const lieuAventure = ville.lieux.find((l) => l.id === derniere?.lieuId);
+  // Ses propres candidatures, en miroir des tiennes (il reprend le vrai nom des entreprises)
+  const parcours = parcoursDuCompagnon(etat);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: couleurs.creme }} edges={['top']}>
@@ -61,7 +65,30 @@ export default function Ville() {
           </Pressable>
         )}
 
-        <Text style={styles.sousTitre}>{etat.contexte === 'pro' ? `La vie de ${nom}` : `La recherche de ${nom}`}</Text>
+        {parcours.length > 0 && (
+          <>
+            <Text style={styles.sousTitre}>Les candidatures de {nom}</Text>
+            <View style={styles.bloc}>
+              {parcours.map(({ candidature, icone, etape, accent }, i) => (
+                <Pressable
+                  key={candidature.id}
+                  style={[styles.lieu, i > 0 && styles.separateur]}
+                  onPress={() => router.push(`/candidature/${candidature.id}`)}
+                  accessibilityRole="button">
+                  <Text style={styles.icone}>{icone}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.lieuNom}>{candidature.entreprise}</Text>
+                    <Text style={[styles.lieuEtat, accent && { color: couleurs.corail }]}>
+                      {candidature.poste} · {etape}
+                    </Text>
+                  </View>
+                </Pressable>
+              ))}
+            </View>
+          </>
+        )}
+
+        <Text style={styles.sousTitre}>{etat.contexte === 'pro' ? `La vie de ${nom}` : `Les lieux de ${ville.nom}`}</Text>
         <View style={styles.bloc}>
           {suivi.map(({ lieu, etape }, i) => (
             <View key={lieu.id} style={[styles.lieu, i > 0 && styles.separateur]}>
@@ -98,6 +125,7 @@ const styles = StyleSheet.create({
   lieu: { flexDirection: 'row', alignItems: 'center', gap: espace.m, padding: espace.l },
   separateur: { borderTopWidth: 1, borderTopColor: couleurs.ligne },
   puce: { width: 12, height: 12, borderRadius: 6 },
+  icone: { fontSize: 22 },
   lieuNom: { fontSize: 15, fontWeight: '800', color: couleurs.brun },
   lieuEtat: { fontSize: 13, fontWeight: '600', color: couleurs.brunDoux, marginTop: 2 },
   note: { fontSize: 13.5, color: couleurs.brunDoux, lineHeight: 19, fontWeight: '600' },

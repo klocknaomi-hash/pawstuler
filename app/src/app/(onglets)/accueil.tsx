@@ -1,6 +1,6 @@
 /**
  * ACCUEIL
- * Le cœur de l'app : le compagnon dans sa ville, son énergie, l'aventure du jour,
+ * Le cœur de l'app : le compagnon dans sa ville, son énergie, l'aventure du jour (ses missions),
  * puis « Tes tâches du jour ».
  * Boucle : je coche une tâche → animation → pièces 🪙 (+ un peu d'énergie ⚡ pour mon compagnon).
  */
@@ -14,6 +14,7 @@ import Animated, { FadeOutUp, SlideInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Compagnon, type Geste } from '@/components/Compagnon';
+import { AventureDuJour } from '@/components/AventureDuJour';
 import { BallonJeu, CoeursCalin, Zzz } from '@/components/Effets';
 import { JaugeEnergie } from '@/components/Energie';
 import { LigneTache } from '@/components/LigneTache';
@@ -27,9 +28,9 @@ import { arrondis, couleurs, espace, ombre, polices } from '@/config/theme';
 import { villeParId } from '@/config/villes';
 import { useMaintenant } from '@/hooks/useMaintenant';
 import { imageVille } from '@/illustrations/registre';
-import { aventuresRestantes } from '@/logique/compagnon';
 import { jourDe } from '@/logique/dates';
 import { dureeLisible, energieDisponible, energieMax, tempsAvantRecharge } from '@/logique/energie';
+import { compagnonAbsent, heureLisible as heureMission, iconeMission, resultatADecouvrir } from '@/logique/missions';
 import { estEndormi, heureLisible } from '@/logique/rythme';
 import { emploiActuel } from '@/logique/tachesDuJour';
 import { jourEssai, rappelEssai, rappelEssaiDisponible } from '@/services/abonnement';
@@ -48,7 +49,10 @@ export default function Accueil() {
   const [saisie, setSaisie] = useState<string | null>(null);
   // Petit mouvement en cours (câlin, jeu) et effet visuel qui l'accompagne
   const [geste, setGeste] = useState<Geste | undefined>(undefined);
-  const [effet, setEffet] = useState<{ type: 'calin' | 'jeu' | 'zzz'; cle: number } | null>(null);
+  const [effet, setEffet] = useState<{
+    type: 'calin' | 'jeu' | 'zzz';
+    cle: number;
+  } | null>(null);
   const compteurGestes = useRef(0);
   const compteurGains = useRef(0);
   const minuterieMoment = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -80,7 +84,9 @@ export default function Accueil() {
   const aujourdhui = jourDe();
   const serieFetee = etat.serie.objectifAtteintLe === aujourdhui;
   const serieReprise = etat.serie.repriseLe === aujourdhui;
-  const restantes = aventuresRestantes(etat);
+  // Missions du compagnon : parti en mission (il n'est plus dans la scène), ou revenu avec un récit
+  const absent = compagnonAbsent(etat, maintenant);
+  const revenu = resultatADecouvrir(etat, maintenant);
 
   /** Fait réagir le compagnon quelques secondes (pose + bulle). */
   function reagir(p: Pose, texte: string) {
@@ -114,7 +120,11 @@ export default function Accueil() {
     if (Platform.OS === 'web') return dispatch({ type: 'SUPPRIMER_TACHE', id: t.id });
     Alert.alert(`Supprimer « ${t.titre} » ?`, t.faite ? `Les ${t.pieces} pièces gagnées seront retirées.` : undefined, [
       { text: 'Annuler', style: 'cancel' },
-      { text: 'Supprimer', style: 'destructive', onPress: () => dispatch({ type: 'SUPPRIMER_TACHE', id: t.id }) },
+      {
+        text: 'Supprimer',
+        style: 'destructive',
+        onPress: () => dispatch({ type: 'SUPPRIMER_TACHE', id: t.id }),
+      },
     ]);
   }
 
@@ -125,6 +135,7 @@ export default function Accueil() {
   }
 
   function interagir(type: 'calin' | 'jeu') {
+    if (absent) return;
     if (energie < COUT[type]) return manqueEnergie();
     dispatch({ type: 'INTERAGIR', moment: type });
     jouerGeste(type);
@@ -134,7 +145,10 @@ export default function Accueil() {
   /** Action bloquée faute d'énergie : explication simple, jamais culpabilisante. */
   function manqueEnergie() {
     const attente = recharge != null ? ` Recharge complète dans ${dureeLisible(recharge)}.` : '';
-    reagir('reconfort', `${compagnon?.nom} n’a plus assez d’énergie pour faire ça.${attente} Chaque tâche terminée lui en redonne ${ENERGIE_PAR_TACHE} ⚡.`);
+    reagir(
+      'reconfort',
+      `${compagnon?.nom} n’a plus assez d’énergie pour faire ça.${attente} Chaque tâche terminée lui en redonne ${ENERGIE_PAR_TACHE} ⚡.`,
+    );
   }
 
   /** Lance le mouvement du compagnon et son effet (cœurs, ballon, zzz), qui s'efface tout seul. */
@@ -150,6 +164,8 @@ export default function Accueil() {
   function messageDuJour(): string {
     const prenom = etat.utilisateur?.prenom ?? '';
     if (dort) return `${compagnon?.nom} dort jusqu’à ${heureLisible(etat.rythme.reveil)}. Tes progrès l’attendront au réveil.`;
+    if (absent?.retour) return `${compagnon?.nom} est chez ${absent.lieu}. Retour à ${heureMission(absent.retour)} !`;
+    if (revenu) return 'Me revoilà ! Viens voir ce que j’ai vécu 🎒';
     if (serieFetee && faites === 0) return `${etat.serie.actuelle} jours d’affilée, objectif atteint ! Merci d’être là 🐾`;
     if (serieReprise && faites === 0) return `Content de te revoir ${prenom} ! On repart ensemble, à ton rythme 🐾`;
     if (toutFait) return 'Bravo, tout est fait pour aujourd’hui !';
@@ -166,7 +182,11 @@ export default function Accueil() {
         <View style={{ flex: 1 }}>
           <Text style={styles.bonjour}>Bonjour {etat.utilisateur?.prenom}</Text>
           <Text style={styles.date}>
-            {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+            {new Date().toLocaleDateString('fr-FR', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+            })}
           </Text>
         </View>
         <Pressable
@@ -196,27 +216,36 @@ export default function Accueil() {
             {effet?.type === 'calin' && <CoeursCalin key={effet.cle} />}
             {effet?.type === 'jeu' && <BallonJeu key={effet.cle} />}
             {effet?.type === 'zzz' && <Zzz key={effet.cle} />}
-            <Pressable
-              onPress={() => (dort ? jouerGeste('zzz') : interagir('calin'))}
-              accessibilityRole="button"
-              accessibilityLabel={dort ? `${compagnon.nom} dort` : `Câliner ${compagnon.nom}`}>
-              <Compagnon
-                espece={compagnon.espece}
-                pose={pose}
-                taille={150}
-                promenade={!dort && !moment}
-                reaction={reaction}
-                geste={geste}
-                equipe={etat.equipe}
-              />
-            </Pressable>
-            {gains.filter((g) => g.pieces > 0).map((g) => (
-              <Animated.View key={g.cle} entering={SlideInDown.duration(250)} exiting={FadeOutUp.duration(700)} style={styles.gainVolant}>
-                <Text style={styles.gainVolantTexte}>+{g.pieces}</Text>
-                <IconePiece taille={18} />
-                <Text style={styles.gainEnergie}>+{ENERGIE_PAR_TACHE} ⚡</Text>
-              </Animated.View>
-            ))}
+            {absent?.retour ? (
+              <Pressable style={styles.panneau} onPress={() => router.push('/aventure')} accessibilityRole="button">
+                <Text style={styles.panneauIcone}>{iconeMission(absent)}</Text>
+                <Text style={styles.panneauTexte}>Retour à {heureMission(absent.retour)}</Text>
+              </Pressable>
+            ) : (
+              <Pressable
+                onPress={() => (dort ? jouerGeste('zzz') : revenu ? router.push('/aventure') : interagir('calin'))}
+                accessibilityRole="button"
+                accessibilityLabel={dort ? `${compagnon.nom} dort` : `Câliner ${compagnon.nom}`}>
+                <Compagnon
+                  espece={compagnon.espece}
+                  pose={pose}
+                  taille={150}
+                  promenade={!dort && !moment}
+                  reaction={reaction}
+                  geste={geste}
+                  equipe={etat.equipe}
+                />
+              </Pressable>
+            )}
+            {gains
+              .filter((g) => g.pieces > 0)
+              .map((g) => (
+                <Animated.View key={g.cle} entering={SlideInDown.duration(250)} exiting={FadeOutUp.duration(700)} style={styles.gainVolant}>
+                  <Text style={styles.gainVolantTexte}>+{g.pieces}</Text>
+                  <IconePiece taille={18} />
+                  <Text style={styles.gainEnergie}>+{ENERGIE_PAR_TACHE} ⚡</Text>
+                </Animated.View>
+              ))}
           </View>
           <View style={styles.energie}>
             <JaugeEnergie energie={energie} max={energieMax(etat)} recharge={recharge} compacte />
@@ -225,36 +254,11 @@ export default function Accueil() {
 
         {/* Moments avec le compagnon */}
         <View style={styles.moments}>
-          {restantes > 0 ? (
-            <Pressable
-              style={[styles.aventure, (dort || energie < COUT.aventure) && { opacity: 0.5 }]}
-              disabled={dort}
-              onPress={() => (energie < COUT.aventure ? manqueEnergie() : router.push('/aventure'))}
-              accessibilityRole="button">
-              <Ionicons name="map" size={20} color={couleurs.blanc} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.aventureTitre}>Aventure du jour</Text>
-                <Text style={styles.aventureSous}>
-                  {dort ? `${compagnon.nom} dort encore` : `${COUT.aventure} ⚡ · ${compagnon.nom} explore ${ville.nom}`}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={couleurs.blanc} />
-            </Pressable>
-          ) : (
-            <Pressable style={styles.aventureFaite} onPress={() => router.push('/aventure')} accessibilityRole="button">
-              <Ionicons name="moon" size={18} color={couleurs.brunDoux} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.aventureFaiteTitre}>Nouvelle aventure demain</Text>
-                <Text style={styles.aventureSous2} numberOfLines={1}>
-                  Relire l’aventure d’aujourd’hui
-                </Text>
-              </View>
-            </Pressable>
-          )}
           <View style={styles.petitsMoments}>
-            <Moment icone="heart" libelle="Câlin" cout={COUT.calin} onPress={() => interagir('calin')} desactive={dort} />
-            <Moment icone="football" libelle="Jouer" cout={COUT.jeu} onPress={() => interagir('jeu')} desactive={dort} />
+            <Moment icone="heart" libelle="Câlin" cout={COUT.calin} onPress={() => interagir('calin')} desactive={dort || !!absent} />
+            <Moment icone="football" libelle="Jouer" cout={COUT.jeu} onPress={() => interagir('jeu')} desactive={dort || !!absent} />
           </View>
+          <AventureDuJour etat={etat} maintenant={maintenant} dort={dort} />
         </View>
 
         {rappel && (
@@ -268,7 +272,12 @@ export default function Accueil() {
         {rappelEssaiDisponible(etat, aujourdhui) && (
           <View style={styles.rappel}>
             <Pressable
-              style={{ flex: 1, flexDirection: 'row', gap: espace.s, alignItems: 'center' }}
+              style={{
+                flex: 1,
+                flexDirection: 'row',
+                gap: espace.s,
+                alignItems: 'center',
+              }}
               onPress={() => {
                 dispatch({ type: 'VOIR_RAPPEL_ESSAI', jour: aujourdhui });
                 router.push('/premium');
@@ -375,9 +384,25 @@ function Moment({
 }
 
 const styles = StyleSheet.create({
-  entete: { flexDirection: 'row', alignItems: 'center', gap: espace.s, paddingHorizontal: espace.l, paddingBottom: espace.s },
-  bonjour: { fontFamily: polices.titre, fontSize: 22, fontWeight: '800', color: couleurs.brun },
-  date: { fontSize: 13, color: couleurs.brunDoux, fontWeight: '600', textTransform: 'capitalize' },
+  entete: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espace.s,
+    paddingHorizontal: espace.l,
+    paddingBottom: espace.s,
+  },
+  bonjour: {
+    fontFamily: polices.titre,
+    fontSize: 22,
+    fontWeight: '800',
+    color: couleurs.brun,
+  },
+  date: {
+    fontSize: 13,
+    color: couleurs.brunDoux,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
   scene: {
     height: 330,
     marginHorizontal: espace.l,
@@ -397,9 +422,26 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     ...ombre,
   },
-  bulleTexte: { fontFamily: polices.texte, fontWeight: '700', fontSize: 14.5, color: couleurs.brun, lineHeight: 19 },
-  sol: { position: 'absolute', bottom: 44, left: 0, right: 0, alignItems: 'center' },
-  energie: { position: 'absolute', left: espace.m, right: espace.m, bottom: espace.m },
+  bulleTexte: {
+    fontFamily: polices.texte,
+    fontWeight: '700',
+    fontSize: 14.5,
+    color: couleurs.brun,
+    lineHeight: 19,
+  },
+  sol: {
+    position: 'absolute',
+    bottom: 44,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  energie: {
+    position: 'absolute',
+    left: espace.m,
+    right: espace.m,
+    bottom: espace.m,
+  },
   gainVolant: {
     position: 'absolute',
     top: -10,
@@ -413,28 +455,26 @@ const styles = StyleSheet.create({
     ...ombre,
   },
   gainVolantTexte: { fontWeight: '800', color: '#9A6400', fontSize: 16 },
-  gainEnergie: { fontWeight: '800', color: couleurs.brunDoux, fontSize: 13, marginLeft: 4 },
+  gainEnergie: {
+    fontWeight: '800',
+    color: couleurs.brunDoux,
+    fontSize: 13,
+    marginLeft: 4,
+  },
   moments: { marginHorizontal: espace.l, marginTop: espace.m, gap: espace.s },
-  aventure: {
-    flexDirection: 'row',
+  // Panneau « parti en mission » à la place du compagnon
+  panneau: {
     alignItems: 'center',
-    gap: espace.m,
-    backgroundColor: couleurs.saugeFonce,
+    gap: 4,
+    backgroundColor: couleurs.carte,
     borderRadius: arrondis.m,
-    padding: espace.l,
+    paddingHorizontal: espace.l,
+    paddingVertical: espace.m,
+    marginBottom: espace.l,
+    ...ombre,
   },
-  aventureTitre: { color: couleurs.blanc, fontWeight: '800', fontSize: 16 },
-  aventureSous: { color: couleurs.blanc, opacity: 0.9, fontWeight: '600', fontSize: 13, marginTop: 2 },
-  aventureFaite: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: espace.m,
-    backgroundColor: couleurs.saugeClair,
-    borderRadius: arrondis.m,
-    padding: espace.l,
-  },
-  aventureFaiteTitre: { color: couleurs.saugeFonce, fontWeight: '800', fontSize: 15 },
-  aventureSous2: { color: couleurs.brunDoux, fontWeight: '600', fontSize: 13, marginTop: 2 },
+  panneauIcone: { fontSize: 40 },
+  panneauTexte: { fontWeight: '800', color: couleurs.brun },
   petitsMoments: { flexDirection: 'row', gap: espace.s },
   moment: {
     flex: 1,
@@ -472,13 +512,43 @@ const styles = StyleSheet.create({
     padding: espace.l,
   },
   proTitre: { fontWeight: '800', color: couleurs.brun, fontSize: 15.5 },
-  proSous: { fontWeight: '600', color: couleurs.brunDoux, fontSize: 13.5, marginTop: 2 },
+  proSous: {
+    fontWeight: '600',
+    color: couleurs.brunDoux,
+    fontSize: 13.5,
+    marginTop: 2,
+  },
   taches: { paddingHorizontal: espace.l, paddingTop: espace.xl, gap: espace.s },
-  titreLigne: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 },
-  titre: { fontFamily: polices.titre, fontSize: 21, fontWeight: '800', color: couleurs.brun },
-  compte: { fontWeight: '800', color: couleurs.brunDoux, fontVariant: ['tabular-nums'] },
-  plafond: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: -2, marginBottom: 4 },
-  plafondTexte: { fontSize: 12.5, fontWeight: '700', color: couleurs.brunDoux, fontVariant: ['tabular-nums'] },
+  titreLigne: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  titre: {
+    fontFamily: polices.titre,
+    fontSize: 21,
+    fontWeight: '800',
+    color: couleurs.brun,
+  },
+  compte: {
+    fontWeight: '800',
+    color: couleurs.brunDoux,
+    fontVariant: ['tabular-nums'],
+  },
+  plafond: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: -2,
+    marginBottom: 4,
+  },
+  plafondTexte: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: couleurs.brunDoux,
+    fontVariant: ['tabular-nums'],
+  },
   ajouter: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -490,7 +560,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: espace.l,
     paddingVertical: 14,
   },
-  ajouterTexte: { fontWeight: '700', color: couleurs.renardFonce, fontSize: 15 },
+  ajouterTexte: {
+    fontWeight: '700',
+    color: couleurs.renardFonce,
+    fontSize: 15,
+  },
   saisie: { flexDirection: 'row', gap: espace.s },
   champ: {
     flex: 1,
@@ -511,5 +585,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  astuce: { fontSize: 12, color: couleurs.brunDoux, textAlign: 'center', marginTop: 4 },
+  astuce: {
+    fontSize: 12,
+    color: couleurs.brunDoux,
+    textAlign: 'center',
+    marginTop: 4,
+  },
 });

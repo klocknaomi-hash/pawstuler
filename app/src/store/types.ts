@@ -10,6 +10,7 @@
 import type { FormuleId } from '@/config/abonnement';
 import type { Contexte } from '@/config/aventures';
 import type { EspeceId, Pronoms } from '@/config/compagnons';
+import type { SecteurId, TypeMission } from '@/config/missions';
 import type { VilleId } from '@/config/villes';
 
 export type TypeContrat = 'cdi' | 'cdd' | 'stage' | 'alternance' | 'freelance';
@@ -134,6 +135,38 @@ export type Serie = {
   repriseLe?: string;
 };
 
+/**
+ * Une mission du compagnon (système miroir) : créée à partir de tes actions
+ * (candidature, relance, entretien…) ou lancée pour explorer sa ville.
+ * Le temps est réel : `depart` et `retour` sont des heures (en millisecondes).
+ */
+export type Mission = {
+  id: string;
+  type: TypeMission;
+  /** Candidature dont la mission est le miroir. */
+  candidatureId?: string;
+  /** Nom du lieu affiché (le vrai nom de l'entreprise pour une mission miroir). */
+  lieu: string;
+  secteur: SecteurId;
+  metier: string;
+  /** Lieu de la ville (exploration) : il rejoint la « Découverte » du compagnon. */
+  lieuId?: string;
+  /** Grande tournée (5 candidatures dans la semaine). */
+  special?: boolean;
+  /** Jour à partir duquel la mission est proposée (calendrier du compagnon). */
+  disponibleLe: string;
+  /** a-venir → en-cours (parti) → vue (résultat découvert) ; annulee si ta candidature a eu une réponse avant. */
+  statut: 'a-venir' | 'en-cours' | 'vue' | 'annulee';
+  depart?: number;
+  retour?: number;
+  /** Résultat tiré au départ, dévoilé seulement au retour. */
+  resultat?: string;
+  creeLe: string;
+};
+
+/** Une ligne du journal de la journée (« Aventure du jour »). */
+export type EntreeJournal = { id: string; le: number; icone: string; texte: string };
+
 export type Parametres = {
   notifications: boolean;
   rappelsRelance: boolean;
@@ -185,6 +218,10 @@ export type EtatApp = {
   aventuresDuJour: number;
   aventuresTotal: number;
   derniereAventure?: { le: string; texte: string; lieuId: string };
+  /** Missions du compagnon (passées, en cours et à venir). */
+  missions: Mission[];
+  /** Journal des moments du compagnon (les plus récents d'abord). */
+  journal: EntreeJournal[];
   /** Lieux découverts en aventure (section « Découverte » et souvenirs de la collection). */
   decouvertes: { villeId: VilleId; lieuId: string; le: string }[];
 

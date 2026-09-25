@@ -3,7 +3,6 @@
  * Sa recherche d'emploi est le miroir de celle de l'utilisateur, et ses aventures
  * racontent sa journée. Tout est calculé à partir de l'état : rien à saisir en double.
  */
-import { RECITS } from '@/config/aventures';
 import { AVENTURES_PAR_JOUR } from '@/config/energie';
 import { villeParId, type Lieu } from '@/config/villes';
 import { aPremium } from '@/services/abonnement';
@@ -49,20 +48,4 @@ export function lieuEmbauche(etat: EtatApp): Lieu | undefined {
 export function aventuresRestantes(etat: EtatApp): number {
   const max = aPremium(etat) ? AVENTURES_PAR_JOUR.premium : AVENTURES_PAR_JOUR.gratuit;
   return Math.max(0, max - etat.aventuresDuJour);
-}
-
-/** Compose l'aventure du jour : un lieu de la ville et un court récit. */
-export function composerAventure(etat: EtatApp): { lieuId: string; texte: string } {
-  const ville = villeParId(etat.villeId ?? 'clairebourg');
-  const avecMetier = ville.lieux.filter((l) => l.metier);
-  const lieu =
-    etat.contexte === 'pro' && etat.compagnon?.metier
-      ? (ville.lieux.find((l) => l.id === etat.compagnon?.metier?.lieuId) ?? avecMetier[0])
-      : avecMetier[etat.aventuresTotal % avecMetier.length];
-  const recits = RECITS[etat.contexte];
-  const texte = recits[etat.aventuresTotal % recits.length]
-    .replaceAll('{nom}', etat.compagnon?.nom ?? 'Ton compagnon')
-    .replaceAll('{lieu}', lieu.nom)
-    .replaceAll('{metier}', (lieu.metier ?? '').toLowerCase());
-  return { lieuId: lieu.id, texte };
 }
