@@ -1,20 +1,26 @@
 /**
  * FICHE CANDIDATURE
- * Tout sur une candidature : statut, entretien, note, historique, archivage.
- * Un refus fait réagir le compagnon ; une offre ou un entretien ouvre « J'ai décroché ! ».
+ * Tout sur une candidature : infos (modifiables), lien de l'offre, e-mail (écrire ou copier),
+ * statut, date d'entretien, note, historique et archivage.
+ * Changer de statut se fait en deux temps : on choisit l'étape, puis « Valider ».
+ * Chaque changement s'ajoute à l'historique (rien n'est effacé).
+ * Un refus fait réagir le compagnon ; « Décroché » ouvre la page de félicitations.
  */
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
+import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Bouton, Champ, Ecran, SousTitre, Titre } from '@/components/base';
+import { ChoixStatut } from '@/components/ChoixStatut';
 import { Compagnon } from '@/components/Compagnon';
-import { STATUTS, statutParId } from '@/config/candidatures';
+import { emailValide, statutParId } from '@/config/candidatures';
 import { arrondis, couleurs, espace } from '@/config/theme';
 import { dateEnSaisie, dateLisible, jourDe, joursEntre, lireDateFr } from '@/logique/dates';
 import { relanceDue } from '@/logique/tachesDuJour';
 import { useApp } from '@/store/etat';
+import type { StatutCandidature } from '@/store/types';
 
 export default function FicheCandidature() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -23,6 +29,14 @@ export default function FicheCandidature() {
   const [note, setNote] = useState(c?.note ?? '');
   const [entretien, setEntretien] = useState(dateEnSaisie(c?.dateEntretien));
   const [erreurDate, setErreurDate] = useState('');
+  // Statut choisi mais pas encore validé
+  const [choix, setChoix] = useState<StatutCandidature | undefined>(c?.statut);
+  const [confirmation, setConfirmation] = useState('');
+  const [copie, setCopie] = useState(false);
+  // Modification des informations principales
+  const [edition, setEdition] = useState(false);
+  const [infos, setInfos] = useState({ entreprise: c?.entreprise ?? '', poste: c?.poste ?? '', lien: c?.lien ?? '', email: c?.email ?? '' });
+  const [erreurInfos, setErreurInfos] = useState('');
 
   if (!c) {
     return (
@@ -34,7 +48,37 @@ export default function FicheCandidature() {
   }
 
   const nomCompagnon = etat.compagnon?.nom ?? 'Ton compagnon';
-  const peutDecrocher = etat.contexte === 'recherche' && (c.statut === 'entretien' || c.statut === 'offre');
+  const aValider = choix !== undefined && choix !== c.statut;
+
+  function valider() {
+    if (!choix || choix === c!.statut) return;
+    dispatch({ type: 'CHANGER_STATUT', id: c!.id, statut: choix });
+    setConfirmation(`✓ ${statutParId(choix).evenement}`);
+    if (choix === 'decroche') router.push({ pathname: '/felicitations', params: { candidatureId: c!.id } });
+  }
+
+  function enregistrerInfos() {
+    if (!infos.entreprise.trim() || !infos.poste.trim()) return setErreurInfos('L’entreprise et le poste sont obligatoires.');
+    if (infos.email.trim() && !emailValide(infos.email)) return setErreurInfos('Cette adresse e-mail ne semble pas complète.');
+    dispatch({
+      type: 'MODIFIER_CANDIDATURE',
+      id: c!.id,
+      modifs: {
+        entreprise: infos.entreprise.trim(),
+        poste: infos.poste.trim(),
+        lien: infos.lien.trim() || undefined,
+        email: infos.email.trim() || undefined,
+      },
+    });
+    setErreurInfos('');
+    setEdition(false);
+  }
+
+  async function copierEmail() {
+    await Clipboard.setStringAsync(c!.email ?? '');
+    setCopie(true);
+    setTimeout(() => setCopie(false), 1800);
+  }
 
   function enregistrerEntretien() {
     if (!entretien.trim()) return dispatch({ type: 'MODIFIER_CANDIDATURE', id: c!.id, modifs: { dateEntretien: undefined } });
@@ -45,57 +89,94 @@ export default function FicheCandidature() {
   }
 
   return (
-    <Ecran
-      defilant
-      avecEntete
-      bas={
-        peutDecrocher ? (
-          <Bouton
-            titre="🎉 J’ai décroché !"
-            variante="victoire"
-            onPress={() => router.push({ pathname: '/decroche', params: { candidatureId: c.id } })}
-          />
-        ) : undefined
-      }>
-      <View style={{ gap: 4 }}>
-        <Titre>{c.entreprise}</Titre>
-        <Text style={styles.poste}>{c.poste}</Text>
-        {c.contact ? <Text style={styles.meta}>Contact : {c.contact}</Text> : null}
-        {c.lien ? (
-          <Pressable onPress={() => Linking.openURL(c.lien!.startsWith('http') ? c.lien! : `https://${c.lien}`)} accessibilityRole="link">
-            <Text style={styles.lien} numberOfLines={1}>
-              Voir l’annonce
-            </Text>
+    <Ecran defilant avecEntete>
+      {!edition ? (
+        <View style={{ gap: 6 }}>
+          <Titre>{c.entreprise}</Titre>
+          <Text style={styles.poste}>{c.poste}</Text>
+          <View style={[styles.statutActuel, { backgroundColor: statutParId(c.statut).fond }]}>
+            <Text style={[styles.statutActuelTexte, { color: statutParId(c.statut).texte }]}>● {statutParId(c.statut).libelle}</Text>
+          </View>
+          {c.lien ? (
+            <Pressable
+              onPress={() => Linking.openURL(c.lien!.startsWith('http') ? c.lien! : `https://${c.lien}`)}
+              accessibilityRole="link"
+              style={styles.ligneAction}>
+              <Ionicons name="open-outline" size={17} color={couleurs.renardFonce} />
+              <Text style={styles.lien} numberOfLines={1}>
+                Voir l’offre
+              </Text>
+            </Pressable>
+          ) : null}
+          {c.email ? (
+            <View style={styles.ligneAction}>
+              <Pressable onPress={() => Linking.openURL(`mailto:${c.email}`)} accessibilityRole="link" style={styles.email} accessibilityHint="Écrire un e-mail">
+                <Ionicons name="mail-outline" size={17} color={couleurs.renardFonce} />
+                <Text style={styles.lien} numberOfLines={1}>
+                  {c.email}
+                </Text>
+              </Pressable>
+              <Pressable onPress={copierEmail} accessibilityRole="button" accessibilityLabel="Copier l’adresse e-mail" hitSlop={10}>
+                <Ionicons name={copie ? 'checkmark' : 'copy-outline'} size={19} color={copie ? couleurs.saugeFonce : couleurs.brunDoux} />
+              </Pressable>
+            </View>
+          ) : null}
+          {copie ? <Text style={styles.copie}>Adresse copiée</Text> : null}
+          <Pressable onPress={() => setEdition(true)} accessibilityRole="button" style={styles.ligneAction}>
+            <Ionicons name="create-outline" size={16} color={couleurs.brunDoux} />
+            <Text style={styles.modifier}>Modifier les informations</Text>
           </Pressable>
-        ) : null}
-      </View>
+        </View>
+      ) : (
+        <View style={{ gap: espace.m }}>
+          <Champ label="Entreprise" value={infos.entreprise} onChangeText={(v) => setInfos({ ...infos, entreprise: v })} />
+          <Champ label="Poste" value={infos.poste} onChangeText={(v) => setInfos({ ...infos, poste: v })} />
+          <Champ
+            label="Lien de l’offre"
+            value={infos.lien}
+            onChangeText={(v) => setInfos({ ...infos, lien: v })}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+            placeholder="https://…"
+          />
+          <Champ
+            label="Adresse e-mail"
+            value={infos.email}
+            onChangeText={(v) => setInfos({ ...infos, email: v })}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            placeholder="recrutement@entreprise.com"
+          />
+          {erreurInfos ? <Text style={styles.erreur}>{erreurInfos}</Text> : null}
+          <View style={{ flexDirection: 'row', gap: espace.s }}>
+            <Bouton titre="Annuler" variante="secondaire" onPress={() => setEdition(false)} style={{ flex: 1 }} />
+            <Bouton titre="Enregistrer" onPress={enregistrerInfos} style={{ flex: 1 }} />
+          </View>
+        </View>
+      )}
 
       {relanceDue(c, jourDe()) && (
         <View style={styles.alerte}>
           <Ionicons name="notifications-outline" size={18} color={couleurs.renardFonce} />
           <Text style={styles.alerteTexte}>
-            Cette candidature date de {joursEntre(c.dateEnvoi!)} jours. Pense à la relancer, puis passe-la en « Relancée ».
+            Cette candidature date de {joursEntre(c.dateEnvoi!)} jours. Pense à la relancer, puis passe-la en « Relancé ».
           </Text>
         </View>
       )}
 
       <View style={{ gap: espace.s }}>
-        <SousTitre>Où en est-elle ?</SousTitre>
-        <View style={styles.statuts}>
-          {STATUTS.map((s) => {
-            const actif = c.statut === s.id;
-            return (
-              <Pressable
-                key={s.id}
-                onPress={() => dispatch({ type: 'CHANGER_STATUT', id: c.id, statut: s.id })}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: actif }}
-                style={[styles.statut, { backgroundColor: actif ? s.fond : couleurs.carte, borderColor: actif ? s.fond : couleurs.ligne }]}>
-                <Text style={[styles.statutTexte, { color: actif ? s.texte : couleurs.brun }]}>{s.libelle}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <SousTitre>Faire évoluer la candidature</SousTitre>
+        <ChoixStatut
+          valeur={choix ?? c.statut}
+          onChange={(s) => {
+            setChoix(s);
+            setConfirmation('');
+          }}
+        />
+        {aValider && <Bouton titre={`Valider : ${statutParId(choix!).libelle}`} onPress={valider} />}
+        {confirmation && !aValider ? <Text style={styles.confirmation}>{confirmation}</Text> : null}
       </View>
 
       {c.statut === 'refus' && (
@@ -135,10 +216,11 @@ export default function FicheCandidature() {
       <View style={{ gap: espace.s }}>
         <SousTitre>Historique</SousTitre>
         <View style={styles.historique}>
-          {[...c.historique].reverse().map((h, i) => (
+          {/* Dans l'ordre chronologique : de l'envoi jusqu'à aujourd'hui */}
+          {c.historique.map((h, i) => (
             <View key={`${h.statut}-${i}`} style={styles.etape}>
               <View style={[styles.puce, { backgroundColor: statutParId(h.statut).fond }]} />
-              <Text style={styles.etapeTexte}>{statutParId(h.statut).libelle}</Text>
+              <Text style={styles.etapeTexte}>✓ {statutParId(h.statut).evenement}</Text>
               <Text style={styles.meta}>{dateLisible(h.le)}</Text>
             </View>
           ))}
@@ -158,7 +240,14 @@ export default function FicheCandidature() {
 const styles = StyleSheet.create({
   poste: { fontSize: 16, fontWeight: '700', color: couleurs.brunDoux },
   meta: { fontSize: 13, fontWeight: '600', color: couleurs.brunDoux },
-  lien: { fontSize: 14, fontWeight: '800', color: couleurs.renardFonce, marginTop: 4 },
+  lien: { fontSize: 14.5, fontWeight: '800', color: couleurs.renardFonce, flexShrink: 1 },
+  ligneAction: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
+  email: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
+  copie: { fontSize: 12.5, fontWeight: '700', color: couleurs.saugeFonce },
+  modifier: { fontSize: 13.5, fontWeight: '700', color: couleurs.brunDoux },
+  statutActuel: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5, marginTop: 2 },
+  statutActuelTexte: { fontWeight: '800', fontSize: 13.5 },
+  confirmation: { fontWeight: '800', color: couleurs.saugeFonce, fontSize: 14 },
   alerte: {
     flexDirection: 'row',
     gap: espace.s,
@@ -168,9 +257,6 @@ const styles = StyleSheet.create({
     padding: espace.m,
   },
   alerteTexte: { flex: 1, fontWeight: '700', color: couleurs.brun, lineHeight: 19 },
-  statuts: { flexDirection: 'row', flexWrap: 'wrap', gap: espace.s },
-  statut: { borderRadius: 999, borderWidth: 1.5, paddingHorizontal: 14, paddingVertical: 9 },
-  statutTexte: { fontWeight: '800', fontSize: 14 },
   reconfort: {
     flexDirection: 'row',
     alignItems: 'center',

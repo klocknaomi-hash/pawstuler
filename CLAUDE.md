@@ -102,13 +102,15 @@ L'accueil est simple : en haut, le badge de série 🐾 et le compteur de pièce
 - **Un seul solde**, identique partout (accueil, Shop, Compte › Portefeuille avec l'historique des gains et dépenses).
 
 ### 5.6 Candidatures
-Un vrai suivi de candidatures, mais simple et dans notre univers, jamais un gros tableau Excel.
-- Fiche : entreprise, poste, lien, contact, date d'envoi, statut, note.
-- Statuts : À envoyer → Envoyée → Relancée → Entretien → Offre reçue, ou Refus.
-- Recherche rapide, filtres par statut, compteurs (envoyées, entretiens, à relancer).
-- **Liées aux tâches** : relance proposée 7 jours après l'envoi sans réponse ; enregistrer une candidature envoyée ou une relance coche automatiquement la tâche correspondante (pas de double saisie).
-- Fiche détaillée : statut, date d'entretien, note, **historique** des statuts, archivage (jamais de suppression automatique).
-- Après un refus, le compagnon envoie un message réconfortant : « Leur perte. On en envoie une autre ensemble ? 🐾 »
+Un vrai suivi de candidatures, assez complet pour **remplacer un tableau Excel**, sans formulaire lourd. Utilisable en gratuit comme en Premium.
+- **Statuts** : Envoyé · Relancé · Entretien · Décroché · Refus. **Aucun ordre imposé** (Envoyé → Entretien ou Envoyé → Refus sont possibles). « À envoyer » n'existe plus ; « Offre reçue » s'appelle **Décroché**. Les anciennes sauvegardes sont converties automatiquement.
+- **Nouvelle candidature (+)** : Entreprise* et Poste* (obligatoires), lien de l'offre, **statut actuel** au choix parmi les 5 (pour reprendre une recherche commencée ailleurs), **adresse e-mail** (remplace « Contact »), date d'envoi (préremplie avec aujourd'hui), note libre. Bouton « Ajouter la candidature ».
+- **Fiche** : entreprise, poste et statut actuel bien visibles ; « Voir l'offre » ; e-mail **cliquable** (ouvre la messagerie) et **copiable** ; « Modifier les informations ». Changer de statut = choisir l'étape puis **« Valider »**.
+- **Historique** automatique, dans l'ordre chronologique, qui garde tout : « ✓ Candidature envoyée », « ✓ Candidature relancée », « ✓ Entretien obtenu », « ✓ Poste décroché », « ✓ Réponse négative », avec la date. Une candidature créée directement à une étape avancée commence par « Candidature envoyée » puis l'étape actuelle.
+- **Décroché + Valider** (ou création directement en Décroché) : page 🎉 « Félicitations ! Tu as décroché ce poste ! » avec entreprise et poste, flèche de retour, « Revenir à ma candidature », et « Commencer mon nouveau chapitre » proposé sans être imposé (voir 5.10).
+- **Recherche** : entreprise, poste, note et e-mail. Filtres par statut, compteurs (envoyées, entretiens, à relancer).
+- **Liées aux tâches** : relance proposée 7 jours après l'envoi sans réponse ; une candidature envoyée aujourd'hui ou une relance coche automatiquement la tâche correspondante.
+- Archivage (jamais de suppression automatique). Après un refus, le compagnon envoie : « Leur perte. On en envoie une autre ensemble ? 🐾 »
 
 ### 5.7 Shop
 Dans la navigation entre Candidatures et Clairebourg. Achats avec les pièces (confirmation avec le solde avant / après). Un premier objet est offert (l'écharpe). Certains objets sont réservés à Pawstuler Premium. Deux rayons :
@@ -131,8 +133,10 @@ L'architecture permet d'ajouter d'autres villes plus tard dans `app/src/config/v
 - **Gratuit** : onboarding, animal, ville, tâches du jour et tâches perso, candidatures, pièces, progression, boutique et personnalisation de base, premières recommandations.
 - **Premium** : animations et interactions en plus, vêtements et événements exclusifs, plus de contenu en ville, personnalisation avancée, recommandations et analyses poussées, aide avancée CV/offres/entretiens.
 - **Offre** :
-  - **Annuel : 39,99 €/an, avec 7 jours d'essai gratuit** (l'essai est réservé à l'annuel et proposé une seule fois).
+  - **Annuel : 39,99 €/an, avec 7 jours d'essai gratuit**. L'essai passe **obligatoirement par l'App Store avec une carte bancaire** (renouvellement automatique ensuite), il est **réservé à l'annuel** et **proposé une seule fois**.
   - **Mensuel : 5,99 €/mois, sans essai gratuit** (payé dès la confirmation).
+  - **Sans abonnement** : la personne utilise la **version gratuite**, sans essai. Elle peut prendre l'annuel ou le mensuel plus tard ; tant qu'elle n'a pas utilisé son essai, il reste disponible et l'app le lui **rappelle de temps en temps** (« Tes 7 jours d'essai Premium t'attendent toujours »), sans insister.
+  - **Pendant l'essai** : expérience Premium complète (énergie 100, recharge 3 h, collections événementielles…). **Après l'essai** sans abonnement : retour en gratuit, rien n'est perdu (animal, pièces, tenues, candidatures, historique, aventures).
 - **Écran d'abonnement** (`app/src/app/premium.tsx`, s'ouvre depuis Compte, le Shop, les aventures et les rappels) : ce qui reste gratuit, ce que Premium ajoute, choix de la formule, frise de l'essai (aujourd'hui 0 € → rappel → date et montant du premier paiement), phrase complète sous le bouton (prix après l'essai, renouvellement automatique, résiliation au moins 24 h avant), mention légale App Store, liens « Restaurer mes achats », « Conditions d'utilisation », « Confidentialité ». Aucune formulation ambiguë.
 - Rappels dans l'app : « Ton essai Premium se termine dans 3 jours. Ensuite : 39,99 €/an, sauf résiliation. », puis « … demain. »
 - Paiement réel : App Store via **RevenueCat**, à brancher dans `app/src/services/abonnement.ts` (produits `pawstuler_premium_annuel` et `pawstuler_premium_mensuel`, entitlement `premium`). En attendant, l'achat est simulé.
@@ -252,5 +256,10 @@ Ces valeurs ne viennent pas de mes consignes : Claude les a choisies pour que l'
 
 ## 12. Questions ouvertes
 Aucune question bloquante. À ajuster après tes premiers tests sur iPhone : les valeurs de la section 11.
-- **Plan « animal vivant »** : annulé. À la place, Claude ajoute de petits mouvements au compagnon (câlin, jeu, petits gestes) sur la base existante.
+- **Plan validé le 25/09, en cours** (étapes suivantes) :
+  - **B — Premium / gratuit / essai** : statut global unique (gratuit, essai, Premium) ; énergie gratuit 30 avec recharge complète 5 h après la première dépense, Premium et essai 100 avec recharge 3 h, affichage « Énergie : 15/30 · Recharge dans 4 h 12 », plus de recharge chaque matin, +3 par tâche gardé ; toute collection d'événement Premium (tenue, chapeau, chaussures, accessoires), visible avec 🔒 ; écran « Jour X / 7 » une fois par jour d'essai (jour 7 spécial, jour 8 « Ton essai Premium est terminé 💛 ») ; rappel doux de l'essai disponible.
+  - **C — Système miroir** : les actions de l'utilisateur (candidature, relance, entretien, refus, décroché, objectifs, beaucoup de candidatures) créent des **missions pour le compagnon** ; lieu et métier cohérents avec le secteur ; le compagnon reprend le vrai nom de l'entreprise ; au plus 2 missions disponibles par jour, les autres étalées dans le temps (entretiens et relances prioritaires) ; **temps réel** avec heure de départ et de retour (ce sont les durées de mission **du compagnon** : c'est lui qui est occupé) ; notification au retour ; résultats variés et suites logiques, le compagnon suit le vrai parcours de l'utilisateur (jamais de refus décidé tout seul) ; lieux aux noms changeants ; « Aventure du jour » dynamique ; +5 pièces par mission (dans le plafond).
+  - **D — Animations des missions** : départ visible, trajet, arrivée, disparition, statut « Milo est à la boulangerie · Retour à 20 h 16 », retour ; une animation par type ; moments « Se reposer » (maison) et « Se baigner » (lac, fontaine à Sunnyville).
+  - Durées proposées : dépôt de CV 5 min, relance 5 min, recherche 10 min, entretien 15 min, travail 30 min, repos 10 min, baignade 2 min. Coûts : dépôt 10, relance 10, recherche 10, entretien 15, travail 20, baignade 5, repos 0.
+- **Plan « animal vivant »** (première version) : annulé. À la place, Claude ajoute de petits mouvements au compagnon (câlin, jeu, petits gestes) sur la base existante.
 - **Planche « Design sans titre-2 »** (dossier Tenues complètes du Drive) : vêtements seuls, sans animal. Pas utilisée pour l'instant ; pourra servir d'icônes du Shop ou de base pour les vêtements en calques.

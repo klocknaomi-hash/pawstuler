@@ -15,7 +15,7 @@ const SECTIONS = [
   {
     titre: 'Les données que tu nous confies',
     texte:
-      'Ton prénom, ton adresse e-mail si tu t’inscris par e-mail, ton compagnon et sa ville, tes tâches, tes pièces, tes candidatures (entreprise, poste, lien, contact, dates, notes) et tes objectifs professionnels.',
+      'Ton prénom, ton adresse e-mail si tu t’inscris par e-mail, ton compagnon et sa ville, tes tâches, tes pièces, tes candidatures (entreprise, poste, lien, adresse e-mail, dates, notes) et tes objectifs professionnels.',
   },
   {
     titre: 'Où elles sont gardées',

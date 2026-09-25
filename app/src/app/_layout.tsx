@@ -48,6 +48,7 @@ function Navigation() {
       {/* Candidatures */}
       <Stack.Screen name="nouvelle-candidature" options={{ presentation: 'modal' }} />
       <Stack.Screen name="candidature/[id]" options={avecEntete('Candidature')} />
+      <Stack.Screen name="felicitations" options={{ ...avecEntete(''), headerStyle: { backgroundColor: couleurs.corailClair } }} />
       {/* Compte */}
       <Stack.Screen name="compte/profil" options={avecEntete('Profil')} />
       <Stack.Screen name="compte/parametres" options={avecEntete('Paramètres')} />

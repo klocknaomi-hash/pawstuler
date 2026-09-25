@@ -17,11 +17,12 @@ import { lireDateFr } from '@/logique/dates';
 import { useApp } from '@/store/etat';
 
 export default function Decroche() {
-  const { candidatureId } = useLocalSearchParams<{ candidatureId?: string }>();
+  const { candidatureId, directement } = useLocalSearchParams<{ candidatureId?: string; directement?: string }>();
   const { etat, dispatch } = useApp();
   const origine = etat.candidatures.find((c) => c.id === candidatureId);
 
-  const [etape, setEtape] = useState<'fete' | 'infos'>('fete');
+  // Venue de la page de félicitations : la fête a déjà eu lieu, on passe aux infos
+  const [etape, setEtape] = useState<'fete' | 'infos'>(directement ? 'infos' : 'fete');
   const [entreprise, setEntreprise] = useState(origine?.entreprise ?? '');
   const [poste, setPoste] = useState(origine?.poste ?? '');
   const [premierJour, setPremierJour] = useState('');

@@ -10,6 +10,7 @@ import { AppState } from 'react-native';
 
 import type { FormuleId } from '@/config/abonnement';
 import { CATALOGUE_BOUTIQUE, objetParId } from '@/config/boutique';
+import { emailValide } from '@/config/candidatures';
 import { especeValide, type EspeceId, type Pronoms } from '@/config/compagnons';
 import { COUT, ENERGIE_MAX, ENERGIE_PAR_TACHE, PIECES_AVENTURE } from '@/config/energie';
 import { OBJECTIF_SERIE_PAR_DEFAUT } from '@/config/serie';
@@ -52,7 +53,7 @@ export const ETAT_INITIAL: EtatApp = {
   parametres: { notifications: true, rappelsRelance: true, rappelsTaches: true },
 };
 
-export type NouvelleCandidature = Pick<Candidature, 'entreprise' | 'poste' | 'lien' | 'contact' | 'note' | 'statut' | 'dateEnvoi'>;
+export type NouvelleCandidature = Pick<Candidature, 'entreprise' | 'poste' | 'lien' | 'email' | 'note' | 'statut' | 'dateEnvoi'>;
 
 export type Action =
   | { type: 'CHARGER'; etat: Partial<EtatApp> & { version?: number } }
@@ -162,6 +163,13 @@ function porter(equipe: string[], objetId: string): string[] {
   return [...(habit ? equipe.filter((id) => !objetParId(id)?.habit) : equipe), objetId];
 }
 
+/** Statuts des anciennes versions de l'app → statuts actuels. */
+function convertirStatut(statut: string): StatutCandidature {
+  if (statut === 'a-envoyer') return 'envoyee';
+  if (statut === 'offre') return 'decroche';
+  return statut as StatutCandidature;
+}
+
 const nouvelleRecherche = () => ({ id: nouvelId(), debut: jourDe() });
 
 /** Met à jour les anciennes sauvegardes (version 1) vers le modèle actuel. */
@@ -171,12 +179,25 @@ function migrer(brut: Partial<EtatApp> & { version?: number }): EtatApp {
   if (etat.villeId && !VILLES.some((v) => v.id === etat.villeId)) etat.villeId = 'clairebourg';
   if (etat.onboardingTermine && etat.recherches.length === 0) etat.recherches = [nouvelleRecherche()];
   const rechercheId = etat.recherches[0]?.id ?? '';
-  etat.candidatures = etat.candidatures.map((c) => ({
-    ...c,
-    historique: c.historique ?? [{ statut: c.statut, le: c.dateEnvoi ?? c.creeLe }],
-    archivee: c.archivee ?? false,
-    rechercheId: c.rechercheId ?? rechercheId,
-  }));
+  etat.candidatures = etat.candidatures.map((brute) => {
+    // Anciens statuts : « À envoyer » devient « Envoyé », « Offre reçue » devient « Décroché »
+    const ancien = brute as Candidature & { contact?: string; statut: string };
+    const statut = convertirStatut(ancien.statut);
+    // L'ancien champ « Contact » devient l'adresse e-mail s'il en est une, sinon il rejoint la note
+    const { contact, ...c } = ancien;
+    const email = c.email ?? (contact && emailValide(contact) ? contact.trim() : undefined);
+    const note = contact && !emailValide(contact) ? [c.note, `Contact : ${contact}`].filter(Boolean).join('\n') : c.note;
+    return {
+      ...c,
+      statut,
+      email,
+      note,
+      dateEnvoi: c.dateEnvoi ?? c.creeLe,
+      historique: (c.historique ?? [{ statut, le: c.dateEnvoi ?? c.creeLe }]).map((h) => ({ ...h, statut: convertirStatut(h.statut) })),
+      archivee: c.archivee ?? false,
+      rechercheId: c.rechercheId ?? rechercheId,
+    };
+  });
   if (brut.version !== 2 && brut.utilisateur) etat.connecte = true;
   // Anciennes sauvegardes : la dernière aventure devient la première découverte
   if (etat.decouvertes.length === 0 && etat.derniereAventure && etat.villeId)
@@ -313,17 +334,26 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
     /* ----- Candidatures ----- */
     case 'AJOUTER_CANDIDATURE': {
       const rechercheId = etat.recherches[etat.recherches.length - 1]?.id ?? '';
+      const aujourdhui = jourDe();
+      const dateEnvoi = action.candidature.dateEnvoi ?? aujourdhui;
+      // L'historique commence toujours par l'envoi ; si la candidature est déjà plus loin
+      // (reprise d'un tableau Excel par exemple), on ajoute l'étape actuelle.
+      const historique: Candidature['historique'] = [{ statut: 'envoyee', le: dateEnvoi }];
+      if (action.candidature.statut !== 'envoyee') historique.push({ statut: action.candidature.statut, le: aujourdhui });
       const c: Candidature = {
         ...action.candidature,
+        dateEnvoi,
         id: nouvelId(),
-        creeLe: jourDe(),
-        historique: [{ statut: action.candidature.statut, le: jourDe() }],
+        creeLe: aujourdhui,
+        historique,
         archivee: false,
         rechercheId,
       };
       const avec = { ...etat, candidatures: [c, ...etat.candidatures] };
-      // Pas de double saisie : une candidature envoyée valide la tâche « Envoyer une candidature »
-      return c.statut === 'envoyee' ? validerTacheLiee(avec, (t) => t.modeleId === 'envoi' || t.modeleId === 'spontanee') : avec;
+      // Pas de double saisie : une candidature envoyée aujourd'hui valide la tâche « Envoyer une candidature »
+      return c.statut === 'envoyee' && dateEnvoi === aujourdhui
+        ? validerTacheLiee(avec, (t) => t.modeleId === 'envoi' || t.modeleId === 'spontanee')
+        : avec;
     }
     case 'MODIFIER_CANDIDATURE':
       return {
@@ -383,7 +413,7 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
         recherches: etat.recherches.map((r, i) => (i === etat.recherches.length - 1 ? { ...r, fin: aujourdhui } : r)),
         // Rien n'est supprimé : les candidatures restent, archivées seulement si l'utilisateur l'a choisi
         candidatures: etat.candidatures.map((c) => {
-          const statut: StatutCandidature = c.id === action.emploi.candidatureId && c.statut !== 'offre' ? 'offre' : c.statut;
+          const statut: StatutCandidature = c.id === action.emploi.candidatureId && c.statut !== 'decroche' ? 'decroche' : c.statut;
           return {
             ...c,
             statut,

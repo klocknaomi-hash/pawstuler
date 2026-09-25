@@ -40,14 +40,16 @@ export type Tache = {
   piecesDonnees?: number;
 };
 
-export type StatutCandidature = 'a-envoyer' | 'envoyee' | 'relancee' | 'entretien' | 'offre' | 'refus';
+/** Où en est une candidature. On l'enregistre à l'étape où elle se trouve vraiment (aucun ordre imposé). */
+export type StatutCandidature = 'envoyee' | 'relancee' | 'entretien' | 'decroche' | 'refus';
 
 export type Candidature = {
   id: string;
   entreprise: string;
   poste: string;
   lien?: string;
-  contact?: string;
+  /** Adresse e-mail du recruteur ou de la personne avec qui on échange. */
+  email?: string;
   /** Date d'envoi au format AAAA-MM-JJ. */
   dateEnvoi?: string;
   /** Date de l'entretien, si prévu. */
