@@ -5,7 +5,7 @@
  * Les images sont déclarées dans src/assets/registre.ts.
  */
 
-export type VilleId = 'clairebourg' | 'les-tilleuls' | 'grand-havre' | 'neuvelle';
+export type VilleId = 'clairebourg' | 'sunnyville';
 export type Ambiance = 'campagne' | 'urbaine';
 
 /** Un lieu de la ville : un endroit où le compagnon peut aller, et parfois postuler. */
@@ -44,39 +44,19 @@ export const VILLES: Ville[] = [
     ],
   },
   {
-    id: 'les-tilleuls',
-    nom: 'Les Tilleuls',
-    ambiance: 'campagne',
-    accroche: 'Une petite ville de périphérie, calme et verte.',
-    couleur: '#C9D9A0',
-    lieux: [
-      { id: 'marche', nom: 'Le marché couvert', metier: 'Vendeur' },
-      { id: 'jardinerie', nom: 'La jardinerie', metier: 'Conseiller' },
-      { id: 'mairie', nom: 'La mairie', metier: 'Agent d’accueil' },
-    ],
-  },
-  {
-    id: 'grand-havre',
-    nom: 'Grand-Havre',
+    id: 'sunnyville',
+    nom: 'Sunnyville',
+    nomDefinitif: true,
     ambiance: 'urbaine',
-    accroche: 'Une ville portuaire, ses quais, ses bureaux et son tram.',
+    accroche: 'La grande ville : ses rues animées, ses bureaux et ses transports.',
     couleur: '#8EC5D6',
+    // Lieux provisoires, à affiner avec les illustrations de la ville
     lieux: [
-      { id: 'port', nom: 'Les bureaux du port', metier: 'Assistant logistique' },
-      { id: 'tram', nom: 'Le dépôt du tram', metier: 'Technicien' },
-      { id: 'agence-com', nom: 'Agence Marée Haute', metier: 'Chargé de communication' },
-    ],
-  },
-  {
-    id: 'neuvelle',
-    nom: 'Neuvelle',
-    ambiance: 'urbaine',
-    accroche: 'La grande ville : tours, métro et start-up.',
-    couleur: '#B9AEDC',
-    lieux: [
-      { id: 'tour', nom: 'La tour Horizon', metier: 'Analyste junior' },
-      { id: 'startup', nom: 'Start-up Pixel', metier: 'Designer' },
-      { id: 'cafe', nom: 'Le café du métro', metier: 'Barista' },
+      { id: 'bureaux', nom: 'Les bureaux du centre', metier: 'Assistant de projet' },
+      { id: 'startup', nom: 'Start-up Pixel', metier: 'Designer junior' },
+      { id: 'agence-com', nom: 'Agence de communication', metier: 'Chargé de communication' },
+      { id: 'cafe-metro', nom: 'Le café du métro', metier: 'Barista' },
+      { id: 'parc-urbain', nom: 'Le parc urbain' },
     ],
   },
 ];

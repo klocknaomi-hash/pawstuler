@@ -66,6 +66,12 @@ export const CATALOGUE_TACHES: ModeleTache[] = [
   { id: 'pause-pro', titre: 'Faire une vraie pause', categorie: 'moral', pieces: 3, contexte: 'pro' },
 ];
 
+/**
+ * Plafond de pièces gagnées par jour (tâches, aventures, objectifs), pour encourager
+ * la régularité plutôt que le spam. Le bonus « J'ai décroché ! » n'est pas plafonné.
+ */
+export const PLAFOND_PIECES_JOUR = 50;
+
 /** Pièces gagnées pour une tâche créée par l'utilisateur. */
 export const PIECES_TACHE_PERSO = 5;
 

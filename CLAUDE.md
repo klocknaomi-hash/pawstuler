@@ -9,6 +9,8 @@
 
 Avant tout gros changement : proposer un plan et attendre ma validation (section 8).
 
+**Où se trouve le travail :** tout est sur la branche `claude/youthful-hopper-ls2cpi`. La branche `main` contient encore la toute première version de ce fichier, tant que la branche n'y est pas fusionnée.
+
 ---
 
 ## 1. Le projet en une phrase
@@ -37,8 +39,8 @@ L'utilisateur choisit **un compagnon parmi 4**. Chacun a ses illustrations, ses 
 |---|---|---|
 | 🦊 Renard | **Ziggy** | Curieux et débrouillard, un peu perdu au début mais plein de ressources |
 | 🐱 Chat | **Mochi** | Calme, observateur, un brin perfectionniste |
-| 🐊 Crocodile | **Kiwi** *(nom provisoire)* | Grand cœur sous ses airs sérieux |
-| 🐰 Lapin | **Nugget** | Un peu stressé mais courageux |
+| 🐊 Crocodile | **Milo** | Grand cœur sous ses airs sérieux *(personnalité proposée par Claude)* |
+| 🐰 Lapin | **Nala** | Un peu stressé mais courageux |
 
 Le crocodile remplace le chien pour avoir des silhouettes bien différentes. Le renard Ziggy reste le personnage de référence ; l'utilisateur choisit l'un des quatre et lui donne le prénom qu'il veut.
 
@@ -65,7 +67,7 @@ Apple, Google, e-mail/mot de passe. Pour l'instant, chaque méthode crée un com
 3. **Choix de l'animal** parmi les 4, très visuel.
 4. **Œuf** : œuf intact → il tremble légèrement → première fissure → plusieurs fissures → il s'ouvre → l'animal apparaît → petite animation de bienvenue. L'utilisateur touche l'œuf pour avancer. Élément magique assumé, pour tous les animaux.
 5. **Prénom du compagnon** : son nom s'affiche en grand, « Comment veux-tu l'appeler ? », « Saisis son prénom », prérempli avec le nom proposé.
-6. **Ville** : « Où veux-tu commencer ton aventure ? », 4 cartes (voir 5.8), puis l'accueil.
+6. **Ville** : « Où veux-tu commencer ton aventure ? », une carte par ville (voir 5.8), puis l'accueil.
 
 ### 5.5 Accueil et tâches du jour
 L'accueil est simple : le compagnon dans sa ville, puis **« Tes tâches du jour »**, sans accumulation de widgets.
@@ -80,6 +82,7 @@ L'accueil est simple : le compagnon dans sa ville, puis **« Tes tâches du jour
 
 ### 5.5 ter Pièces 🪙 (portefeuille)
 - Gagnées gratuitement avec les tâches (et les aventures, les objectifs pro, « J'ai décroché ! »). **Jamais remises à zéro** : elles s'accumulent.
+- **Plafond : 50 pièces gagnées par jour** (tâches, aventures, objectifs). Au-delà, les tâches se cochent toujours, sans pièce en plus, avec un message bienveillant. Le compteur « x/50 aujourd'hui » est affiché sur l'accueil. Le bonus « J'ai décroché ! » n'est pas plafonné.
 - Dépensées dans le Shop : le solde est **réellement débité** (confirmation avec solde avant / après).
 - **Un seul solde**, identique partout (accueil, Shop, Compte › Portefeuille avec l'historique des gains et dépenses).
 
@@ -96,9 +99,10 @@ Un vrai suivi de candidatures, mais simple et dans notre univers, jamais un gros
 Dans la navigation entre Candidatures et Clairebourg. Chapeaux, vêtements, accessoires, objets, achetés avec les pièces. Un premier objet est offert. Certains objets sont réservés à Ziggy+.
 
 ### 5.8 Les villes
-4 villes : **2 campagne/périphérie** (herbe, arbres, petites maisons, chemins, commerces de proximité, calme) et **2 urbaines** (immeubles, rues, transports, bureaux, grande ville).
-- **Clairebourg** (nom officiel, écrit exactement ainsi) : petite ville française fictive, campagne, illustrée — boulangerie, librairie, studio, agence, café, parc.
-- Les 3 autres villes sont prévues dans l'architecture ; leurs noms seront définis ensuite. Elles s'affichent « Bientôt » tant que leur illustration n'existe pas.
+2 villes :
+- **Clairebourg** (campagne, nom écrit exactement ainsi) : petite ville française fictive, illustrée — boulangerie, librairie, studio, agence, café, parc.
+- **Sunnyville** (grande ville) : immeubles, bureaux, commerces, transports. Elle s'affiche « Bientôt » tant que son illustration n'existe pas ; ses lieux actuels (bureaux, start-up, agence de com, café du métro, parc) sont provisoires.
+L'architecture permet d'ajouter d'autres villes plus tard dans `app/src/config/villes.ts`.
 
 **Une ville n'est pas un fond d'écran.** Le compagnon doit pouvoir s'y déplacer, visiter des lieux, vivre des événements, rencontrer des personnages et progresser professionnellement, **en miroir de l'utilisateur** : l'utilisateur a un entretien → le compagnon aussi, dans un lieu de sa ville ; l'utilisateur décroche un poste → le compagnon aussi, avec une grande célébration.
 
@@ -146,6 +150,8 @@ Chaque tâche rapporte des **pièces** (valeurs ci-dessous, réglables dans `app
 | Moral | Faire une vraie pause | 3 |
 | Tâche perso | Créée par l'utilisateur | 5 |
 
+**Plafond : 50 pièces gagnées par jour** (voir 5.5 ter).
+
 **Après « J'ai décroché ! » (contexte pro) :** préparer ton premier jour (10), définir tes objectifs du premier mois (10), découvrir ton nouvel environnement (5), prendre un café avec un collègue (5), préparer une présentation (15), bilan de ta première semaine (10), choisir une compétence à développer (10), faire le point sur ta progression (10). Objectif pro atteint : 15.
 
 **Selon le contrat recherché :** Alternance → vérifier le rythme de l'école (5) ; Alternance ou Stage → contacter le service relations entreprises (10) ; Freelance → mettre à jour son portfolio (10).
@@ -186,8 +192,15 @@ Chaque tâche rapporte des **pièces** (valeurs ci-dessous, réglables dans `app
 - **Services** (`app/src/services/`) : connexion (bouchons à remplacer), abonnement (achat App Store à brancher), compte et RGPD (export, suppression), futur simulateur d'entretien.
 - Avant de dire qu'une étape est terminée : `npx tsc --noEmit` et `npx eslint src` sans erreur, et parcours testé.
 
-## 11. Questions ouvertes (à trancher avec moi)
-1. **Nom du crocodile** : « Kiwi » est provisoire.
-2. **Noms des 3 autres villes** (1 campagne, 2 urbaines).
-3. **Plafonds quotidiens** par tâche (anti-spam) : à appliquer aux pièces ?
-4. **Réglages de l'énergie** (30 max, câlin 5, jeu 10, aventure 20, +3 par tâche, recharge chaque matin) : valeurs de départ à ajuster après test.
+## 11. Décisions prises par Claude, à valider
+Ces valeurs ne viennent pas de mes consignes : Claude les a choisies pour que l'app fonctionne. Elles sont toutes réglables dans `app/src/config/`.
+- **Énergie** (`energie.ts`) : 30 max, câlin 5, jeu 10, Aventure du jour 20, +3 par tâche terminée, recharge complète chaque matin. Aucun document ne précise d'autres valeurs.
+- **Moments avec le compagnon** : « Câlin » et « Jouer » sont des propositions de Claude pour donner une utilité à l'énergie.
+- **Récompenses** : aventure +10 pièces, objectif pro atteint +15, « J'ai décroché ! » +50.
+- **Ziggy+** : 3 aventures par jour (contre 1 en gratuit).
+- **Shop** (`boutique.ts`) : la liste des objets et leurs prix (de 20 à 150 pièces), l'écharpe offerte, la couronne réservée à Ziggy+.
+- **Récits d'aventure** (`aventures.ts`) et **lieux de Sunnyville** : textes provisoires.
+- **Personnalité du crocodile** : « Grand cœur sous ses airs sérieux ».
+
+## 12. Questions ouvertes
+Aucune question bloquante. À ajuster après tes premiers tests sur iPhone : les valeurs de la section 11.

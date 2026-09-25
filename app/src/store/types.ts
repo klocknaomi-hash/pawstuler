@@ -36,6 +36,8 @@ export type Tache = {
   candidatureId?: string;
   /** Énergie réellement donnée au compagnon en cochant (reprise si on décoche). */
   energieDonnee?: number;
+  /** Pièces réellement données en cochant (peuvent être réduites par le plafond du jour). */
+  piecesDonnees?: number;
 };
 
 export type StatutCandidature = 'a-envoyer' | 'envoyee' | 'relancee' | 'entretien' | 'offre' | 'refus';
@@ -61,7 +63,15 @@ export type Candidature = {
   rechercheId: string;
 };
 
-export type ObjectifPro = { id: string; titre: string; atteint: boolean; creeLe: string };
+export type ObjectifPro = {
+  id: string;
+  titre: string;
+  atteint: boolean;
+  creeLe: string;
+  /** Jour où il a été atteint, et pièces réellement données (plafond du jour). */
+  atteintLe?: string;
+  piecesDonnees?: number;
+};
 
 /** Un poste décroché : le chapitre « Mon aventure professionnelle ». */
 export type Emploi = {
@@ -125,6 +135,8 @@ export type EtatApp = {
   /** Modèles de tâches déjà réalisés au moins une fois. */
   modelesFaits: string[];
   pieces: number;
+  /** Pièces gagnées aujourd'hui (plafonnées, voir PLAFOND_PIECES_JOUR). */
+  piecesDuJour: number;
   mouvements: Mouvement[];
 
   /* Énergie et aventures */

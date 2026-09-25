@@ -19,6 +19,7 @@ import { LigneTache } from '@/components/LigneTache';
 import { CompteurPieces, IconePiece } from '@/components/Pieces';
 import type { Pose } from '@/config/compagnons';
 import { COUT, ENERGIE_PAR_TACHE } from '@/config/energie';
+import { PLAFOND_PIECES_JOUR } from '@/config/taches';
 import { arrondis, couleurs, espace, ombre, polices } from '@/config/theme';
 import { villeParId } from '@/config/villes';
 import { imageVille } from '@/illustrations/registre';
@@ -26,7 +27,7 @@ import { aventuresRestantes } from '@/logique/compagnon';
 import { estEndormi, heureLisible } from '@/logique/rythme';
 import { emploiActuel } from '@/logique/tachesDuJour';
 import { rappelEssai } from '@/services/abonnement';
-import { useApp } from '@/store/etat';
+import { gainPlafonne, useApp } from '@/store/etat';
 import type { Tache } from '@/store/types';
 
 const vibrer = () => {
@@ -68,12 +69,18 @@ export default function Accueil() {
       dispatch({ type: 'DECOCHER_TACHE', id: t.id });
       return;
     }
+    const gain = gainPlafonne(etat, t.pieces);
     dispatch({ type: 'COCHER_TACHE', id: t.id });
     compteurGains.current += 1;
     const cle = compteurGains.current;
-    setGains((g) => [...g, { cle, pieces: t.pieces }]);
+    setGains((g) => [...g, { cle, pieces: gain }]);
     setTimeout(() => setGains((g) => g.filter((x) => x.cle !== cle)), 1200);
-    reagir(t.modeleId === 'relance' || t.modeleId === 'recruteur' ? 'fier' : 'content', 'Bien joué ! Chaque petit pas compte.');
+    reagir(
+      t.modeleId === 'relance' || t.modeleId === 'recruteur' ? 'fier' : 'content',
+      gain < t.pieces
+        ? `Plafond de ${PLAFOND_PIECES_JOUR} pièces atteint pour aujourd’hui. Ta tâche compte quand même, bravo !`
+        : 'Bien joué ! Chaque petit pas compte.',
+    );
     vibrer();
   }
 
@@ -138,7 +145,7 @@ export default function Accueil() {
             <Pressable onPress={() => !dort && interagir('calin')} accessibilityRole="button" accessibilityLabel={`Câliner ${compagnon.nom}`}>
               <Compagnon espece={compagnon.espece} pose={pose} taille={150} promenade={!dort && !moment} reaction={reaction} />
             </Pressable>
-            {gains.map((g) => (
+            {gains.filter((g) => g.pieces > 0).map((g) => (
               <Animated.View key={g.cle} entering={SlideInDown.duration(250)} exiting={FadeOutUp.duration(700)} style={styles.gainVolant}>
                 <Text style={styles.gainVolantTexte}>+{g.pieces}</Text>
                 <IconePiece taille={18} />
@@ -212,6 +219,12 @@ export default function Accueil() {
             <Text style={styles.titre}>Tes tâches du jour</Text>
             <Text style={styles.compte}>
               {faites}/{etat.taches.length}
+            </Text>
+          </View>
+          <View style={styles.plafond} accessibilityLabel={`${etat.piecesDuJour} pièces gagnées aujourd’hui sur ${PLAFOND_PIECES_JOUR}`}>
+            <IconePiece taille={14} />
+            <Text style={styles.plafondTexte}>
+              {etat.piecesDuJour}/{PLAFOND_PIECES_JOUR} pièces gagnées aujourd’hui
             </Text>
           </View>
 
@@ -380,6 +393,8 @@ const styles = StyleSheet.create({
   titreLigne: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 },
   titre: { fontFamily: polices.titre, fontSize: 21, fontWeight: '800', color: couleurs.brun },
   compte: { fontWeight: '800', color: couleurs.brunDoux, fontVariant: ['tabular-nums'] },
+  plafond: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: -2, marginBottom: 4 },
+  plafondTexte: { fontSize: 12.5, fontWeight: '700', color: couleurs.brunDoux, fontVariant: ['tabular-nums'] },
   ajouter: {
     flexDirection: 'row',
     alignItems: 'center',

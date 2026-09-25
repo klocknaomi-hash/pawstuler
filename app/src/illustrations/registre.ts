@@ -58,9 +58,7 @@ const VILLES: Record<VilleId, Images<'portrait' | 'paysage'>> = {
     portrait: require('../../assets/villes/clairebourg/portrait.jpg'),
     paysage: require('../../assets/villes/clairebourg/paysage.jpg'),
   },
-  'les-tilleuls': {},
-  'grand-havre': {},
-  neuvelle: {},
+  sunnyville: {},
 };
 
 /** Objets de la boutique, par id (voir src/config/boutique.ts). */

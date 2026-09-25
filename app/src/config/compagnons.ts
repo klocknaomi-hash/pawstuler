@@ -47,7 +47,7 @@ export const COMPAGNONS: Compagnon[] = [
   {
     id: 'crocodile',
     espece: 'le crocodile',
-    nomParDefaut: 'Kiwi', // nom provisoire
+    nomParDefaut: 'Milo',
     personnalite: 'Grand cœur sous ses airs sérieux',
     couleur: '#9CC48A',
     emoji: '🐊',
@@ -55,7 +55,7 @@ export const COMPAGNONS: Compagnon[] = [
   {
     id: 'lapin',
     espece: 'le lapin',
-    nomParDefaut: 'Nugget',
+    nomParDefaut: 'Nala',
     personnalite: 'Un peu stressé mais courageux',
     couleur: '#E8D5C4',
     emoji: '🐰',

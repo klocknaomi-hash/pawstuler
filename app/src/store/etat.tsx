@@ -12,8 +12,8 @@ import type { FormuleId } from '@/config/abonnement';
 import { CATALOGUE_BOUTIQUE } from '@/config/boutique';
 import { especeValide, type EspeceId } from '@/config/compagnons';
 import { COUT, ENERGIE_MAX, ENERGIE_PAR_TACHE, PIECES_AVENTURE } from '@/config/energie';
-import { PIECES_OBJECTIF, PIECES_TACHE_PERSO } from '@/config/taches';
-import type { VilleId } from '@/config/villes';
+import { PIECES_OBJECTIF, PIECES_TACHE_PERSO, PLAFOND_PIECES_JOUR } from '@/config/taches';
+import { VILLES, type VilleId } from '@/config/villes';
 import { aventuresRestantes, composerAventure, lieuEmbauche } from '@/logique/compagnon';
 import { jourDe, nouvelId } from '@/logique/dates';
 import { candidaturesActives, emploiActuel, preparerTaches } from '@/logique/tachesDuJour';
@@ -37,6 +37,7 @@ export const ETAT_INITIAL: EtatApp = {
   taches: [],
   modelesFaits: [],
   pieces: 0,
+  piecesDuJour: 0,
   mouvements: [],
   energie: ENERGIE_MAX,
   aventuresDuJour: 0,
@@ -105,6 +106,16 @@ function crediter(etat: EtatApp, montant: number, libelle: string): EtatApp {
   return { ...etat, pieces: etat.pieces + reel, mouvements: [mouvement, ...etat.mouvements].slice(0, 200) };
 }
 
+/** Pièces encore gagnables aujourd'hui, dans la limite du plafond. */
+export const gainPlafonne = (etat: EtatApp, montant: number) =>
+  Math.max(0, Math.min(montant, PLAFOND_PIECES_JOUR - etat.piecesDuJour));
+
+/** Gain soumis au plafond du jour (ou reprise d'un tel gain si montant négatif). */
+function crediterDuJour(etat: EtatApp, montant: number, libelle: string): EtatApp {
+  const credite = crediter(etat, montant, libelle);
+  return { ...credite, piecesDuJour: Math.max(0, etat.piecesDuJour + (credite.pieces - etat.pieces)) };
+}
+
 const bornerEnergie = (n: number) => Math.max(0, Math.min(ENERGIE_MAX, n));
 
 /** Coche automatiquement la première tâche du jour non faite qui correspond. */
@@ -119,6 +130,7 @@ const nouvelleRecherche = () => ({ id: nouvelId(), debut: jourDe() });
 function migrer(brut: Partial<EtatApp> & { version?: number }): EtatApp {
   const etat = { ...ETAT_INITIAL, ...brut, version: 2 } as EtatApp;
   if (etat.compagnon && !especeValide(etat.compagnon.espece)) etat.compagnon = { ...etat.compagnon, espece: 'renard' };
+  if (etat.villeId && !VILLES.some((v) => v.id === etat.villeId)) etat.villeId = 'clairebourg';
   if (etat.onboardingTermine && etat.recherches.length === 0) etat.recherches = [nouvelleRecherche()];
   const rechercheId = etat.recherches[0]?.id ?? '';
   etat.candidatures = etat.candidatures.map((c) => ({
@@ -186,19 +198,21 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
         jourTaches: action.jour,
         energie: ENERGIE_MAX,
         aventuresDuJour: 0,
+        piecesDuJour: 0,
       };
     }
     case 'COCHER_TACHE': {
       const t = etat.taches.find((x) => x.id === action.id);
       if (!t || t.faite) return etat;
       const energieDonnee = Math.min(ENERGIE_PAR_TACHE, ENERGIE_MAX - etat.energie);
+      const gain = gainPlafonne(etat, t.pieces);
       const coche: EtatApp = {
         ...etat,
         energie: etat.energie + energieDonnee,
-        taches: etat.taches.map((x) => (x.id === t.id ? { ...x, faite: true, energieDonnee } : x)),
+        taches: etat.taches.map((x) => (x.id === t.id ? { ...x, faite: true, energieDonnee, piecesDonnees: gain } : x)),
         modelesFaits: t.modeleId && !etat.modelesFaits.includes(t.modeleId) ? [...etat.modelesFaits, t.modeleId] : etat.modelesFaits,
       };
-      return crediter(coche, t.pieces, t.titre);
+      return crediterDuJour(coche, gain, gain < t.pieces ? `${t.titre} (plafond du jour)` : t.titre);
     }
     case 'DECOCHER_TACHE': {
       // On fait confiance à l'utilisateur : décocher reprend simplement la récompense.
@@ -207,9 +221,9 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
       const decoche: EtatApp = {
         ...etat,
         energie: bornerEnergie(etat.energie - (t.energieDonnee ?? 0)),
-        taches: etat.taches.map((x) => (x.id === t.id ? { ...x, faite: false, energieDonnee: 0 } : x)),
+        taches: etat.taches.map((x) => (x.id === t.id ? { ...x, faite: false, energieDonnee: 0, piecesDonnees: 0 } : x)),
       };
-      return crediter(decoche, -t.pieces, `Tâche décochée : ${t.titre}`);
+      return crediterDuJour(decoche, -(t.piecesDonnees ?? t.pieces), `Tâche décochée : ${t.titre}`);
     }
     case 'SUPPRIMER_TACHE': {
       const t = etat.taches.find((x) => x.id === action.id);
@@ -237,7 +251,7 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
         aventuresTotal: etat.aventuresTotal + 1,
         derniereAventure: { le: jourDe(), texte, lieuId },
       };
-      return crediter(parti, PIECES_AVENTURE, 'Aventure du jour');
+      return crediterDuJour(parti, gainPlafonne(etat, PIECES_AVENTURE), 'Aventure du jour');
     }
 
     /* ----- Candidatures ----- */
@@ -349,13 +363,27 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
       const e = emploiActuel(etat);
       const o = e?.objectifs.find((x) => x.id === action.id);
       if (!e || !o) return etat;
+      const aujourdhui = jourDe();
+      const gain = o.atteint ? 0 : gainPlafonne(etat, PIECES_OBJECTIF);
       const modifie = {
         ...etat,
         emplois: etat.emplois.map((x) =>
-          x.id === e.id ? { ...x, objectifs: x.objectifs.map((y) => (y.id === o.id ? { ...y, atteint: !y.atteint } : y)) } : x,
+          x.id === e.id
+            ? {
+                ...x,
+                objectifs: x.objectifs.map((y) =>
+                  y.id === o.id ? { ...y, atteint: !y.atteint, atteintLe: o.atteint ? undefined : aujourdhui, piecesDonnees: gain } : y,
+                ),
+              }
+            : x,
         ),
       };
-      return crediter(modifie, o.atteint ? -PIECES_OBJECTIF : PIECES_OBJECTIF, `Objectif : ${o.titre}`);
+      if (!o.atteint) return crediterDuJour(modifie, gain, `Objectif : ${o.titre}`);
+      // Reprise : ne compte dans le plafond du jour que si l'objectif avait été atteint aujourd'hui
+      const reprise = o.piecesDonnees ?? PIECES_OBJECTIF;
+      return o.atteintLe === aujourdhui
+        ? crediterDuJour(modifie, -reprise, `Objectif décoché : ${o.titre}`)
+        : crediter(modifie, -reprise, `Objectif décoché : ${o.titre}`);
     }
     case 'SUPPRIMER_OBJECTIF': {
       const e = emploiActuel(etat);
