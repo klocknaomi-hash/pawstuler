@@ -30,7 +30,7 @@ export type Compagnon = {
   personnalite: string;
   /**
    * Petite présentation, pour la page de profil. Accordée selon les pronoms choisis :
-   * {Il}/{il} devient Elle/elle ou Iel/iel, {e} ajoute l'accord (« perdu{e} »).
+   * {Il}/{il} devient Elle/elle ou Iel/iel, {lui} devient elle ou iel, {e} ajoute l'accord (« perdu{e} »).
    */
   description: string;
   /** Traits de caractère affichés dans l'onglet « Traits ». */
@@ -91,7 +91,12 @@ export const COMPAGNONS: Compagnon[] = [
 export function accorder(texte: string, pronoms?: Pronoms): string {
   const sujet = pronoms === 'elle' ? 'Elle' : pronoms === 'iel' ? 'Iel' : 'Il';
   const accord = pronoms === 'elle' ? 'e' : pronoms === 'iel' ? '·e' : '';
-  return texte.replaceAll('{Il}', sujet).replaceAll('{il}', sujet.toLowerCase()).replaceAll('{e}', accord);
+  const tonique = pronoms === 'elle' ? 'elle' : pronoms === 'iel' ? 'iel' : 'lui';
+  return texte
+    .replaceAll('{Il}', sujet)
+    .replaceAll('{il}', sujet.toLowerCase())
+    .replaceAll('{lui}', tonique)
+    .replaceAll('{e}', accord);
 }
 
 export const compagnonParId = (id: EspeceId) => COMPAGNONS.find((c) => c.id === id) ?? COMPAGNONS[0];

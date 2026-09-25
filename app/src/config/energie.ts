@@ -1,5 +1,5 @@
 /**
- * ÉNERGIE ⚡ ET AVENTURE DU JOUR
+ * ÉNERGIE ⚡
  * L'énergie n'est pas une monnaie : c'est la capacité du compagnon à vivre des moments
  * (câlin, jeu, aventures, missions). Elle ne baisse que quand on lui demande une action ;
  * consulter une page ou recevoir une notification ne coûte jamais rien.
@@ -18,15 +18,11 @@ export const NIVEAUX_ENERGIE = {
 /** Chaque tâche terminée redonne un peu d'énergie (reprise si la tâche est décochée). */
 export const ENERGIE_PAR_TACHE = 3;
 
-/** Ce que coûtent les moments avec le compagnon. */
+/** Ce que coûtent les petits moments avec le compagnon (les missions ont leurs coûts dans `missions.ts`). */
 export const COUT = {
   calin: 5,
   jeu: 10,
-  aventure: 20,
 } as const;
 
-/** Nombre d'aventures possibles par jour. */
+/** Nombre d'explorations de la ville possibles par jour (les missions miroir ont leur propre limite). */
 export const AVENTURES_PAR_JOUR = { gratuit: 1, premium: 3 } as const;
-
-/** Pièces gagnées au retour d'une aventure. */
-export const PIECES_AVENTURE = 10;

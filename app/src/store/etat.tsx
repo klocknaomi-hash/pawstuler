@@ -12,17 +12,33 @@ import type { FormuleId } from '@/config/abonnement';
 import { CATALOGUE_BOUTIQUE, estPremium, objetParId } from '@/config/boutique';
 import { emailValide } from '@/config/candidatures';
 import { especeValide, type EspeceId, type Pronoms } from '@/config/compagnons';
-import { COUT, ENERGIE_PAR_TACHE, NIVEAUX_ENERGIE, PIECES_AVENTURE } from '@/config/energie';
+import { COUT, ENERGIE_PAR_TACHE, NIVEAUX_ENERGIE } from '@/config/energie';
+import { COUTS_MISSION, JOURNAL_DECROCHE, JOURNAL_REFUS, JOURS_MAX_DEPOT, PIECES_MISSION } from '@/config/missions';
 import { OBJECTIF_SERIE_PAR_DEFAUT } from '@/config/serie';
 import { PIECES_OBJECTIF, PIECES_TACHE_PERSO, PLAFOND_PIECES_JOUR } from '@/config/taches';
 import { VILLES, type VilleId } from '@/config/villes';
-import { aventuresRestantes, composerAventure, lieuEmbauche } from '@/logique/compagnon';
+import { aventuresRestantes, lieuEmbauche } from '@/logique/compagnon';
 import { jourDe, joursEntre, nouvelId } from '@/logique/dates';
 import { appliquerEnergie, energieDisponible, energieMax } from '@/logique/energie';
+import {
+  compagnonAbsent,
+  detecterSecteur,
+  dureeMission,
+  grandeTourneeMeritee,
+  iconeMission,
+  journalDepart,
+  missionDansLaVille,
+  missionPourCandidature,
+  missionsDisponibles,
+  remplir,
+  resultatADecouvrir,
+  tirerResultat,
+  titreMission,
+} from '@/logique/missions';
 import { abonnementDuJour, aPremium } from '@/services/abonnement';
 import { candidaturesActives, emploiActuel, preparerTaches } from '@/logique/tachesDuJour';
 
-import type { Candidature, EtatApp, Parametres, StatutCandidature, TypeContrat, Utilisateur } from './types';
+import type { Candidature, EtatApp, Mission, Parametres, StatutCandidature, TypeContrat, Utilisateur } from './types';
 
 const CLE_STOCKAGE = 'pawstuler/etat/v1';
 
@@ -48,11 +64,17 @@ export const ETAT_INITIAL: EtatApp = {
   aventuresDuJour: 0,
   aventuresTotal: 0,
   decouvertes: [],
+  missions: [],
+  journal: [],
   candidatures: [],
   inventaire: [],
   equipe: [],
   abonnement: { statut: 'gratuit' },
-  parametres: { notifications: true, rappelsRelance: true, rappelsTaches: true },
+  parametres: {
+    notifications: true,
+    rappelsRelance: true,
+    rappelsTaches: true,
+  },
 };
 
 export type NouvelleCandidature = Pick<Candidature, 'entreprise' | 'poste' | 'lien' | 'email' | 'note' | 'statut' | 'dateEnvoi'>;
@@ -81,10 +103,17 @@ export type Action =
   | { type: 'SUPPRIMER_TACHE'; id: string }
   | { type: 'AJOUTER_TACHE'; titre: string }
   | { type: 'INTERAGIR'; moment: 'calin' | 'jeu' }
-  | { type: 'PARTIR_EN_AVENTURE' }
+  /* Missions du compagnon (système miroir) */
+  | { type: 'LANCER_MISSION'; id: string }
+  | { type: 'EXPLORER_LA_VILLE' }
+  | { type: 'DECOUVRIR_RESULTAT'; id: string }
   /* Candidatures */
   | { type: 'AJOUTER_CANDIDATURE'; candidature: NouvelleCandidature }
-  | { type: 'MODIFIER_CANDIDATURE'; id: string; modifs: Partial<NouvelleCandidature & { dateEntretien: string }> }
+  | {
+      type: 'MODIFIER_CANDIDATURE';
+      id: string;
+      modifs: Partial<NouvelleCandidature & { dateEntretien: string }>;
+    }
   | { type: 'CHANGER_STATUT'; id: string; statut: StatutCandidature }
   | { type: 'ARCHIVER_CANDIDATURE'; id: string; archivee: boolean }
   /* Shop */
@@ -93,10 +122,18 @@ export type Action =
   /* Parcours professionnel */
   | {
       type: 'DECROCHER';
-      emploi: { entreprise: string; poste: string; premierJour?: string; candidatureId?: string };
+      emploi: {
+        entreprise: string;
+        poste: string;
+        premierJour?: string;
+        candidatureId?: string;
+      };
       archiverCandidatures: boolean;
     }
-  | { type: 'MODIFIER_EMPLOI'; modifs: { entreprise?: string; poste?: string; premierJour?: string } }
+  | {
+      type: 'MODIFIER_EMPLOI';
+      modifs: { entreprise?: string; poste?: string; premierJour?: string };
+    }
   | { type: 'AJOUTER_OBJECTIF'; titre: string }
   | { type: 'BASCULER_OBJECTIF'; id: string }
   | { type: 'SUPPRIMER_OBJECTIF'; id: string }
@@ -117,19 +154,24 @@ function crediter(etat: EtatApp, montant: number, libelle: string): EtatApp {
   if (montant === 0) return etat;
   const reel = montant < 0 ? -Math.min(etat.pieces, -montant) : montant;
   const mouvement = { id: nouvelId(), le: jourDe(), libelle, montant: reel };
-  return { ...etat, pieces: etat.pieces + reel, mouvements: [mouvement, ...etat.mouvements].slice(0, 200) };
+  return {
+    ...etat,
+    pieces: etat.pieces + reel,
+    mouvements: [mouvement, ...etat.mouvements].slice(0, 200),
+  };
 }
 
 /** Pièces encore gagnables aujourd'hui, dans la limite du plafond. */
-export const gainPlafonne = (etat: EtatApp, montant: number) =>
-  Math.max(0, Math.min(montant, PLAFOND_PIECES_JOUR - etat.piecesDuJour));
+export const gainPlafonne = (etat: EtatApp, montant: number) => Math.max(0, Math.min(montant, PLAFOND_PIECES_JOUR - etat.piecesDuJour));
 
 /** Gain soumis au plafond du jour (ou reprise d'un tel gain si montant négatif). */
 function crediterDuJour(etat: EtatApp, montant: number, libelle: string): EtatApp {
   const credite = crediter(etat, montant, libelle);
-  return { ...credite, piecesDuJour: Math.max(0, etat.piecesDuJour + (credite.pieces - etat.pieces)) };
+  return {
+    ...credite,
+    piecesDuJour: Math.max(0, etat.piecesDuJour + (credite.pieces - etat.pieces)),
+  };
 }
-
 
 /** Coche automatiquement la première tâche du jour non faite qui correspond. */
 function validerTacheLiee(etat: EtatApp, correspond: (t: EtatApp['taches'][number]) => boolean): EtatApp {
@@ -176,6 +218,87 @@ function convertirStatut(statut: string): StatutCandidature {
   return statut as StatutCandidature;
 }
 
+/** Ajoute une ligne au journal du compagnon (« Aventure du jour »). */
+function noterJournal(etat: EtatApp, icone: string, texte: string): EtatApp {
+  const entree = { id: nouvelId(), le: Date.now(), icone, texte };
+  return { ...etat, journal: [entree, ...etat.journal].slice(0, 150) };
+}
+
+/** Fait partir le compagnon en mission (énergie dépensée, résultat tiré, retour calculé en heure réelle). */
+function partirEnMission(etat: EtatApp, mission: Mission): EtatApp {
+  const cout = COUTS_MISSION[mission.type];
+  if (energieDisponible(etat) < cout || compagnonAbsent(etat) || resultatADecouvrir(etat)) return etat;
+  const depart = Date.now();
+  const partie: Mission = {
+    ...mission,
+    statut: 'en-cours',
+    depart,
+    retour: depart + dureeMission(mission),
+    resultat: tirerResultat(etat, mission),
+  };
+  const avec: EtatApp = {
+    ...etat,
+    ...appliquerEnergie(etat, -cout),
+    missions: etat.missions.some((m) => m.id === mission.id)
+      ? etat.missions.map((m) => (m.id === mission.id ? partie : m))
+      : [partie, ...etat.missions],
+    // L'exploration de la ville (ou la journée de travail) compte comme l'aventure du jour (1 par jour en gratuit, 3 en Premium)
+    ...(!mission.candidatureId && !mission.special
+      ? {
+          aventuresDuJour: etat.aventuresDuJour + 1,
+          aventuresTotal: etat.aventuresTotal + 1,
+        }
+      : {}),
+  };
+  return noterJournal(avec, iconeMission(mission), journalDepart(etat, mission));
+}
+
+/** Missions miroir d'une candidature qui vient d'être enregistrée ou de changer d'étape. */
+function missionsMiroir(etat: EtatApp, c: Candidature, statut: StatutCandidature, nouvelle: boolean): EtatApp {
+  const aujourdhui = jourDe();
+  const enAttente = (m: Mission) => m.candidatureId === c.id && m.statut === 'a-venir';
+  const ajouter = (m: Mission) => ({
+    ...etat,
+    missions: [...etat.missions, m],
+  });
+  switch (statut) {
+    case 'envoyee':
+      // Une vieille candidature reprise d'un tableau ne fait pas partir le compagnon
+      if (!nouvelle || joursEntre(c.dateEnvoi ?? aujourdhui, aujourdhui) > JOURS_MAX_DEPOT) return etat;
+      return ajouter(missionPourCandidature(etat, c, 'depot'));
+    case 'relancee':
+      return ajouter(missionPourCandidature(etat, c, 'relance'));
+    case 'entretien': {
+      // L'entretien du compagnon a lieu le jour du tien (ou aujourd'hui si la date n'est pas connue)
+      const jour = c.dateEntretien && c.dateEntretien > aujourdhui ? c.dateEntretien : aujourdhui;
+      const sans = {
+        ...etat,
+        missions: etat.missions.map((m) => (enAttente(m) ? { ...m, statut: 'annulee' as const } : m)),
+      };
+      return {
+        ...sans,
+        missions: [...sans.missions, missionPourCandidature(sans, c, 'entretien', jour)],
+      };
+    }
+    case 'refus':
+    case 'decroche': {
+      // Le compagnon suit ton vrai parcours : ses missions en attente pour ce lieu s'arrêtent
+      const sans = {
+        ...etat,
+        missions: etat.missions.map((m) => (enAttente(m) ? { ...m, statut: 'annulee' as const } : m)),
+      };
+      const lieu = {
+        lieu: c.entreprise,
+        metier: c.poste,
+        secteur: detecterSecteur(c.entreprise, c.poste),
+      };
+      return statut === 'refus'
+        ? noterJournal(sans, '🌱', remplir(etat, JOURNAL_REFUS, lieu))
+        : noterJournal(sans, '💼', remplir(etat, JOURNAL_DECROCHE, lieu));
+    }
+  }
+}
+
 const nouvelleRecherche = () => ({ id: nouvelId(), debut: jourDe() });
 
 /** Met à jour les anciennes sauvegardes (version 1) vers le modèle actuel. */
@@ -207,7 +330,13 @@ function migrer(brut: Partial<EtatApp> & { version?: number }): EtatApp {
   if (brut.version !== 2 && brut.utilisateur) etat.connecte = true;
   // Anciennes sauvegardes : la dernière aventure devient la première découverte
   if (etat.decouvertes.length === 0 && etat.derniereAventure && etat.villeId)
-    etat.decouvertes = [{ villeId: etat.villeId, lieuId: etat.derniereAventure.lieuId, le: etat.derniereAventure.le }];
+    etat.decouvertes = [
+      {
+        villeId: etat.villeId,
+        lieuId: etat.derniereAventure.lieuId,
+        le: etat.derniereAventure.le,
+      },
+    ];
   return etat;
 }
 
@@ -220,22 +349,47 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
 
     /* ----- Compte ----- */
     case 'CONNECTER':
-      return { ...etat, connecte: true, utilisateur: { prenom: etat.utilisateur?.prenom ?? '', ...action.utilisateur } };
+      return {
+        ...etat,
+        connecte: true,
+        utilisateur: {
+          prenom: etat.utilisateur?.prenom ?? '',
+          ...action.utilisateur,
+        },
+      };
     case 'DECONNECTER':
       // Les données restent sur le téléphone : on les retrouve en se reconnectant.
       return { ...etat, connecte: false };
     case 'SUPPRIMER_COMPTE':
       return ETAT_INITIAL;
     case 'MODIFIER_PARAMETRES':
-      return { ...etat, parametres: { ...etat.parametres, ...action.parametres } };
+      return {
+        ...etat,
+        parametres: { ...etat.parametres, ...action.parametres },
+      };
 
     /* ----- Onboarding et profil ----- */
     case 'DEFINIR_PRENOM':
-      return etat.utilisateur ? { ...etat, utilisateur: { ...etat.utilisateur, prenom: action.prenom } } : etat;
+      return etat.utilisateur
+        ? {
+            ...etat,
+            utilisateur: { ...etat.utilisateur, prenom: action.prenom },
+          }
+        : etat;
     case 'DEFINIR_CONTRATS':
-      return { ...etat, recherche: { objectif: 'emploi', contrats: action.contrats } };
+      return {
+        ...etat,
+        recherche: { objectif: 'emploi', contrats: action.contrats },
+      };
     case 'CHOISIR_ESPECE':
-      return { ...etat, compagnon: { espece: action.espece, nom: action.nomParDefaut, neLe: jourDe() } };
+      return {
+        ...etat,
+        compagnon: {
+          espece: action.espece,
+          nom: action.nomParDefaut,
+          neLe: jourDe(),
+        },
+      };
     case 'NOMMER_COMPAGNON':
       return etat.compagnon ? { ...etat, compagnon: { ...etat.compagnon, nom: action.nom } } : etat;
     case 'DEFINIR_PRONOMS':
@@ -243,11 +397,21 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
     case 'CHOISIR_VILLE':
       return { ...etat, villeId: action.villeId };
     case 'DEFINIR_RYTHME':
-      return { ...etat, rythme: { reveil: action.reveil, coucher: action.coucher } };
+      return {
+        ...etat,
+        rythme: { reveil: action.reveil, coucher: action.coucher },
+      };
     case 'DEFINIR_OBJECTIF_SERIE': {
       // Nouvel objectif : s'il est déjà atteint par la série en cours, on le fête aujourd'hui
       const atteint = etat.serie.actuelle >= action.jours && etat.serie.dernierJour ? etat.serie.dernierJour : undefined;
-      return { ...etat, serie: { ...etat.serie, objectif: action.jours, objectifAtteintLe: atteint } };
+      return {
+        ...etat,
+        serie: {
+          ...etat.serie,
+          objectif: action.jours,
+          objectifAtteintLe: atteint,
+        },
+      };
     }
     case 'TERMINER_ONBOARDING': {
       // Cadeau de bienvenue : les objets « offerts » du Shop
@@ -260,10 +424,20 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
         energie: energieMax(etat),
         rechargeA: undefined,
         // Le premier rappel doux de l'essai n'arrive que quelques jours après l'inscription
-        abonnement: { ...etat.abonnement, rappelEssaiLe: etat.abonnement.rappelEssaiLe ?? jourDe() },
+        abonnement: {
+          ...etat.abonnement,
+          rappelEssaiLe: etat.abonnement.rappelEssaiLe ?? jourDe(),
+        },
         inventaire: [...new Set([...etat.inventaire, ...cadeaux])],
       };
-      return compterJourSerie({ ...fini, taches: preparerTaches(fini, jourDe()), jourTaches: jourDe() }, jourDe());
+      return compterJourSerie(
+        {
+          ...fini,
+          taches: preparerTaches(fini, jourDe()),
+          jourTaches: jourDe(),
+        },
+        jourDe(),
+      );
     }
 
     /* ----- Tâches, pièces et énergie ----- */
@@ -317,29 +491,56 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
     case 'AJOUTER_TACHE':
       return {
         ...etat,
-        taches: [...etat.taches, { id: nouvelId(), titre: action.titre, pieces: PIECES_TACHE_PERSO, faite: false, perso: true }],
+        taches: [
+          ...etat.taches,
+          {
+            id: nouvelId(),
+            titre: action.titre,
+            pieces: PIECES_TACHE_PERSO,
+            faite: false,
+            perso: true,
+          },
+        ],
       };
     case 'INTERAGIR': {
       const cout = COUT[action.moment];
-      if (energieDisponible(etat) < cout) return etat;
-      return { ...etat, ...appliquerEnergie(etat, -cout) };
+      if (energieDisponible(etat) < cout || compagnonAbsent(etat)) return etat;
+      const fait = { ...etat, ...appliquerEnergie(etat, -cout) };
+      return action.moment === 'calin'
+        ? noterJournal(fait, '❤️', remplir(etat, 'Tu as fait un câlin à {nom}.'))
+        : noterJournal(fait, '⚽', remplir(etat, '{nom} a joué au ballon.'));
     }
-    case 'PARTIR_EN_AVENTURE': {
-      if (energieDisponible(etat) < COUT.aventure || aventuresRestantes(etat) === 0) return etat;
-      const { lieuId, texte } = composerAventure(etat);
-      const parti: EtatApp = {
+    /* ----- Missions du compagnon ----- */
+    case 'LANCER_MISSION': {
+      // Seules les missions proposées aujourd'hui peuvent partir (2 missions miroir par jour au plus)
+      const m = missionsDisponibles(etat).find((x) => x.id === action.id);
+      return m ? partirEnMission(etat, m) : etat;
+    }
+    case 'EXPLORER_LA_VILLE':
+      if (aventuresRestantes(etat) === 0) return etat;
+      return partirEnMission(etat, missionDansLaVille(etat));
+    case 'DECOUVRIR_RESULTAT': {
+      const m = etat.missions.find((x) => x.id === action.id && x.statut === 'en-cours');
+      if (!m || !m.retour || Date.now() < m.retour) return etat;
+      const aujourdhui = jourDe();
+      const vue: EtatApp = {
         ...etat,
-        ...appliquerEnergie(etat, -COUT.aventure),
-        aventuresDuJour: etat.aventuresDuJour + 1,
-        aventuresTotal: etat.aventuresTotal + 1,
-        derniereAventure: { le: jourDe(), texte, lieuId },
-        // Premier passage dans ce lieu : il rejoint la section « Découverte » (et offre son souvenir)
-        decouvertes:
-          etat.villeId && !etat.decouvertes.some((d) => d.villeId === etat.villeId && d.lieuId === lieuId)
-            ? [...etat.decouvertes, { villeId: etat.villeId, lieuId, le: jourDe() }]
-            : etat.decouvertes,
+        missions: etat.missions.map((x) => (x.id === m.id ? { ...x, statut: 'vue' } : x)),
+        // Exploration : premier passage dans un lieu → « Découverte » et souvenir
+        ...(m.lieuId && etat.villeId
+          ? {
+              derniereAventure: {
+                le: aujourdhui,
+                texte: m.resultat ?? '',
+                lieuId: m.lieuId,
+              },
+              decouvertes: etat.decouvertes.some((d) => d.villeId === etat.villeId && d.lieuId === m.lieuId)
+                ? etat.decouvertes
+                : [...etat.decouvertes, { villeId: etat.villeId, lieuId: m.lieuId, le: aujourdhui }],
+            }
+          : {}),
       };
-      return crediterDuJour(parti, gainPlafonne(etat, PIECES_AVENTURE), 'Aventure du jour');
+      return crediterDuJour(vue, gainPlafonne(etat, PIECES_MISSION[m.type]), `Mission : ${titreMission(etat, m)}`);
     }
 
     /* ----- Candidatures ----- */
@@ -360,17 +561,43 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
         archivee: false,
         rechercheId,
       };
-      const avec = { ...etat, candidatures: [c, ...etat.candidatures] };
+      let avec: EtatApp = { ...etat, candidatures: [c, ...etat.candidatures] };
+      // Le compagnon vit sa propre version de cette candidature (dépôt, relance ou entretien)
+      avec = missionsMiroir(avec, c, c.statut, true);
+      // 5 candidatures dans la semaine : une grande tournée de la ville en récompense
+      if (grandeTourneeMeritee(avec))
+        avec = {
+          ...avec,
+          missions: [...avec.missions, missionDansLaVille(avec, true)],
+        };
       // Pas de double saisie : une candidature envoyée aujourd'hui valide la tâche « Envoyer une candidature »
       return c.statut === 'envoyee' && dateEnvoi === aujourdhui
         ? validerTacheLiee(avec, (t) => t.modeleId === 'envoi' || t.modeleId === 'spontanee')
         : avec;
     }
-    case 'MODIFIER_CANDIDATURE':
+    case 'MODIFIER_CANDIDATURE': {
+      const modifiee = {
+        ...etat.candidatures.find((c) => c.id === action.id),
+        ...action.modifs,
+      } as Candidature;
       return {
         ...etat,
         candidatures: etat.candidatures.map((c) => (c.id === action.id ? { ...c, ...action.modifs } : c)),
+        // Les missions à venir suivent : nouveau nom d'entreprise, nouvelle date d'entretien
+        missions: etat.missions.map((m) =>
+          m.candidatureId === action.id && m.statut === 'a-venir'
+            ? {
+                ...m,
+                lieu: modifiee.entreprise,
+                metier: modifiee.poste,
+                secteur: detecterSecteur(modifiee.entreprise, modifiee.poste),
+                disponibleLe:
+                  m.type === 'entretien' && modifiee.dateEntretien && modifiee.dateEntretien >= jourDe() ? modifiee.dateEntretien : m.disponibleLe,
+              }
+            : m,
+        ),
       };
+    }
     case 'CHANGER_STATUT': {
       const avant = etat.candidatures.find((c) => c.id === action.id);
       if (!avant || avant.statut === action.statut) return etat;
@@ -387,10 +614,12 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
             : c,
         ),
       };
-      if (action.statut === 'envoyee') return validerTacheLiee(apres, (t) => t.modeleId === 'envoi' || t.modeleId === 'spontanee');
+      // Miroir : ta relance, ton entretien, ta réponse deviennent une étape de la vie du compagnon
+      const miroir = missionsMiroir(apres, { ...avant, statut: action.statut }, action.statut, false);
+      if (action.statut === 'envoyee') return validerTacheLiee(miroir, (t) => t.modeleId === 'envoi' || t.modeleId === 'spontanee');
       if (action.statut === 'relancee')
-        return validerTacheLiee(apres, (t) => t.candidatureId === action.id || (t.modeleId === 'relance' && !t.candidatureId));
-      return apres;
+        return validerTacheLiee(miroir, (t) => t.candidatureId === action.id || (t.modeleId === 'relance' && !t.candidatureId));
+      return miroir;
     }
     case 'ARCHIVER_CANDIDATURE':
       return {
@@ -404,7 +633,11 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
       if (!objet || etat.inventaire.includes(objet.id) || etat.pieces < objet.prix) return etat;
       // Collections d'événement et objets Premium : achat réservé à Premium (ce qui est déjà acquis reste acquis)
       if (estPremium(objet) && !aPremium(etat)) return etat;
-      const achete = { ...etat, inventaire: [...etat.inventaire, objet.id], equipe: porter(etat.equipe, objet.id) };
+      const achete = {
+        ...etat,
+        inventaire: [...etat.inventaire, objet.id],
+        equipe: porter(etat.equipe, objet.id),
+      };
       return crediter(achete, -objet.prix, `Achat : ${objet.nom}`);
     }
     case 'EQUIPER':
@@ -421,7 +654,12 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
         contexte: 'pro',
         emplois: [
           ...etat.emplois,
-          { id: nouvelId(), ...action.emploi, decrocheLe: aujourdhui, objectifs: [] },
+          {
+            id: nouvelId(),
+            ...action.emploi,
+            decrocheLe: aujourdhui,
+            objectifs: [],
+          },
         ],
         recherches: etat.recherches.map((r, i) => (i === etat.recherches.length - 1 ? { ...r, fin: aujourdhui } : r)),
         // Rien n'est supprimé : les candidatures restent, archivées seulement si l'utilisateur l'a choisi
@@ -435,23 +673,46 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
           };
         }),
         // Le compagnon décroche lui aussi un poste dans sa ville
-        compagnon: etat.compagnon && lieu
-          ? { ...etat.compagnon, metier: { lieuId: lieu.id, intitule: lieu.metier ?? 'Nouveau poste', depuis: aujourdhui } }
-          : etat.compagnon,
+        compagnon:
+          etat.compagnon && lieu
+            ? {
+                ...etat.compagnon,
+                metier: {
+                  lieuId: lieu.id,
+                  intitule: lieu.metier ?? 'Nouveau poste',
+                  depuis: aujourdhui,
+                },
+              }
+            : etat.compagnon,
       };
-      const avecTaches = { ...nouveau, taches: preparerTaches(nouveau, aujourdhui), jourTaches: aujourdhui };
+      const avecTaches = {
+        ...nouveau,
+        taches: preparerTaches(nouveau, aujourdhui),
+        jourTaches: aujourdhui,
+      };
       return crediter(avecTaches, PIECES_DECROCHE, `J'ai décroché ! ${action.emploi.poste}`);
     }
     case 'MODIFIER_EMPLOI': {
       const e = emploiActuel(etat);
       if (!e) return etat;
-      return { ...etat, emplois: etat.emplois.map((x) => (x.id === e.id ? { ...x, ...action.modifs } : x)) };
+      return {
+        ...etat,
+        emplois: etat.emplois.map((x) => (x.id === e.id ? { ...x, ...action.modifs } : x)),
+      };
     }
     case 'AJOUTER_OBJECTIF': {
       const e = emploiActuel(etat);
       if (!e) return etat;
-      const objectif = { id: nouvelId(), titre: action.titre, atteint: false, creeLe: jourDe() };
-      return { ...etat, emplois: etat.emplois.map((x) => (x.id === e.id ? { ...x, objectifs: [...x.objectifs, objectif] } : x)) };
+      const objectif = {
+        id: nouvelId(),
+        titre: action.titre,
+        atteint: false,
+        creeLe: jourDe(),
+      };
+      return {
+        ...etat,
+        emplois: etat.emplois.map((x) => (x.id === e.id ? { ...x, objectifs: [...x.objectifs, objectif] } : x)),
+      };
     }
     case 'BASCULER_OBJECTIF': {
       const e = emploiActuel(etat);
@@ -466,7 +727,14 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
             ? {
                 ...x,
                 objectifs: x.objectifs.map((y) =>
-                  y.id === o.id ? { ...y, atteint: !y.atteint, atteintLe: o.atteint ? undefined : aujourdhui, piecesDonnees: gain } : y,
+                  y.id === o.id
+                    ? {
+                        ...y,
+                        atteint: !y.atteint,
+                        atteintLe: o.atteint ? undefined : aujourdhui,
+                        piecesDonnees: gain,
+                      }
+                    : y,
                 ),
               }
             : x,
@@ -498,36 +766,81 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
         emplois: etat.emplois.map((e) => (e.termineLe ? e : { ...e, termineLe: aujourdhui })),
         recherches: [...etat.recherches, nouvelleRecherche()],
       };
-      return { ...relance, taches: preparerTaches(relance, aujourdhui), jourTaches: aujourdhui };
+      return {
+        ...relance,
+        taches: preparerTaches(relance, aujourdhui),
+        jourTaches: aujourdhui,
+      };
     }
 
     /* ----- Pawstuler Premium ----- */
     case 'SOUSCRIRE': {
       // L'essai gratuit n'existe qu'avec l'annuel ; le mensuel est actif tout de suite.
       const abonnement: EtatApp['abonnement'] = action.essai
-        ? { statut: 'essai', debutEssai: jourDe(), formule: action.formule, essaiUtilise: true, jourEssaiVu: 0 }
-        : { statut: 'actif', formule: action.formule, essaiUtilise: etat.abonnement.essaiUtilise };
+        ? {
+            statut: 'essai',
+            debutEssai: jourDe(),
+            formule: action.formule,
+            essaiUtilise: true,
+            jourEssaiVu: 0,
+          }
+        : {
+            statut: 'actif',
+            formule: action.formule,
+            essaiUtilise: etat.abonnement.essaiUtilise,
+          };
       // Bienvenue dans Premium : l'énergie passe tout de suite au nouveau maximum
-      return { ...etat, abonnement, energie: NIVEAUX_ENERGIE.premium.max, rechargeA: undefined };
+      return {
+        ...etat,
+        abonnement,
+        energie: NIVEAUX_ENERGIE.premium.max,
+        rechargeA: undefined,
+      };
     }
     case 'BASCULER_RESILIATION':
       return etat.abonnement.statut === 'essai'
-        ? { ...etat, abonnement: { ...etat.abonnement, resiliationPrevue: !etat.abonnement.resiliationPrevue } }
+        ? {
+            ...etat,
+            abonnement: {
+              ...etat.abonnement,
+              resiliationPrevue: !etat.abonnement.resiliationPrevue,
+            },
+          }
         : etat;
     case 'VOIR_JOUR_ESSAI':
-      return { ...etat, abonnement: { ...etat.abonnement, jourEssaiVu: action.jour } };
+      return {
+        ...etat,
+        abonnement: { ...etat.abonnement, jourEssaiVu: action.jour },
+      };
     case 'VOIR_FIN_ESSAI':
-      return { ...etat, abonnement: { ...etat.abonnement, finEssaiAVoir: false } };
+      return {
+        ...etat,
+        abonnement: { ...etat.abonnement, finEssaiAVoir: false },
+      };
     case 'VOIR_RAPPEL_ESSAI':
-      return { ...etat, abonnement: { ...etat.abonnement, rappelEssaiLe: action.jour } };
+      return {
+        ...etat,
+        abonnement: { ...etat.abonnement, rappelEssaiLe: action.jour },
+      };
     case 'RESTAURER_ABONNEMENT':
-      return { ...etat, abonnement: { ...etat.abonnement, statut: 'actif', formule: action.formule } };
+      return {
+        ...etat,
+        abonnement: {
+          ...etat.abonnement,
+          statut: 'actif',
+          formule: action.formule,
+        },
+      };
   }
 }
 
 /* ---------- Fournisseur : chargement, sauvegarde, nouveau jour ---------- */
 
-type ContexteApp = { etat: EtatApp; dispatch: (a: Action) => void; pret: boolean };
+type ContexteApp = {
+  etat: EtatApp;
+  dispatch: (a: Action) => void;
+  pret: boolean;
+};
 const Contexte = createContext<ContexteApp | null>(null);
 
 export function FournisseurApp({ children }: { children: ReactNode }) {
