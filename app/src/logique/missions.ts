@@ -326,14 +326,15 @@ export const derniereAventure = (etat: EtatApp) =>
   etat.missions.filter(estAventure).sort((a, b) => (b.depart ?? 0) - (a.depart ?? 0))[0];
 
 /**
- * Quand Milo pourra repartir à l'aventure : maintenant (null), à une heure précise (Premium,
- * 3 h après le dernier départ), ou demain (quota du jour atteint). Indépendant de l'énergie.
+ * Quand Milo pourra repartir à l'aventure : maintenant (null), à une heure précise (Premium :
+ * 3 h après son RETOUR de la dernière aventure), ou demain (gratuit, ou quota du jour atteint).
+ * L'aventure elle-même dure 5 à 10 minutes ; ce délai est indépendant de l'énergie.
  */
 export function prochainDepart(etat: EtatApp, maintenant = Date.now()): null | number | 'demain' {
   if (aventuresRestantes(etat) === 0) return 'demain';
   const derniere = derniereAventure(etat);
-  if (aPremium(etat) && derniere?.depart && jourDuDepart(derniere) === jourDe(new Date(maintenant))) {
-    const possible = derniere.depart + HEURES_ENTRE_AVENTURES_PREMIUM * HEURE;
+  if (aPremium(etat) && derniere?.retour && jourDuDepart(derniere) === jourDe(new Date(maintenant))) {
+    const possible = derniere.retour + HEURES_ENTRE_AVENTURES_PREMIUM * HEURE;
     if (maintenant < possible) return possible;
   }
   return null;

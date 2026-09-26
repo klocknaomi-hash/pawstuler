@@ -4,7 +4,7 @@
  * son CV (ses candidatures à lui, sans lien avec tes entreprises). Le seul lien avec toi, c'est
  * le rythme des nouvelles, avec un peu de décalage : il ne fait jamais la même chose que toi au même moment.
  *   - 40 candidatures = 40 candidatures enregistrées, pas 40 aventures : Milo part au plus
- *     1 fois par jour (gratuit), ou 3 fois par jour avec 3 h entre deux départs (Premium).
+ *     1 fois par jour (gratuit), ou 3 fois par jour avec 3 h d'attente après chaque retour (Premium).
  *   - Ton entretien du 28 → Milo reçoit une demande d'entretien le lendemain de ta saisie,
  *     et passe le sien 2 jours après le tien (le 30), à une heure précise.
  *   - Ta relance, ton refus → Milo relance, ou reçoit sa réponse, le lendemain.
@@ -59,7 +59,7 @@ export const PIECES_MISSION: Record<TypeMission, number> = {
   baignade: 0,
 };
 
-/** Premium : 3 aventures par jour au plus, avec ce délai minimum entre deux départs (indépendant de l'énergie). */
+/** Premium : 3 aventures par jour au plus ; après le retour de Milo, ce délai avant la suivante (indépendant de l'énergie). */
 export const HEURES_ENTRE_AVENTURES_PREMIUM = 3;
 
 /** Le décalage entre ta recherche et celle de Milo, en jours. */
