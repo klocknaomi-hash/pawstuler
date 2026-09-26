@@ -143,6 +143,23 @@ export type Serie = {
 };
 
 /**
+ * Une candidature de Milo, dans SA ville : il l'a déposée lui-même pendant une aventure
+ * (ou il avait déjà postulé). Elle n'a rien à voir avec tes entreprises : le seul lien avec toi,
+ * c'est le rythme des nouvelles (ton entretien, ta relance, ton refus la font avancer, en décalé).
+ */
+export type CandidatureMilo = {
+  id: string;
+  /** Nom du lieu de sa ville (« Boulangerie du Lac »), fixé une fois pour toutes. */
+  lieu: string;
+  secteur: SecteurId;
+  metier: string;
+  lieuId?: string;
+  deposeLe: string;
+  /** Usage interne : l'étape de ton parcours qu'elle reflète en décalé (jamais affiché). */
+  miroirDe?: string;
+};
+
+/**
  * Une aventure de Milo (ou un moment pour souffler), créée au moment où il part.
  * Elle ne change plus ensuite, même si tu mets une candidature à jour pendant qu'il est parti.
  * Le temps est réel : `depart` et `retour` sont des heures (en millisecondes).
@@ -150,8 +167,10 @@ export type Serie = {
 export type Mission = {
   id: string;
   type: TypeMission;
-  /** Ta candidature dont l'aventure est le miroir (Milo, lui, postule dans une entreprise de sa ville). */
+  /** Usage interne : l'étape de ton parcours qui a donné cette aventure (jamais affiché). */
   candidatureId?: string;
+  /** La candidature de Milo concernée (dépôt de CV, relance, entretien, réponse). */
+  candidatureMiloId?: string;
   /** Nom du lieu affiché (une entreprise de sa ville). */
   lieu: string;
   secteur: SecteurId;
@@ -225,6 +244,8 @@ export type EtatApp = {
   derniereAventure?: { le: string; texte: string; lieuId: string };
   /** Aventures et moments du compagnon (passés et en cours). */
   missions: Mission[];
+  /** Les candidatures de Milo dans sa ville (les siennes, pas les tiennes). */
+  candidaturesMilo: CandidatureMilo[];
   /** Lieux découverts en aventure (section « Découverte » et souvenirs de la collection). */
   decouvertes: { villeId: VilleId; lieuId: string; le: string }[];
 

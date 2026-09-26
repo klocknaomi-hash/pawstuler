@@ -32,7 +32,7 @@ import { useMaintenant } from '@/hooks/useMaintenant';
 import { imageVille } from '@/illustrations/registre';
 import { jourDe } from '@/logique/dates';
 import { dureeLisible, energieDisponible, energieMax, tempsAvantRecharge } from '@/logique/energie';
-import { compagnonAbsent, heureLisible as heureMission, ouEst, resultatADecouvrir } from '@/logique/missions';
+import { annonceEntretien, compagnonAbsent, heureLisible as heureMission, ouEst, resultatADecouvrir } from '@/logique/missions';
 import { estEndormi, heureLisible } from '@/logique/rythme';
 import { emploiActuel } from '@/logique/tachesDuJour';
 import { jourEssai, rappelEssai, rappelEssaiDisponible } from '@/services/abonnement';
@@ -89,6 +89,7 @@ export default function Accueil() {
   // Missions du compagnon : parti en mission (il n'est plus dans la scène), ou revenu avec un récit
   const absent = compagnonAbsent(etat, maintenant);
   const revenu = resultatADecouvrir(etat, maintenant);
+  const annonce = annonceEntretien(etat);
 
   /** Fait réagir le compagnon quelques secondes (pose + bulle). */
   function reagir(p: Pose, texte: string) {
@@ -173,6 +174,8 @@ export default function Accueil() {
     if (dort) return `${compagnon?.nom} dort jusqu’à ${heureLisible(etat.rythme.reveil)}. Tes progrès l’attendront au réveil.`;
     if (absent?.retour) return `${ouEst(etat, absent)}. Retour à ${heureMission(absent.retour)} !`;
     if (revenu) return 'Me revoilà ! Viens voir ce que j’ai vécu 🎒';
+    // Son entretien à lui (demande reçue, veille, jour J) : il te le dit lui-même
+    if (annonce) return annonce.texte;
     if (serieFetee && faites === 0) return `${etat.serie.actuelle} jours d’affilée, objectif atteint ! Merci d’être là 🐾`;
     if (serieReprise && faites === 0) return `Content de te revoir ${prenom} ! On repart ensemble, à ton rythme 🐾`;
     if (toutFait) return 'Bravo, tout est fait pour aujourd’hui !';
@@ -182,6 +185,7 @@ export default function Accueil() {
     return `Bonjour ${prenom} ! On commence par quoi aujourd’hui ?`;
   }
   const bulle = moment?.texte ?? messageDuJour();
+  const bulleVersShop = !moment && !dort && !absent && !revenu && !!annonce?.versLeShop;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: couleurs.creme }} edges={['top']}>
@@ -216,9 +220,10 @@ export default function Accueil() {
             <View style={[StyleSheet.absoluteFill, { backgroundColor: ville.couleur }]} />
           )}
           {dort && <View style={[StyleSheet.absoluteFill, styles.nuit]} />}
-          <View style={styles.bulle}>
+          <Pressable style={styles.bulle} onPress={() => router.push('/boutique')} disabled={!bulleVersShop} accessibilityRole={bulleVersShop ? 'button' : 'text'}>
             <Text style={styles.bulleTexte}>{bulle}</Text>
-          </View>
+            {bulleVersShop && <Text style={styles.bulleLien}>Voir les tenues au Shop ›</Text>}
+          </Pressable>
           <View style={styles.sol}>
             {effet?.type === 'calin' && <CoeursCalin key={effet.cle} />}
             {effet?.type === 'jeu' && <BallonJeu key={effet.cle} />}
@@ -450,6 +455,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     ...ombre,
   },
+  bulleLien: { fontWeight: '800', color: couleurs.renardFonce, fontSize: 13, marginTop: 4 },
   bulleTexte: {
     fontFamily: polices.texte,
     fontWeight: '700',

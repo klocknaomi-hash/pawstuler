@@ -1,14 +1,15 @@
 /**
  * LES AVENTURES DE MILO (système miroir)
- * Milo vit sa propre recherche d'emploi, en parallèle de la tienne, avec un peu de décalage :
- * il ne fait jamais exactement la même chose que toi au même moment.
+ * Milo vit SA propre recherche d'emploi dans SA ville : il explore, découvre des lieux et y dépose
+ * son CV (ses candidatures à lui, sans lien avec tes entreprises). Le seul lien avec toi, c'est
+ * le rythme des nouvelles, avec un peu de décalage : il ne fait jamais la même chose que toi au même moment.
  *   - 40 candidatures = 40 candidatures enregistrées, pas 40 aventures : Milo part au plus
  *     1 fois par jour (gratuit), ou 3 fois par jour avec 3 h entre deux départs (Premium).
  *   - Ton entretien du 28 → Milo reçoit une demande d'entretien le lendemain de ta saisie,
  *     et passe le sien 2 jours après le tien (le 30), à une heure précise.
  *   - Ta relance, ton refus → Milo relance, ou reçoit sa réponse, le lendemain.
- *   - Il postule dans les entreprises de SA ville : toujours la même pour une même candidature
- *     (s'il a déposé son CV à la Boulangerie du Lac, c'est là qu'il relance et passe son entretien).
+ *   - Tes nouvelles font avancer UNE de ses candidatures à lui : s'il a déposé son CV à la Boulangerie
+ *     du Lac, c'est là qu'il relance et passe son entretien.
  *   - Une aventure lancée ne change jamais, même si tu mets ensuite une candidature à jour.
  *
  * Tout se règle ici : durées, coûts, pièces, décalages, et les textes. Dans les textes :
@@ -71,12 +72,7 @@ export const DECALAGE_JOURS = {
   relance: 1,
   /** Milo reçoit sa réponse le lendemain de ton refus (après son propre entretien, s'il en avait un). */
   refus: 1,
-  /** Milo dépose son CV au plus tôt le lendemain de ta candidature. */
-  depot: 1,
 };
-
-/** Une candidature récente (moins de 7 jours) peut donner à Milo une aventure « déposer son CV ». */
-export const JOURS_MAX_DEPOT = 7;
 
 /** Relances proposées dans le formulaire : dans 1, 3 ou 5 jours après l'envoi. */
 export const DELAIS_RELANCE = [1, 3, 5];
@@ -226,6 +222,30 @@ export const OU_EST: Record<TypeMission, string> = {
   travail: '{nom} est chez {lieu}',
   repos: '{nom} est à la maison',
   baignade: '{nom} est {lieu}',
+};
+
+/** Carte verte « Aventure du jour » : ce qu'il va faire (avant de partir). {cout} = énergie. */
+export const CARTE_DISPONIBLE: Record<TypeMission, string> = {
+  recherche: '{cout} ⚡ · {nom} explore {ville}',
+  depot: '{cout} ⚡ · {nom} explore {ville}',
+  relance: '{cout} ⚡ · {nom} a un appel à passer',
+  entretien: '{cout} ⚡ · {nom} part à son entretien',
+  refus: '{cout} ⚡ · {nom} a reçu une réponse',
+  travail: '{cout} ⚡ · {nom} part travailler',
+  repos: '{nom} peut se reposer',
+  baignade: '{nom} peut aller se baigner',
+};
+
+/** Carte verte « Aventure du jour » : ce qu'il fait pendant qu'il est parti (sans heure : elle est déjà dans la scène). */
+export const CARTE_PARTI: Record<TypeMission, string> = {
+  recherche: '{nom} est allé{e} découvrir {lieu}',
+  depot: '{nom} est allé{e} déposer son CV chez {lieu}',
+  relance: '{nom} est au téléphone avec {lieu}',
+  entretien: '{nom} est en entretien chez {lieu}',
+  refus: '{nom} lit un message de {lieu}',
+  travail: '{nom} est au travail chez {lieu}',
+  repos: '{nom} se repose à la maison',
+  baignade: '{nom} est allé{e} se baigner {lieu}',
 };
 
 /** Présentation, avant le départ. */

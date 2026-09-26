@@ -6,8 +6,10 @@
  *     rappelle qu'il lui faudrait une tenue, le 30 il passe son entretien à une heure précise ;
  *   - ta relance (faite ou prévue) → il relance par téléphone le lendemain ;
  *   - ton refus → il reçoit sa réponse le lendemain (après son propre entretien s'il en avait un) ;
- *   - tes candidatures récentes → il dépose son CV ; sinon il cherche des opportunités.
- * Il postule dans les entreprises de SA ville : toujours la même pour une même candidature.
+ *   - le reste du temps, il explore sa ville : il découvre un lieu, ou dépose son CV dans un lieu
+ *     de sa ville (ce sont SES candidatures, qui n'ont rien à voir avec tes entreprises).
+ * Le seul lien avec toi, c'est le rythme des nouvelles : tes entretiens, relances et refus font
+ * avancer UNE de ses candidatures à lui, avec un peu de décalage.
  * L'aventure du jour est choisie au moment où tu l'envoies, puis elle ne change plus.
  * Ici : que des calculs (aucun écran). Les réglages et les textes sont dans src/config/missions.ts.
  */
@@ -20,7 +22,6 @@ import {
   DUREES_MINUTES,
   FENETRE_ENTRETIEN,
   HEURES_ENTRE_AVENTURES_PREMIUM,
-  JOURS_MAX_DEPOT,
   OU_EST,
   PRESENTATIONS,
   RESULTATS,
@@ -37,7 +38,7 @@ import { villeParId, type Lieu } from '@/config/villes';
 import { aventuresRestantes } from '@/logique/compagnon';
 import { jourDe, joursEntre, nouvelId } from '@/logique/dates';
 import { aPremium } from '@/services/abonnement';
-import type { Candidature, EtatApp, Mission } from '@/store/types';
+import type { Candidature, CandidatureMilo, EtatApp, Mission } from '@/store/types';
 
 import { candidaturesActives } from './tachesDuJour';
 
@@ -108,22 +109,63 @@ export function metierDuJour(lieu: Lieu, jour: string): string {
   return choisir([lieu.metier ?? SECTEURS[lieu.secteur].metiers[0], ...SECTEURS[lieu.secteur].metiers], `${jour}-${lieu.id}-metier`);
 }
 
-/**
- * L'entreprise de Milo qui correspond à une de tes candidatures : une entreprise de SA ville,
- * du même secteur que la tienne si possible. Toujours la même pour une même candidature
- * (il relance et passe son entretien là où il a déposé son CV).
- */
-export function entrepriseDeMilo(etat: EtatApp, c: Pick<Candidature, 'id' | 'entreprise' | 'poste'>): Pick<Mission, 'lieu' | 'secteur' | 'metier'> {
+/* ---------- Les candidatures de Milo, dans SA ville ---------- */
+
+/** Une nouvelle candidature de Milo dans un lieu de sa ville où il n'a pas encore postulé. */
+export function nouvelleCandidatureMilo(etat: EtatApp, jour: string, graine: string): CandidatureMilo {
   const ville = villeParId(etat.villeId ?? 'clairebourg');
-  let secteur = detecterSecteur(c.entreprise, c.poste);
-  if (secteur === 'entreprise') {
-    // Secteur non reconnu : un des commerces de sa ville
-    const lieux = ville.lieux.filter((l) => l.secteur);
-    secteur = choisir(lieux, c.id).secteur ?? 'entreprise';
-  }
-  const noms = SECTEURS[secteur].noms.map((n) => n.replaceAll('{ville}', ville.nom));
-  return { lieu: choisir(noms, c.id), secteur, metier: choisir(SECTEURS[secteur].metiers, `${c.id}-metier`) };
+  const avecSecteur = ville.lieux.filter((l) => l.secteur);
+  const dejaPostule = new Set(etat.candidaturesMilo.map((cm) => cm.lieuId));
+  const libres = avecSecteur.filter((l) => !dejaPostule.has(l.id));
+  const lieu = choisir(libres.length ? libres : avecSecteur, graine);
+  return {
+    id: nouvelId(),
+    lieu: nomDuJour(etat, lieu, jour),
+    secteur: lieu.secteur ?? 'entreprise',
+    metier: metierDuJour(lieu, jour),
+    lieuId: lieu.id,
+    deposeLe: jour,
+  };
 }
+
+/** La candidature de Milo qui avance quand ta candidature avance (en décalé). */
+export const candidatureMiloDe = (etat: EtatApp, c: Pick<Candidature, 'id'>) => etat.candidaturesMilo.find((cm) => cm.miroirDe === c.id);
+
+/**
+ * Ta candidature a une nouvelle (relance faite ou arrivée à sa date, entretien, réponse) : Milo la vivra
+ * aussi. Une relance seulement prévue ne compte qu'à partir de son jour.
+ */
+const aDesNouvelles = (c: Candidature, jour: string) =>
+  (!!c.relancePrevue && c.relancePrevue <= jour) || c.historique.some((h) => h.statut !== 'envoyee');
+
+/**
+ * Relie chaque étape de ton parcours à UNE candidature de Milo : la plus ancienne qu'il a déposée
+ * et qui n'a pas encore de nouvelles, sinon une candidature qu'il avait déjà envoyée dans sa ville.
+ * Fait une seule fois : ensuite, c'est toujours la même (il relance et passe son entretien là où il a postulé).
+ */
+export function synchroniserMiroirs(etat: EtatApp): EtatApp {
+  let suite = etat;
+  const jour = jourDe();
+  for (const c of candidaturesActives(etat)) {
+    if (!aDesNouvelles(c, jour) || candidatureMiloDe(suite, c)) continue;
+    const libre = [...suite.candidaturesMilo].sort((a, b) => a.deposeLe.localeCompare(b.deposeLe)).find((cm) => !cm.miroirDe);
+    const cm = libre ? { ...libre, miroirDe: c.id } : { ...nouvelleCandidatureMilo(suite, jour, c.id), miroirDe: c.id };
+    suite = {
+      ...suite,
+      candidaturesMilo: libre ? suite.candidaturesMilo.map((x) => (x.id === libre.id ? cm : x)) : [...suite.candidaturesMilo, cm],
+    };
+  }
+  return suite;
+}
+
+/** Ce qu'il faut pour une aventure autour d'une de ses candidatures (lieu, métier…). */
+const autourDe = (cm: CandidatureMilo): Pick<Mission, 'lieu' | 'secteur' | 'metier' | 'lieuId' | 'candidatureMiloId'> => ({
+  lieu: cm.lieu,
+  secteur: cm.secteur,
+  metier: cm.metier,
+  lieuId: cm.lieuId,
+  candidatureMiloId: cm.id,
+});
 
 /* ---------- Le calendrier de Milo, décalé du tien ---------- */
 
@@ -153,9 +195,9 @@ export function entretienDeMilo(etat: EtatApp, c: Candidature): EntretienMilo | 
   return { candidature: c, annonceLe: ajouterJours(saisi, DECALAGE_JOURS.annonceEntretien), le, heure, fait };
 }
 
-type Etape = { type: 'entretien' | 'refus' | 'relance' | 'depot'; candidature: Candidature; le: string; pasAvant?: number };
+type Etape = { type: 'entretien' | 'refus' | 'relance'; candidature: Candidature; le: string; pasAvant?: number };
 
-/** Ce que Milo a à vivre, dans l'ordre d'importance (entretien, réponse, relance, dépôt de CV). */
+/** Les nouvelles que Milo a à vivre (en décalé des tiennes), dans l'ordre d'importance : entretien, réponse, relance. */
 function etapesDeMilo(etat: EtatApp, jour: string): Etape[] {
   const etapes: Etape[] = [];
   const actives = candidaturesActives(etat);
@@ -180,24 +222,25 @@ function etapesDeMilo(etat: EtatApp, jour: string): Etape[] {
       }
     }
   }
-  // Dépôt de CV : une de tes candidatures récentes (40 candidatures ne font pas 40 aventures)
-  const derniere = derniereAventure(etat);
-  if (derniere?.type !== 'depot') {
-    const recente = actives
-      .filter((c) => c.statut !== 'refus' && joursEntre(c.creeLe, jour) <= JOURS_MAX_DEPOT)
-      .filter((c) => ajouterJours(c.creeLe, DECALAGE_JOURS.depot) <= jour && !aventuresPour(etat, c, 'depot').length)
-      .sort((a, b) => b.creeLe.localeCompare(a.creeLe))[0];
-    if (recente) etapes.push({ type: 'depot', candidature: recente, le: jour });
-  }
-  const ordre = { entretien: 0, refus: 1, relance: 2, depot: 3 };
+  const ordre = { entretien: 0, refus: 1, relance: 2 };
   return etapes.sort((a, b) => ordre[a.type] - ordre[b.type] || a.le.localeCompare(b.le));
 }
 
-/** Une aventure « libre » : chercher une opportunité ou découvrir une entreprise (ou travailler, après « J'ai décroché ! »). */
+/**
+ * Une aventure « libre » dans sa ville (ou une journée de travail, après « J'ai décroché ! ») :
+ * le premier jour il découvre un lieu ; ensuite, un jour sur deux, il y dépose son CV (une nouvelle candidature à lui).
+ */
 export function missionDansLaVille(etat: EtatApp): Mission {
   const aujourdhui = jourDe();
   const ville = villeParId(etat.villeId ?? 'clairebourg');
   const pro = etat.contexte === 'pro';
+  // Le premier jour il découvre sa ville ; ensuite, un jour sur deux, il y dépose son CV
+  const derniere = derniereAventure(etat);
+  if (!pro && derniere && derniere.type !== 'depot') {
+    // Il va déposer son CV dans un lieu de sa ville où il n'a pas encore postulé
+    const cm = nouvelleCandidatureMilo(etat, aujourdhui, `${aujourdhui}-${etat.aventuresTotal}`);
+    return { id: nouvelId(), type: 'depot', lieu: cm.lieu, secteur: cm.secteur, metier: cm.metier, lieuId: cm.lieuId, statut: 'en-cours', creeLe: aujourdhui };
+  }
   const avecSecteur = ville.lieux.filter((l) => l.secteur);
   const lieu =
     (pro && etat.compagnon?.metier && ville.lieux.find((l) => l.id === etat.compagnon?.metier?.lieuId)) ||
@@ -209,7 +252,7 @@ export function missionDansLaVille(etat: EtatApp): Mission {
     secteur: lieu.secteur ?? 'entreprise',
     metier: pro && etat.compagnon?.metier ? etat.compagnon.metier.intitule : metierDuJour(lieu, aujourdhui),
     lieuId: lieu.id,
-    decouverte: !pro && etat.aventuresTotal % 2 === 1,
+    decouverte: !pro,
     statut: 'en-cours',
     creeLe: aujourdhui,
   };
@@ -224,13 +267,15 @@ export function aventureDuJour(etat: EtatApp, maintenant = Date.now()): { missio
   if (etat.contexte === 'pro') return { mission: missionDansLaVille(etat) };
   const etape = etapesDeMilo(etat, jour)[0];
   if (!etape) return { mission: missionDansLaVille(etat) };
+  const cm = candidatureMiloDe(etat, etape.candidature);
+  if (!cm) return { mission: missionDansLaVille(etat) };
   const tenue = etape.type === 'entretien' ? tenueEntretienPossedee(etat) : undefined;
   return {
     mission: {
       id: nouvelId(),
       type: etape.type,
       candidatureId: etape.candidature.id,
-      ...entrepriseDeMilo(etat, etape.candidature),
+      ...autourDe(cm),
       ...(etape.type === 'entretien' ? { avecTenue: !!tenue, tenue } : {}),
       statut: 'en-cours',
       creeLe: jour,
@@ -261,7 +306,8 @@ export function prochainEntretienDeMilo(etat: EtatApp): EntretienMilo | undefine
 export function annonceEntretien(etat: EtatApp, jour = jourDe()): { texte: string; versLeShop: boolean } | undefined {
   const e = prochainEntretienDeMilo(etat);
   if (!e || jour < e.annonceLe) return undefined;
-  const lieu = entrepriseDeMilo(etat, e.candidature);
+  const lieu = candidatureMiloDe(etat, e.candidature);
+  if (!lieu) return undefined;
   const extra = { jour: jourLisible(e.le, jour), heure: heureLisible(e.heure) };
   const tenue = !!tenueEntretienPossedee(etat);
   if (jour >= e.le) return { texte: remplir(etat, ANNONCES_ENTRETIEN.jour, lieu, extra), versLeShop: !tenue };
@@ -379,23 +425,22 @@ export function jourLisible(jour: string, aujourdhui = jourDe()): string {
 
 /* ---------- Les candidatures de Milo (onglet ville) ---------- */
 
-export type EtapeCompagnon = { candidature: Candidature; lieu: string; metier: string; icone: string; etape: string; accent?: boolean };
+export type EtapeCompagnon = { candidature: CandidatureMilo; icone: string; etape: string; accent?: boolean };
 
-/** Pour chacune de tes candidatures en cours : l'entreprise de Milo, et où il en est (avec son décalage). */
+/** Les candidatures de Milo dans sa ville, et où il en est pour chacune (avec son décalage). */
 export function parcoursDuCompagnon(etat: EtatApp, jour = jourDe()): EtapeCompagnon[] {
-  return candidaturesActives(etat).map((c) => {
-    const e = entrepriseDeMilo(etat, c);
-    const base = { candidature: c, lieu: e.lieu, metier: e.metier, icone: SECTEURS[e.secteur].icone };
-    const fait = (type: TypeMission) => aventuresPour(etat, c, type).length > 0;
-    const entretien = entretienDeMilo(etat, c);
-    if (c.statut === 'decroche') return { ...base, etape: 'A décroché son poste ! 🎉', accent: true };
-    if (fait('refus')) return { ...base, etape: 'Pas retenu cette fois' };
+  return [...etat.candidaturesMilo].reverse().map((cm) => {
+    const base = { candidature: cm, icone: SECTEURS[cm.secteur].icone };
+    const faite = (type: TypeMission) => etat.missions.some((m) => m.candidatureMiloId === cm.id && m.type === type && m.depart);
+    const miroir = cm.miroirDe ? etat.candidatures.find((c) => c.id === cm.miroirDe) : undefined;
+    const entretien = miroir ? entretienDeMilo(etat, miroir) : undefined;
+    if (miroir?.statut === 'decroche') return { ...base, etape: 'A décroché son poste ! 🎉', accent: true };
+    if (faite('refus')) return { ...base, etape: 'Pas retenu cette fois' };
     if (entretien && !entretien.fait && jour >= entretien.annonceLe) {
       return { ...base, etape: `Entretien ${jourLisible(entretien.le, jour)} à ${heureLisible(entretien.heure)}`, accent: true };
     }
     if (entretien?.fait) return { ...base, etape: 'Entretien passé', accent: true };
-    if (fait('relance')) return { ...base, etape: 'A relancé par téléphone' };
-    if (fait('depot')) return { ...base, etape: 'CV déposé' };
-    return { ...base, etape: 'A repéré l’annonce' };
+    if (faite('relance')) return { ...base, etape: 'A relancé par téléphone' };
+    return { ...base, etape: 'CV déposé' };
   });
 }

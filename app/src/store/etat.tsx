@@ -28,6 +28,7 @@ import {
   momentDuCompagnon,
   prochainDepart,
   resultatADecouvrir,
+  synchroniserMiroirs,
   tirerResultat,
   titreMission,
 } from '@/logique/missions';
@@ -62,6 +63,7 @@ export const ETAT_INITIAL: EtatApp = {
   aventuresTotal: 0,
   decouvertes: [],
   missions: [],
+  candidaturesMilo: [],
   candidatures: [],
   inventaire: [],
   equipe: [],
@@ -267,8 +269,14 @@ function partirEnMission(etat: EtatApp, mission: Mission): EtatApp {
   const cout = COUTS_MISSION[mission.type];
   if (energieDisponible(etat) < cout || compagnonAbsent(etat) || resultatADecouvrir(etat) || estEndormi(etat.rythme)) return etat;
   const depart = Date.now();
+  // Dépôt de CV : c'est une nouvelle candidature de Milo, dans un lieu de sa ville
+  const nouvelle =
+    mission.type === 'depot' && !mission.candidatureMiloId
+      ? { id: nouvelId(), lieu: mission.lieu, secteur: mission.secteur, metier: mission.metier, lieuId: mission.lieuId, deposeLe: jourDe() }
+      : undefined;
   const partie: Mission = {
     ...mission,
+    ...(nouvelle ? { candidatureMiloId: nouvelle.id } : {}),
     statut: 'en-cours',
     depart,
     retour: depart + dureeMission(mission),
@@ -278,6 +286,7 @@ function partirEnMission(etat: EtatApp, mission: Mission): EtatApp {
     ...etat,
     ...appliquerEnergie(etat, -cout),
     missions: [partie, ...etat.missions],
+    candidaturesMilo: nouvelle ? [...etat.candidaturesMilo, nouvelle] : etat.candidaturesMilo,
     // Les aventures comptent dans le quota du jour (pas les moments pour souffler)
     ...(!estUnMoment(mission) ? { aventuresDuJour: etat.aventuresDuJour + 1, aventuresTotal: etat.aventuresTotal + 1 } : {}),
   };
@@ -446,7 +455,7 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
       // Nouveau jour : tâches renouvelées, nouvelle aventure possible.
       // L'énergie, elle, suit sa propre recharge en temps réel (5 h en gratuit, 3 h en Premium).
       return synchroniserTaches({
-        ...compte,
+        ...synchroniserMiroirs(compte),
         taches: preparerTaches(compte, action.jour),
         jourTaches: action.jour,
         aventuresDuJour: 0,
@@ -548,13 +557,13 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
       const avec: EtatApp = { ...etat, candidatures: [c, ...etat.candidatures] };
       // Pas de double saisie : une candidature envoyée aujourd'hui valide la tâche « Envoyer une candidature »
       // Pas de double saisie : les tâches « Envoyer X candidatures » avancent toutes seules
-      return synchroniserTaches(avec);
+      return synchroniserTaches(synchroniserMiroirs(avec));
     }
     case 'MODIFIER_CANDIDATURE':
-      return {
+      return synchroniserMiroirs({
         ...etat,
         candidatures: etat.candidatures.map((c) => (c.id === action.id ? { ...c, ...action.modifs } : c)),
-      };
+      });
     case 'CHANGER_STATUT': {
       const avant = etat.candidatures.find((c) => c.id === action.id);
       if (!avant || avant.statut === action.statut) return etat;
@@ -575,8 +584,8 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
       };
       // Miroir : Milo vivra cette étape plus tard, avec son décalage (calendrier des aventures)
       const miroir = apres;
-      // Les tâches de relance avancent toutes seules
-      return synchroniserTaches(miroir);
+      // Les tâches de relance avancent toutes seules ; une de ses candidatures à lui vivra la même nouvelle
+      return synchroniserTaches(synchroniserMiroirs(miroir));
     }
     case 'ARCHIVER_CANDIDATURE':
       return {
