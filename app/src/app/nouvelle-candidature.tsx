@@ -22,7 +22,7 @@ import { useApp } from '@/store/etat';
 import type { StatutCandidature } from '@/store/types';
 
 export default function NouvelleCandidature() {
-  const { etat, dispatch } = useApp();
+  const { dispatch } = useApp();
   const [entreprise, setEntreprise] = useState('');
   const [poste, setPoste] = useState('');
   const [lien, setLien] = useState('');
@@ -141,7 +141,6 @@ export default function NouvelleCandidature() {
       />
       {erreur ? <Text style={styles.erreur}>{erreur}</Text> : null}
       <Text style={styles.aide}>* Champs obligatoires</Text>
-      {etat.compagnon && <Text style={styles.aide}>{etat.compagnon.nom} suivra cette candidature avec toi 🐾</Text>}
     </Ecran>
   );
 }

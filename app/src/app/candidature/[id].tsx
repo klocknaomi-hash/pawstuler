@@ -4,7 +4,7 @@
  * statut, date d'entretien, note, historique et archivage.
  * Changer de statut se fait en deux temps : on choisit l'étape, puis « Valider ».
  * Un entretien demande sa date (obligatoire) ; un refus demande ce qui a pu jouer (facultatif,
- * pour s'améliorer : Milo s'en souviendra aussi). Une relance peut être prévue (+1, +3, +5 jours).
+ * pour s'améliorer). Une relance peut être prévue (+1, +3, +5 jours).
  * Chaque changement s'ajoute à l'historique (rien n'est effacé).
  * Un refus fait réagir le compagnon ; « Décroché » ouvre la page de félicitations.
  */
@@ -208,7 +208,7 @@ export default function FicheCandidature() {
             style={{ minHeight: 70, textAlignVertical: 'top' }}
           />
         )}
-        {aValider && choix === 'refus' && <Text style={styles.meta}>Le noter t’aide à t’améliorer pour la prochaine fois. {nomCompagnon} s’en souviendra aussi.</Text>}
+        {aValider && choix === 'refus' && <Text style={styles.meta}>Le noter t’aide à t’améliorer pour la prochaine fois.</Text>}
         {erreurStatut ? <Text style={styles.erreur}>{erreurStatut}</Text> : null}
         {aValider && (
           <Bouton

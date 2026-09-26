@@ -133,7 +133,7 @@ export default function Candidatures() {
                   ? 'Tes anciennes candidatures et celles que tu archives apparaîtront ici.'
                   : etat.contexte === 'pro'
                     ? 'Tu pourras en recommencer une depuis « Mon aventure professionnelle ».'
-                    : `Ajoute ta première candidature, ou juste une offre qui te plaît. ${etat.compagnon?.nom ?? ''} s’en souviendra pour toi.`}
+                    : 'Ajoute ta première candidature, ou juste une offre qui te plaît.'}
             </Text>
           </View>
         ) : (
