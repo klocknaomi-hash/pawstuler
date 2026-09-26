@@ -3,6 +3,8 @@
  * Tout sur une candidature : infos (modifiables), lien de l'offre, e-mail (écrire ou copier),
  * statut, date d'entretien, note, historique et archivage.
  * Changer de statut se fait en deux temps : on choisit l'étape, puis « Valider ».
+ * Un entretien demande sa date (obligatoire) ; un refus demande ce qui a pu jouer (facultatif,
+ * pour s'améliorer : Milo s'en souviendra aussi). Une relance peut être prévue (+1, +3, +5 jours).
  * Chaque changement s'ajoute à l'historique (rien n'est effacé).
  * Un refus fait réagir le compagnon ; « Décroché » ouvre la page de félicitations.
  */
@@ -12,13 +14,15 @@ import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Bouton, Champ, Ecran, SousTitre, Titre } from '@/components/base';
+import { Bouton, Champ, Ecran, Pastille, SousTitre, Titre } from '@/components/base';
 import { ChoixStatut } from '@/components/ChoixStatut';
 import { Compagnon } from '@/components/Compagnon';
 import { emailValide, statutParId } from '@/config/candidatures';
+import { DELAIS_RELANCE } from '@/config/missions';
 import { arrondis, couleurs, espace } from '@/config/theme';
+import { ajouterJours } from '@/logique/missions';
 import { dateEnSaisie, dateLisible, jourDe, joursEntre, lireDateFr } from '@/logique/dates';
-import { relanceDue } from '@/logique/tachesDuJour';
+import { jourDeRelance, relanceDue } from '@/logique/tachesDuJour';
 import { useApp } from '@/store/etat';
 import type { StatutCandidature } from '@/store/types';
 
@@ -32,6 +36,10 @@ export default function FicheCandidature() {
   // Statut choisi mais pas encore validé
   const [choix, setChoix] = useState<StatutCandidature | undefined>(c?.statut);
   const [confirmation, setConfirmation] = useState('');
+  // Précisions demandées au moment de valider : date de l'entretien, raison du refus
+  const [dateNouvelEntretien, setDateNouvelEntretien] = useState('');
+  const [raison, setRaison] = useState('');
+  const [erreurStatut, setErreurStatut] = useState('');
   const [copie, setCopie] = useState(false);
   // Modification des informations principales
   const [edition, setEdition] = useState(false);
@@ -52,7 +60,11 @@ export default function FicheCandidature() {
 
   function valider() {
     if (!choix || choix === c!.statut) return;
-    dispatch({ type: 'CHANGER_STATUT', id: c!.id, statut: choix });
+    const dateEntretien = choix === 'entretien' ? lireDateFr(dateNouvelEntretien) : undefined;
+    if (choix === 'entretien' && !dateEntretien) return setErreurStatut('Indique la date de ton entretien. Exemple : 28/09.');
+    setErreurStatut('');
+    dispatch({ type: 'CHANGER_STATUT', id: c!.id, statut: choix, dateEntretien, raisonRefus: choix === 'refus' ? raison.trim() || undefined : undefined });
+    if (dateEntretien) setEntretien(dateEnSaisie(dateEntretien));
     setConfirmation(`✓ ${statutParId(choix).evenement}`);
     if (choix === 'decroche') router.push({ pathname: '/felicitations', params: { candidatureId: c!.id } });
   }
@@ -161,7 +173,9 @@ export default function FicheCandidature() {
         <View style={styles.alerte}>
           <Ionicons name="notifications-outline" size={18} color={couleurs.renardFonce} />
           <Text style={styles.alerteTexte}>
-            Cette candidature date de {joursEntre(c.dateEnvoi!)} jours. Pense à la relancer, puis passe-la en « Relancé ».
+            {c.relancePrevue
+              ? 'C’est le jour prévu pour relancer cette candidature. Une fois fait, passe-la en « Relancé ».'
+              : `Cette candidature date de ${joursEntre(c.dateEnvoi!)} jours. Pense à la relancer, puis passe-la en « Relancé ».`}
           </Text>
         </View>
       )}
@@ -175,9 +189,56 @@ export default function FicheCandidature() {
             setConfirmation('');
           }}
         />
-        {aValider && <Bouton titre={`Valider : ${statutParId(choix!).libelle}`} onPress={valider} />}
+        {aValider && choix === 'entretien' && (
+          <Champ
+            label="Date de l’entretien *"
+            value={dateNouvelEntretien}
+            onChangeText={setDateNouvelEntretien}
+            placeholder="Ex. 28/09"
+            keyboardType="numbers-and-punctuation"
+          />
+        )}
+        {aValider && choix === 'refus' && (
+          <Champ
+            label="Pourquoi, selon toi ? (facultatif)"
+            value={raison}
+            onChangeText={setRaison}
+            placeholder="Ex. Pas assez préparé sur mes expériences, trop stressé…"
+            multiline
+            style={{ minHeight: 70, textAlignVertical: 'top' }}
+          />
+        )}
+        {aValider && choix === 'refus' && <Text style={styles.meta}>Le noter t’aide à t’améliorer pour la prochaine fois. {nomCompagnon} s’en souviendra aussi.</Text>}
+        {erreurStatut ? <Text style={styles.erreur}>{erreurStatut}</Text> : null}
+        {aValider && (
+          <Bouton
+            titre={`Valider : ${statutParId(choix!).libelle}`}
+            onPress={valider}
+            desactive={choix === 'entretien' && !dateNouvelEntretien.trim()}
+          />
+        )}
         {confirmation && !aValider ? <Text style={styles.confirmation}>{confirmation}</Text> : null}
       </View>
+
+      {(c.statut === 'envoyee' || c.statut === 'relancee') && (
+        <View style={{ gap: espace.s }}>
+          <SousTitre>Prévoir une relance</SousTitre>
+          <View style={styles.pastilles}>
+            {DELAIS_RELANCE.map((j) => {
+              const jour = ajouterJours(jourDe(), j);
+              return (
+                <Pastille
+                  key={j}
+                  libelle={`+${j} jour${j > 1 ? 's' : ''}`}
+                  choisi={c.relancePrevue === jour}
+                  onPress={() => dispatch({ type: 'MODIFIER_CANDIDATURE', id: c.id, modifs: { relancePrevue: c.relancePrevue === jour ? undefined : jour } })}
+                />
+              );
+            })}
+          </View>
+          {jourDeRelance(c) && <Text style={styles.meta}>Relance prévue le {dateLisible(jourDeRelance(c)!)}.</Text>}
+        </View>
+      )}
 
       {c.statut === 'refus' && (
         <View style={styles.reconfort}>
@@ -220,7 +281,10 @@ export default function FicheCandidature() {
           {c.historique.map((h, i) => (
             <View key={`${h.statut}-${i}`} style={styles.etape}>
               <View style={[styles.puce, { backgroundColor: statutParId(h.statut).fond }]} />
-              <Text style={styles.etapeTexte}>✓ {statutParId(h.statut).evenement}</Text>
+              <Text style={styles.etapeTexte}>
+                ✓ {statutParId(h.statut).evenement}
+                {h.detail ? <Text style={styles.meta}> · {h.detail}</Text> : null}
+              </Text>
               <Text style={styles.meta}>{dateLisible(h.le)}</Text>
             </View>
           ))}
@@ -239,6 +303,7 @@ export default function FicheCandidature() {
 
 const styles = StyleSheet.create({
   poste: { fontSize: 16, fontWeight: '700', color: couleurs.brunDoux },
+  pastilles: { flexDirection: 'row', flexWrap: 'wrap', gap: espace.s },
   meta: { fontSize: 13, fontWeight: '600', color: couleurs.brunDoux },
   lien: { fontSize: 14.5, fontWeight: '800', color: couleurs.renardFonce, flexShrink: 1 },
   ligneAction: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },

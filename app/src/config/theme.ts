@@ -36,6 +36,9 @@ export const couleurs = {
 
   // Divers
   ligne: '#EEDCCB',
+  // Bouton qu'on ne peut pas encore utiliser (champs obligatoires vides…)
+  desactive: '#DAD5D0',
+  texteDesactive: '#8E8781',
   danger: '#B3261E',
   blanc: '#FFFFFF',
   noir: '#1C1410',

@@ -1,8 +1,9 @@
 /**
  * NOUVELLE CANDIDATURE
- * Comme une ligne de tableau de suivi, en plus simple : entreprise et poste (obligatoires),
- * lien de l'offre, statut actuel (on peut reprendre une candidature déjà avancée),
- * adresse e-mail, date d'envoi et note libre.
+ * Comme une ligne de tableau de suivi, en plus simple : entreprise et poste (obligatoires :
+ * le bouton reste gris tant qu'ils sont vides, puis devient orange), lien de l'offre, statut actuel
+ * (on peut reprendre une candidature déjà avancée ; un entretien demande sa date), adresse e-mail,
+ * date d'envoi, relance prévue (+1, +3 ou +5 jours après l'envoi) et note libre.
  * L'historique est créé automatiquement. Si la candidature est déjà « Décroché »,
  * la page de félicitations s'ouvre juste après.
  */
@@ -10,11 +11,13 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Bouton, Champ, Ecran, SousTitre, Titre } from '@/components/base';
+import { Bouton, Champ, Ecran, Pastille, SousTitre, Titre } from '@/components/base';
 import { ChoixStatut } from '@/components/ChoixStatut';
 import { emailValide } from '@/config/candidatures';
+import { DELAIS_RELANCE } from '@/config/missions';
 import { couleurs, espace } from '@/config/theme';
-import { dateEnSaisie, jourDe, lireDateFr } from '@/logique/dates';
+import { ajouterJours } from '@/logique/missions';
+import { dateEnSaisie, dateLisible, jourDe, lireDateFr } from '@/logique/dates';
 import { useApp } from '@/store/etat';
 import type { StatutCandidature } from '@/store/types';
 
@@ -27,15 +30,21 @@ export default function NouvelleCandidature() {
   const [email, setEmail] = useState('');
   const [dateEnvoi, setDateEnvoi] = useState(dateEnSaisie(jourDe()));
   const [note, setNote] = useState('');
+  const [relance, setRelance] = useState<number | null>(null);
+  const [entretien, setEntretien] = useState('');
   const [erreur, setErreur] = useState('');
 
-  const pret = entreprise.trim().length > 0 && poste.trim().length > 0;
+  // Obligatoire : entreprise et poste (et la date si c'est déjà un entretien)
+  const pret = entreprise.trim().length > 0 && poste.trim().length > 0 && (statut !== 'entretien' || entretien.trim().length > 0);
+  const envoiLu = (dateEnvoi.trim() ? lireDateFr(dateEnvoi) : jourDe()) ?? jourDe();
 
   function enregistrer() {
     const date = dateEnvoi.trim() ? lireDateFr(dateEnvoi) : jourDe();
     if (!date) return setErreur('Date d’envoi non reconnue. Exemple : 25/09 ou 25/09/2026.');
     if (date > jourDe()) return setErreur('La date d’envoi ne peut pas être dans le futur.');
     if (email.trim() && !emailValide(email)) return setErreur('Cette adresse e-mail ne semble pas complète.');
+    const dateEntretien = statut === 'entretien' ? lireDateFr(entretien) : undefined;
+    if (statut === 'entretien' && !dateEntretien) return setErreur('Date d’entretien non reconnue. Exemple : 28/09.');
     dispatch({
       type: 'AJOUTER_CANDIDATURE',
       candidature: {
@@ -46,6 +55,8 @@ export default function NouvelleCandidature() {
         note: note.trim() || undefined,
         statut,
         dateEnvoi: date,
+        dateEntretien,
+        relancePrevue: relance !== null && (statut === 'envoyee' || statut === 'relancee') ? ajouterJours(date, relance) : undefined,
       },
     });
     router.back();
@@ -65,8 +76,8 @@ export default function NouvelleCandidature() {
         </View>
       }>
       <Titre>Nouvelle candidature</Titre>
-      <Champ label="Entreprise" value={entreprise} onChangeText={setEntreprise} placeholder="Ex. EDF" autoFocus />
-      <Champ label="Poste" value={poste} onChangeText={setPoste} placeholder="Ex. Chargé·e de clientèle" />
+      <Champ label="Entreprise *" value={entreprise} onChangeText={setEntreprise} placeholder="Ex. EDF" autoFocus />
+      <Champ label="Poste *" value={poste} onChangeText={setPoste} placeholder="Ex. Chargé·e de clientèle" />
       <Champ
         label="Lien de l’offre (facultatif)"
         value={lien}
@@ -82,6 +93,15 @@ export default function NouvelleCandidature() {
         <Text style={styles.aide}>Choisis l’étape où elle se trouve vraiment, même si tu l’as commencée ailleurs.</Text>
         <ChoixStatut valeur={statut} onChange={setStatut} />
       </View>
+      {statut === 'entretien' && (
+        <Champ
+          label="Date de l’entretien *"
+          value={entretien}
+          onChangeText={setEntretien}
+          placeholder="Ex. 28/09"
+          keyboardType="numbers-and-punctuation"
+        />
+      )}
 
       <Champ
         label="Adresse e-mail (facultatif)"
@@ -100,6 +120,17 @@ export default function NouvelleCandidature() {
         placeholder="Ex. 25/09"
         keyboardType="numbers-and-punctuation"
       />
+      {(statut === 'envoyee' || statut === 'relancee') && (
+        <View style={{ gap: espace.s }}>
+          <Text style={styles.label}>Relancer (facultatif)</Text>
+          <View style={styles.pastilles}>
+            {DELAIS_RELANCE.map((j) => (
+              <Pastille key={j} libelle={`+${j} jour${j > 1 ? 's' : ''}`} choisi={relance === j} onPress={() => setRelance(relance === j ? null : j)} />
+            ))}
+          </View>
+          {relance !== null && <Text style={styles.aide}>Relance prévue le {dateLisible(ajouterJours(envoiLu, relance))} : on te le rappellera ce jour-là.</Text>}
+        </View>
+      )}
       <Champ
         label="Note (facultatif)"
         value={note}
@@ -109,6 +140,7 @@ export default function NouvelleCandidature() {
         style={{ minHeight: 90, textAlignVertical: 'top' }}
       />
       {erreur ? <Text style={styles.erreur}>{erreur}</Text> : null}
+      <Text style={styles.aide}>* Champs obligatoires</Text>
       {etat.compagnon && <Text style={styles.aide}>{etat.compagnon.nom} suivra cette candidature avec toi 🐾</Text>}
     </Ecran>
   );
@@ -116,6 +148,8 @@ export default function NouvelleCandidature() {
 
 const styles = StyleSheet.create({
   boutons: { flexDirection: 'row', gap: espace.s },
+  label: { fontSize: 12.5, fontWeight: '800', color: couleurs.brunDoux, textTransform: 'uppercase', letterSpacing: 0.6 },
+  pastilles: { flexDirection: 'row', flexWrap: 'wrap', gap: espace.s },
   aide: { fontSize: 13, color: couleurs.brunDoux, fontWeight: '600', lineHeight: 18 },
   erreur: { color: couleurs.danger, fontWeight: '700', fontSize: 13.5 },
 });

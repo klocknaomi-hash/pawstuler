@@ -81,7 +81,7 @@ export default function Ville() {
           <>
             <Text style={styles.sousTitre}>Les candidatures de {nom}</Text>
             <View style={styles.bloc}>
-              {parcours.map(({ candidature, icone, etape, accent }, i) => (
+              {parcours.map(({ candidature, lieu, metier, icone, etape, accent }, i) => (
                 <Pressable
                   key={candidature.id}
                   style={[styles.lieu, i > 0 && styles.separateur]}
@@ -89,10 +89,11 @@ export default function Ville() {
                   accessibilityRole="button">
                   <Text style={styles.icone}>{icone}</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.lieuNom}>{candidature.entreprise}</Text>
+                    <Text style={styles.lieuNom}>{lieu}</Text>
                     <Text style={[styles.lieuEtat, accent && { color: couleurs.corail }]}>
-                      {candidature.poste} · {etape}
+                      {metier} · {etape}
                     </Text>
+                    <Text style={styles.miroir}>En miroir de ta candidature chez {candidature.entreprise}</Text>
                   </View>
                 </Pressable>
               ))}
@@ -117,7 +118,7 @@ export default function Ville() {
         <Text style={styles.note}>
           {etat.contexte === 'pro'
             ? `${nom} a commencé son nouveau travail le même jour que toi. Chaque aventure lui fait découvrir un peu plus sa ville.`
-            : `Chaque candidature que tu envoies, ${nom} en dépose une aussi. Le jour où tu décroches ton poste, ${nom} décroche le sien.`}
+            : `${nom} cherche son job en même temps que toi, dans les entreprises de ${ville.nom}, avec un peu de décalage : il relance, passe ses entretiens et reçoit ses réponses quelques jours après toi. Le jour où tu décroches ton poste, ${nom} décroche le sien.`}
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -140,6 +141,7 @@ const styles = StyleSheet.create({
   separateur: { borderTopWidth: 1, borderTopColor: couleurs.ligne },
   puce: { width: 12, height: 12, borderRadius: 6 },
   icone: { fontSize: 22 },
+  miroir: { fontSize: 12, fontWeight: '600', color: couleurs.brunDoux, marginTop: 2, opacity: 0.8 },
   lieuNom: { fontSize: 15, fontWeight: '800', color: couleurs.brun },
   lieuEtat: { fontSize: 13, fontWeight: '600', color: couleurs.brunDoux, marginTop: 2 },
   note: { fontSize: 13.5, color: couleurs.brunDoux, lineHeight: 19, fontWeight: '600' },

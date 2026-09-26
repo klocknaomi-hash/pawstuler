@@ -28,7 +28,15 @@ export type ModeleTache = {
   contrats?: TypeContrat[];
   /** Tâche « de démarrage » : proposée en priorité tant qu'elle n'a jamais été faite. */
   demarrage?: boolean;
+  /**
+   * Tâche mesurable : elle avance toute seule avec tes vraies données du jour (3/5…) et se coche
+   * quand l'objectif est atteint. On ne peut pas la cocher à la main.
+   */
+  mesure?: Mesure;
 };
+
+/** Ce qu'on compte aujourd'hui : candidatures enregistrées, ou relances notées. */
+export type Mesure = { quoi: 'candidatures' | 'relances'; objectif: number };
 
 export const CATALOGUE_TACHES: ModeleTache[] = [
   /* ---------- Recherche d'emploi ---------- */
@@ -39,10 +47,11 @@ export const CATALOGUE_TACHES: ModeleTache[] = [
   { id: 'recherche', titre: "Faire 20 min de recherche d'offres", categorie: 'chercher', pieces: 5, contexte: 'recherche' },
   { id: 'offre', titre: 'Sauvegarder une offre intéressante', categorie: 'chercher', pieces: 2, contexte: 'recherche' },
   { id: 'cible', titre: 'Repérer une entreprise qui te plaît', categorie: 'chercher', pieces: 5, contexte: 'recherche' },
-  { id: 'envoi', titre: 'Envoyer une candidature', categorie: 'candidater', pieces: 10, contexte: 'recherche' },
-  { id: 'envoi5', titre: 'Envoyer 5 candidatures', categorie: 'candidater', pieces: 40, contexte: 'recherche' },
+  { id: 'envoi', titre: 'Envoyer une candidature', categorie: 'candidater', pieces: 10, contexte: 'recherche', mesure: { quoi: 'candidatures', objectif: 1 } },
+  { id: 'envoi3', titre: 'Envoyer 3 candidatures', categorie: 'candidater', pieces: 25, contexte: 'recherche', mesure: { quoi: 'candidatures', objectif: 3 } },
+  { id: 'envoi5', titre: 'Envoyer 5 candidatures', categorie: 'candidater', pieces: 40, contexte: 'recherche', mesure: { quoi: 'candidatures', objectif: 5 } },
   { id: 'spontanee', titre: 'Envoyer une candidature spontanée', categorie: 'candidater', pieces: 15, contexte: 'recherche' },
-  { id: 'relance', titre: 'Relancer une candidature', categorie: 'relancer', pieces: 10, contexte: 'recherche' },
+  { id: 'relance', titre: 'Relancer une candidature', categorie: 'relancer', pieces: 10, contexte: 'recherche', mesure: { quoi: 'relances', objectif: 1 } },
   { id: 'contact', titre: 'Ajouter un contact', categorie: 'reseau', pieces: 5, contexte: 'recherche' },
   { id: 'recruteur', titre: 'Appeler un recruteur', categorie: 'reseau', pieces: 15, contexte: 'recherche' },
   { id: 'ancien', titre: 'Écrire à un ancien élève', categorie: 'reseau', pieces: 10, contexte: 'recherche' },

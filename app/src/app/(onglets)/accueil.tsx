@@ -18,7 +18,7 @@ import { AventureDuJour } from '@/components/AventureDuJour';
 import { BallonJeu, CoeursCalin, Zzz } from '@/components/Effets';
 import { JaugeEnergie } from '@/components/Energie';
 import { LigneTache } from '@/components/LigneTache';
-import { Trajet } from '@/components/Trajet';
+import { SceneAventure } from '@/components/SceneAventure';
 import { CompteurPieces, IconePiece } from '@/components/Pieces';
 import { BadgeSerie } from '@/components/Serie';
 import type { Pose } from '@/config/compagnons';
@@ -32,7 +32,7 @@ import { useMaintenant } from '@/hooks/useMaintenant';
 import { imageVille } from '@/illustrations/registre';
 import { jourDe } from '@/logique/dates';
 import { dureeLisible, energieDisponible, energieMax, tempsAvantRecharge } from '@/logique/energie';
-import { compagnonAbsent, heureLisible as heureMission, iconeMission, ouEst, resultatADecouvrir } from '@/logique/missions';
+import { compagnonAbsent, heureLisible as heureMission, ouEst, resultatADecouvrir } from '@/logique/missions';
 import { estEndormi, heureLisible } from '@/logique/rythme';
 import { emploiActuel } from '@/logique/tachesDuJour';
 import { jourEssai, rappelEssai, rappelEssaiDisponible } from '@/services/abonnement';
@@ -99,6 +99,11 @@ export default function Accueil() {
   }
 
   function basculer(t: Tache) {
+    // Tâche mesurable : elle suit tes vraies données, pas de case à cocher à la main
+    if (t.mesure) {
+      reagir('neutre', t.faite ? 'Objectif atteint, bravo !' : `Celle-ci avance toute seule : ${t.progres ?? 0}/${t.mesure.objectif}. Enregistre tes ${t.mesure.quoi === 'candidatures' ? 'candidatures' : 'relances'} dans l’onglet Candidatures.`);
+      return;
+    }
     if (t.faite) {
       dispatch({ type: 'DECOCHER_TACHE', id: t.id });
       return;
@@ -219,12 +224,9 @@ export default function Accueil() {
             {effet?.type === 'jeu' && <BallonJeu key={effet.cle} />}
             {effet?.type === 'zzz' && <Zzz key={effet.cle} />}
             {absent?.retour ? (
-              // Parti en mission : son trajet en temps réel (aller, sur place, retour)
-              <Pressable style={styles.panneau} onPress={() => router.push('/aventure')} accessibilityRole="button">
-                <Trajet mission={absent} espece={compagnon.espece} equipe={etat.equipe} taille={58} />
-                <Text style={styles.panneauTexte} numberOfLines={1}>
-                  {iconeMission(absent)} {ouEst(etat, absent)} · Retour à {heureMission(absent.retour)}
-                </Text>
+              // Parti à l'aventure : la scène raconte ce qu'il fait, en temps réel
+              <Pressable style={styles.panneau} onPress={() => router.push('/aventure')} accessibilityRole="button" accessibilityLabel={`${ouEst(etat, absent)}. Retour à ${heureMission(absent.retour)}`}>
+                <SceneAventure mission={absent} espece={compagnon.espece} equipe={etat.equipe} hauteur={170} taille={70} />
               </Pressable>
             ) : (
               // Quand il revient de mission, il arrive en courant depuis le bord de l'écran
@@ -262,6 +264,8 @@ export default function Accueil() {
 
         {/* Moments avec le compagnon */}
         <View style={styles.moments}>
+          {/* Une seule carte : l'aventure du jour, juste sous la scène */}
+          <AventureDuJour etat={etat} maintenant={maintenant} dort={dort} />
           <View style={styles.petitsMoments}>
             <Moment icone="heart" libelle="Câlin" cout={COUT.calin} onPress={() => interagir('calin')} desactive={dort || !!absent} />
             <Moment icone="football" libelle="Jouer" cout={COUT.jeu} onPress={() => interagir('jeu')} desactive={dort || !!absent} />
@@ -283,7 +287,6 @@ export default function Accueil() {
               desactive={dort || !!absent || !!revenu}
             />
           </View>
-          <AventureDuJour etat={etat} maintenant={maintenant} dort={dort} />
         </View>
 
         {rappel && (
@@ -488,19 +491,8 @@ const styles = StyleSheet.create({
   },
   moments: { marginHorizontal: espace.l, marginTop: espace.m, gap: espace.s },
   // Panneau « parti en mission » à la place du compagnon
-  panneau: {
-    alignSelf: 'stretch',
-    marginHorizontal: espace.m,
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: couleurs.carte,
-    borderRadius: arrondis.m,
-    paddingHorizontal: espace.l,
-    paddingVertical: espace.m,
-    marginBottom: espace.l,
-    ...ombre,
-  },
-  panneauTexte: { fontWeight: '800', color: couleurs.brun },
+  // Scène de l'aventure à la place du compagnon (sur le décor de la ville)
+  panneau: { alignSelf: 'stretch' },
   petitsMoments: { flexDirection: 'row', gap: espace.s },
   moment: {
     flex: 1,

@@ -1,5 +1,5 @@
 /**
- * ONBOARDING 6/7 — La ville où le compagnon va vivre.
+ * ONBOARDING 7/8 — La ville où le compagnon va vivre.
  * Une ville devient choisissable dès que son illustration existe dans le registre.
  * Ensuite : l'objectif de série (dernière étape).
  */
@@ -32,7 +32,7 @@ export default function VilleDepart() {
 
   return (
     <Ecran defilant bas={<Bouton titre="Continuer" onPress={continuer} />}>
-      <EnteteEtape etape={6} />
+      <EnteteEtape etape={7} />
       <Titre>Où veux-tu commencer ton aventure ?</Titre>
       <Texte>{nom} y vivra, visitera ses lieux et y cherchera son propre job, en même temps que toi.</Texte>
 
