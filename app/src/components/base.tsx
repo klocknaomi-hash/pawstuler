@@ -92,7 +92,9 @@ export function Bouton({
   icone?: ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
-  const v = VARIANTES[variante];
+  // Bouton désactivé : gris (il redevient orange dès qu'on peut l'utiliser)
+  const plein = variante === 'principal' || variante === 'victoire' || variante === 'noir';
+  const v = desactive && plein ? { fond: couleurs.desactive, texte: couleurs.texteDesactive, bord: couleurs.desactive } : VARIANTES[variante];
   return (
     <Pressable
       accessibilityRole="button"
@@ -103,7 +105,7 @@ export function Bouton({
         styles.bouton,
         { backgroundColor: v.fond, borderColor: v.bord ?? v.fond },
         variante === 'texte' && { paddingVertical: espace.s },
-        (desactive || chargement) && { opacity: 0.45 },
+        (desactive || chargement) && !(desactive && plein) && { opacity: 0.45 },
         pressed && { transform: [{ scale: 0.98 }], opacity: 0.9 },
         style,
       ]}>

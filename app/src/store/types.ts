@@ -39,6 +39,9 @@ export type Tache = {
   energieDonnee?: number;
   /** Pièces réellement données en cochant (peuvent être réduites par le plafond du jour). */
   piecesDonnees?: number;
+  /** Tâche mesurable : objectif du jour (se coche toute seule), et où on en est. */
+  mesure?: { quoi: 'candidatures' | 'relances'; objectif: number };
+  progres?: number;
 };
 
 /** Où en est une candidature. On l'enregistre à l'étape où elle se trouve vraiment (aucun ordre imposé). */
@@ -55,11 +58,15 @@ export type Candidature = {
   dateEnvoi?: string;
   /** Date de l'entretien, si prévu. */
   dateEntretien?: string;
+  /** Relance prévue (AAAA-MM-JJ), choisie à l'ajout : +1, +3 ou +5 jours après l'envoi. */
+  relancePrevue?: string;
+  /** Après un refus : ce qui a pu jouer selon toi (pour t'améliorer ; Milo s'en sert aussi). */
+  raisonRefus?: string;
   statut: StatutCandidature;
   note?: string;
   creeLe: string;
   /** Historique des changements de statut. */
-  historique: { statut: StatutCandidature; le: string }[];
+  historique: { statut: StatutCandidature; le: string; detail?: string }[];
   /** Rangée dans l'historique (jamais supprimée). */
   archivee: boolean;
   /** Recherche à laquelle appartient la candidature. */
@@ -136,36 +143,34 @@ export type Serie = {
 };
 
 /**
- * Une mission du compagnon (système miroir) : créée à partir de tes actions
- * (candidature, relance, entretien…) ou lancée pour explorer sa ville.
+ * Une aventure de Milo (ou un moment pour souffler), créée au moment où il part.
+ * Elle ne change plus ensuite, même si tu mets une candidature à jour pendant qu'il est parti.
  * Le temps est réel : `depart` et `retour` sont des heures (en millisecondes).
  */
 export type Mission = {
   id: string;
   type: TypeMission;
-  /** Candidature dont la mission est le miroir. */
+  /** Ta candidature dont l'aventure est le miroir (Milo, lui, postule dans une entreprise de sa ville). */
   candidatureId?: string;
-  /** Nom du lieu affiché (le vrai nom de l'entreprise pour une mission miroir). */
+  /** Nom du lieu affiché (une entreprise de sa ville). */
   lieu: string;
   secteur: SecteurId;
   metier: string;
-  /** Lieu de la ville (exploration) : il rejoint la « Découverte » du compagnon. */
+  /** Lieu de la ville (recherche) : il rejoint la « Découverte » du compagnon. */
   lieuId?: string;
-  /** Grande tournée (5 candidatures dans la semaine). */
-  special?: boolean;
-  /** Jour à partir duquel la mission est proposée (calendrier du compagnon). */
-  disponibleLe: string;
-  /** a-venir → en-cours (parti) → vue (résultat découvert) ; annulee si ta candidature a eu une réponse avant. */
-  statut: 'a-venir' | 'en-cours' | 'vue' | 'annulee';
+  /** Recherche du jour sous la forme « découvrir une entreprise ». */
+  decouverte?: boolean;
+  /** Entretien : il portait une tenue d'entretien achetée au Shop (et laquelle). */
+  avecTenue?: boolean;
+  tenue?: string;
+  /** en-cours (parti, ou revenu avec un récit à découvrir) → vue. */
+  statut: 'en-cours' | 'vue';
   depart?: number;
   retour?: number;
   /** Résultat tiré au départ, dévoilé seulement au retour. */
   resultat?: string;
   creeLe: string;
 };
-
-/** Une ligne du journal de la journée (« Aventure du jour »). */
-export type EntreeJournal = { id: string; le: number; icone: string; texte: string };
 
 export type Parametres = {
   notifications: boolean;
@@ -218,10 +223,8 @@ export type EtatApp = {
   aventuresDuJour: number;
   aventuresTotal: number;
   derniereAventure?: { le: string; texte: string; lieuId: string };
-  /** Missions du compagnon (passées, en cours et à venir). */
+  /** Aventures et moments du compagnon (passés et en cours). */
   missions: Mission[];
-  /** Journal des moments du compagnon (les plus récents d'abord). */
-  journal: EntreeJournal[];
   /** Lieux découverts en aventure (section « Découverte » et souvenirs de la collection). */
   decouvertes: { villeId: VilleId; lieuId: string; le: string }[];
 

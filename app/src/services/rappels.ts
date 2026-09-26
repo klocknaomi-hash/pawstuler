@@ -10,7 +10,8 @@
  *  - Relances : 7 jours après l'envoi d'une candidature restée sans réponse, à 10 h.
  *  - Essai Premium : 3 jours puis 1 jour avant la fin, à 10 h (transparence sur le prix).
  *  - Essai encore disponible : un rappel doux au plus tous les 4 jours, à 18 h, sans insister.
- *  - Retour de mission : à l'heure exacte où le compagnon rentre (il a une histoire à raconter).
+ *  - Retour d'aventure : à l'heure exacte où le compagnon rentre (il a une histoire à raconter).
+ *  - Entretien de Milo : sa demande d'entretien, la veille (penser à sa tenue), puis le jour J.
  */
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
@@ -18,8 +19,9 @@ import { Platform } from 'react-native';
 import { JOURS_ESSAI } from '@/config/abonnement';
 import { JOURS_AVANT_RELANCE } from '@/config/taches';
 import { jourDe } from '@/logique/dates';
-import { compagnonAbsent, estUnMoment } from '@/logique/missions';
-import { candidaturesActives } from '@/logique/tachesDuJour';
+import { ANNONCES_ENTRETIEN } from '@/config/missions';
+import { ajouterJours, compagnonAbsent, entrepriseDeMilo, estUnMoment, heureLisible, prochainEntretienDeMilo, remplir, tenueEntretienPossedee } from '@/logique/missions';
+import { candidaturesActives, jourDeRelance } from '@/logique/tachesDuJour';
 import { essaiDisponible } from '@/services/abonnement';
 import type { EtatApp } from '@/store/types';
 
@@ -69,7 +71,9 @@ function dateA(jour: string, plusJours: number, heure: number): Date {
 
 /** Heure à laquelle le compagnon est réveillé (on ne dérange jamais pendant son sommeil). */
 function heureEveillee(etat: EtatApp, voulue: number): number {
-  const { reveil, coucher } = etat.rythme;
+  const { reveil } = etat.rythme;
+  // Coucher à minuit (0 h) : on compte 24 h
+  const coucher = etat.rythme.coucher <= reveil ? etat.rythme.coucher + 24 : etat.rythme.coucher;
   return Math.min(Math.max(voulue, reveil), coucher - 1);
 }
 
@@ -113,13 +117,17 @@ export async function synchroniserRappels(etat: EtatApp): Promise<Autorisation> 
   // 2. Relances : 7 jours après l'envoi, si la candidature est toujours « envoyée »
   if (p.rappelsRelance) {
     const aRelancer = candidaturesActives(etat)
-      .filter((c) => c.statut === 'envoyee' && c.dateEnvoi)
+      .filter((c) => (c.statut === 'envoyee' || !!c.relancePrevue) && c.statut !== 'refus' && c.statut !== 'decroche')
       .slice(0, MAX_RELANCES);
     for (const c of aRelancer) {
+      const jour = jourDeRelance(c);
+      if (!jour) continue;
       await programmerLe(
-        dateA(c.dateEnvoi as string, JOURS_AVANT_RELANCE, heureEveillee(etat, 10)),
+        dateA(jour, 0, heureEveillee(etat, 10)),
         `Une relance pour ${c.entreprise} ?`,
-        `Ça fait ${JOURS_AVANT_RELANCE} jours que tu as postulé. Un petit message suffit, ${nom} croise les doigts avec toi.`,
+        c.relancePrevue
+          ? `C’est le jour que tu avais prévu pour relancer. Un petit message suffit, ${nom} croise les doigts avec toi.`
+          : `Ça fait ${JOURS_AVANT_RELANCE} jours que tu as postulé. Un petit message suffit, ${nom} croise les doigts avec toi.`,
       );
     }
   }
@@ -141,7 +149,20 @@ export async function synchroniserRappels(etat: EtatApp): Promise<Autorisation> 
     );
   }
 
-  // 5. Retour de mission : le compagnon rentre, son récit l'attend (même si l'app est fermée)
+  // 5. L'entretien de Milo : demande reçue, veille (sa tenue), jour J
+  const entretien = prochainEntretienDeMilo(etat);
+  if (entretien) {
+    const lieu = entrepriseDeMilo(etat, entretien.candidature);
+    const extra = { jour: 'le ' + new Date(`${entretien.le}T00:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric' }), heure: heureLisible(entretien.heure) };
+    const tenue = !!tenueEntretienPossedee(etat);
+    await programmerLe(dateA(entretien.annonceLe, 0, heureEveillee(etat, etat.rythme.reveil + 1)), `${nom} a une nouvelle 📩`, remplir(etat, ANNONCES_ENTRETIEN.annonce, lieu, extra));
+    if (ajouterJours(entretien.le, -1) > entretien.annonceLe) {
+      await programmerLe(dateA(ajouterJours(entretien.le, -1), 0, heureEveillee(etat, 18)), `Demain, ${nom} a un entretien !`, remplir(etat, tenue ? ANNONCES_ENTRETIEN.veillePret : ANNONCES_ENTRETIEN.veille, lieu, extra));
+    }
+    await programmerLe(dateA(entretien.le, 0, heureEveillee(etat, etat.rythme.reveil + 1)), `C’est le grand jour pour ${nom} 👔`, remplir(etat, ANNONCES_ENTRETIEN.jour, lieu, extra));
+  }
+
+  // 6. Retour d'aventure : le compagnon rentre, son récit l'attend (même si l'app est fermée)
   const mission = compagnonAbsent(etat);
   if (mission?.retour) {
     await programmerLe(new Date(mission.retour), `${nom} est de retour 🎒`, estUnMoment(mission) ? 'Viens voir comment s’est passé son petit moment 💛' : `Sa mission chez ${mission.lieu} est terminée. Viens découvrir ce qui s’est passé !`);

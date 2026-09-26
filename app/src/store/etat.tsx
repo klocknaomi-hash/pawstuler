@@ -13,33 +13,29 @@ import { CATALOGUE_BOUTIQUE, estPremium, objetParId } from '@/config/boutique';
 import { emailValide } from '@/config/candidatures';
 import { especeValide, type EspeceId, type Pronoms } from '@/config/compagnons';
 import { COUT, ENERGIE_PAR_TACHE, NIVEAUX_ENERGIE } from '@/config/energie';
-import { COUTS_MISSION, type TypeMoment, JOURNAL_DECROCHE, JOURNAL_REFUS, JOURS_MAX_DEPOT, PIECES_MISSION } from '@/config/missions';
+import { COUTS_MISSION, PIECES_MISSION, type TypeMoment } from '@/config/missions';
 import { OBJECTIF_SERIE_PAR_DEFAUT } from '@/config/serie';
 import { PIECES_OBJECTIF, PIECES_TACHE_PERSO, PLAFOND_PIECES_JOUR } from '@/config/taches';
 import { VILLES, type VilleId } from '@/config/villes';
-import { aventuresRestantes, lieuEmbauche } from '@/logique/compagnon';
+import { lieuEmbauche } from '@/logique/compagnon';
 import { jourDe, joursEntre, nouvelId } from '@/logique/dates';
 import { appliquerEnergie, energieDisponible, energieMax } from '@/logique/energie';
 import {
+  aventureDuJour,
   compagnonAbsent,
-  detecterSecteur,
   dureeMission,
-  grandeTourneeMeritee,
-  iconeMission,
-  journalDepart,
-  missionDansLaVille,
-  missionPourCandidature,
+  estUnMoment,
   momentDuCompagnon,
-  missionsDisponibles,
-  remplir,
+  prochainDepart,
   resultatADecouvrir,
   tirerResultat,
   titreMission,
 } from '@/logique/missions';
+import { estEndormi } from '@/logique/rythme';
 import { abonnementDuJour, aPremium } from '@/services/abonnement';
-import { candidaturesActives, emploiActuel, preparerTaches } from '@/logique/tachesDuJour';
+import { candidaturesActives, emploiActuel, preparerTaches, progresDuJour } from '@/logique/tachesDuJour';
 
-import type { Candidature, EtatApp, Mission, Parametres, StatutCandidature, TypeContrat, Utilisateur } from './types';
+import type { Candidature, EtatApp, Mission, Parametres, StatutCandidature, Tache, TypeContrat, Utilisateur } from './types';
 
 const CLE_STOCKAGE = 'pawstuler/etat/v1';
 
@@ -66,7 +62,6 @@ export const ETAT_INITIAL: EtatApp = {
   aventuresTotal: 0,
   decouvertes: [],
   missions: [],
-  journal: [],
   candidatures: [],
   inventaire: [],
   equipe: [],
@@ -78,7 +73,7 @@ export const ETAT_INITIAL: EtatApp = {
   },
 };
 
-export type NouvelleCandidature = Pick<Candidature, 'entreprise' | 'poste' | 'lien' | 'email' | 'note' | 'statut' | 'dateEnvoi'>;
+export type NouvelleCandidature = Pick<Candidature, 'entreprise' | 'poste' | 'lien' | 'email' | 'note' | 'statut' | 'dateEnvoi' | 'relancePrevue' | 'dateEntretien'>;
 
 export type Action =
   | { type: 'CHARGER'; etat: Partial<EtatApp> & { version?: number } }
@@ -105,8 +100,7 @@ export type Action =
   | { type: 'AJOUTER_TACHE'; titre: string }
   | { type: 'INTERAGIR'; moment: 'calin' | 'jeu' }
   /* Missions du compagnon (système miroir) */
-  | { type: 'LANCER_MISSION'; id: string }
-  | { type: 'EXPLORER_LA_VILLE' }
+  | { type: 'LANCER_AVENTURE' }
   | { type: 'DECOUVRIR_RESULTAT'; id: string }
   | { type: 'PRENDRE_UN_MOMENT'; moment: TypeMoment }
   /* Candidatures */
@@ -116,7 +110,14 @@ export type Action =
       id: string;
       modifs: Partial<NouvelleCandidature & { dateEntretien: string }>;
     }
-  | { type: 'CHANGER_STATUT'; id: string; statut: StatutCandidature }
+  | {
+      type: 'CHANGER_STATUT';
+      id: string;
+      statut: StatutCandidature;
+      /** Entretien : sa date. Refus : ce qui a pu jouer (facultatif). */
+      dateEntretien?: string;
+      raisonRefus?: string;
+    }
   | { type: 'ARCHIVER_CANDIDATURE'; id: string; archivee: boolean }
   /* Shop */
   | { type: 'ACHETER'; objetId: string }
@@ -176,9 +177,47 @@ function crediterDuJour(etat: EtatApp, montant: number, libelle: string): EtatAp
 }
 
 /** Coche automatiquement la première tâche du jour non faite qui correspond. */
-function validerTacheLiee(etat: EtatApp, correspond: (t: EtatApp['taches'][number]) => boolean): EtatApp {
-  const t = etat.taches.find((x) => !x.faite && correspond(x));
-  return t ? reducer(etat, { type: 'COCHER_TACHE', id: t.id }) : etat;
+/** Coche une tâche : pièces (dans le plafond du jour) et un peu d'énergie pour le compagnon. */
+function cocher(etat: EtatApp, t: Tache): EtatApp {
+  const energie = appliquerEnergie(etat, ENERGIE_PAR_TACHE);
+  const energieDonnee = energie.energie - energieDisponible(etat);
+  const gain = gainPlafonne(etat, t.pieces);
+  const coche: EtatApp = {
+    ...etat,
+    ...energie,
+    taches: etat.taches.map((x) => (x.id === t.id ? { ...x, faite: true, energieDonnee, piecesDonnees: gain } : x)),
+    modelesFaits: t.modeleId && !etat.modelesFaits.includes(t.modeleId) ? [...etat.modelesFaits, t.modeleId] : etat.modelesFaits,
+  };
+  return crediterDuJour(coche, gain, gain < t.pieces ? `${t.titre} (plafond du jour)` : t.titre);
+}
+
+/** Décoche une tâche : la récompense réellement donnée est reprise. */
+function decocher(etat: EtatApp, t: Tache): EtatApp {
+  const decoche: EtatApp = {
+    ...etat,
+    ...appliquerEnergie(etat, -(t.energieDonnee ?? 0)),
+    taches: etat.taches.map((x) => (x.id === t.id ? { ...x, faite: false, energieDonnee: 0, piecesDonnees: 0 } : x)),
+  };
+  return crediterDuJour(decoche, -(t.piecesDonnees ?? t.pieces), `Tâche décochée : ${t.titre}`);
+}
+
+/**
+ * Tâches mesurables : leur progression suit tes vraies données du jour (candidatures enregistrées,
+ * relances notées). L'objectif atteint coche la tâche toute seule.
+ */
+function synchroniserTaches(etat: EtatApp): EtatApp {
+  const jour = jourDe();
+  let suite = etat;
+  for (const t of etat.taches) {
+    if (!t.mesure) continue;
+    const progres = progresDuJour(suite, t, jour);
+    const actuelle = suite.taches.find((x) => x.id === t.id)!;
+    if (progres !== actuelle.progres) suite = { ...suite, taches: suite.taches.map((x) => (x.id === t.id ? { ...x, progres } : x)) };
+    const aJour = suite.taches.find((x) => x.id === t.id)!;
+    if (progres >= t.mesure.objectif && !aJour.faite) suite = cocher(suite, aJour);
+    else if (progres < t.mesure.objectif && aJour.faite) suite = decocher(suite, aJour);
+  }
+  return suite;
 }
 
 /**
@@ -220,16 +259,13 @@ function convertirStatut(statut: string): StatutCandidature {
   return statut as StatutCandidature;
 }
 
-/** Ajoute une ligne au journal du compagnon (« Aventure du jour »). */
-function noterJournal(etat: EtatApp, icone: string, texte: string): EtatApp {
-  const entree = { id: nouvelId(), le: Date.now(), icone, texte };
-  return { ...etat, journal: [entree, ...etat.journal].slice(0, 150) };
-}
-
-/** Fait partir le compagnon en mission (énergie dépensée, résultat tiré, retour calculé en heure réelle). */
+/**
+ * Fait partir le compagnon (énergie dépensée, résultat tiré, retour calculé en heure réelle).
+ * L'aventure est figée à cet instant : la mettre à jour plus tard ne la change pas.
+ */
 function partirEnMission(etat: EtatApp, mission: Mission): EtatApp {
   const cout = COUTS_MISSION[mission.type];
-  if (energieDisponible(etat) < cout || compagnonAbsent(etat) || resultatADecouvrir(etat)) return etat;
+  if (energieDisponible(etat) < cout || compagnonAbsent(etat) || resultatADecouvrir(etat) || estEndormi(etat.rythme)) return etat;
   const depart = Date.now();
   const partie: Mission = {
     ...mission,
@@ -238,67 +274,22 @@ function partirEnMission(etat: EtatApp, mission: Mission): EtatApp {
     retour: depart + dureeMission(mission),
     resultat: tirerResultat(etat, mission),
   };
-  const avec: EtatApp = {
+  return {
     ...etat,
     ...appliquerEnergie(etat, -cout),
-    missions: etat.missions.some((m) => m.id === mission.id)
-      ? etat.missions.map((m) => (m.id === mission.id ? partie : m))
-      : [partie, ...etat.missions],
-    // L'exploration de la ville (ou la journée de travail) compte comme l'aventure du jour (1 par jour en gratuit, 3 en Premium)
-    ...((mission.type === 'recherche' || mission.type === 'travail') && !mission.special
-      ? {
-          aventuresDuJour: etat.aventuresDuJour + 1,
-          aventuresTotal: etat.aventuresTotal + 1,
-        }
-      : {}),
+    missions: [partie, ...etat.missions],
+    // Les aventures comptent dans le quota du jour (pas les moments pour souffler)
+    ...(!estUnMoment(mission) ? { aventuresDuJour: etat.aventuresDuJour + 1, aventuresTotal: etat.aventuresTotal + 1 } : {}),
   };
-  return noterJournal(avec, iconeMission(mission), journalDepart(etat, mission));
 }
 
-/** Missions miroir d'une candidature qui vient d'être enregistrée ou de changer d'étape. */
-function missionsMiroir(etat: EtatApp, c: Candidature, statut: StatutCandidature, nouvelle: boolean): EtatApp {
-  const aujourdhui = jourDe();
-  const enAttente = (m: Mission) => m.candidatureId === c.id && m.statut === 'a-venir';
-  const ajouter = (m: Mission) => ({
-    ...etat,
-    missions: [...etat.missions, m],
-  });
-  switch (statut) {
-    case 'envoyee':
-      // Une vieille candidature reprise d'un tableau ne fait pas partir le compagnon
-      if (!nouvelle || joursEntre(c.dateEnvoi ?? aujourdhui, aujourdhui) > JOURS_MAX_DEPOT) return etat;
-      return ajouter(missionPourCandidature(etat, c, 'depot'));
-    case 'relancee':
-      return ajouter(missionPourCandidature(etat, c, 'relance'));
-    case 'entretien': {
-      // L'entretien du compagnon a lieu le jour du tien (ou aujourd'hui si la date n'est pas connue)
-      const jour = c.dateEntretien && c.dateEntretien > aujourdhui ? c.dateEntretien : aujourdhui;
-      const sans = {
-        ...etat,
-        missions: etat.missions.map((m) => (enAttente(m) ? { ...m, statut: 'annulee' as const } : m)),
-      };
-      return {
-        ...sans,
-        missions: [...sans.missions, missionPourCandidature(sans, c, 'entretien', jour)],
-      };
-    }
-    case 'refus':
-    case 'decroche': {
-      // Le compagnon suit ton vrai parcours : ses missions en attente pour ce lieu s'arrêtent
-      const sans = {
-        ...etat,
-        missions: etat.missions.map((m) => (enAttente(m) ? { ...m, statut: 'annulee' as const } : m)),
-      };
-      const lieu = {
-        lieu: c.entreprise,
-        metier: c.poste,
-        secteur: detecterSecteur(c.entreprise, c.poste),
-      };
-      return statut === 'refus'
-        ? noterJournal(sans, '🌱', remplir(etat, JOURNAL_REFUS, lieu))
-        : noterJournal(sans, '💼', remplir(etat, JOURNAL_DECROCHE, lieu));
-    }
+/** Ce que l'historique garde en plus : date de l'entretien, raison du refus. */
+function detailHistorique(action: { statut: StatutCandidature; dateEntretien?: string; raisonRefus?: string }): { detail?: string } {
+  if (action.statut === 'entretien' && action.dateEntretien) {
+    return { detail: `prévu le ${new Date(`${action.dateEntretien}T00:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}` };
   }
+  if (action.statut === 'refus' && action.raisonRefus) return { detail: `« ${action.raisonRefus} »` };
+  return {};
 }
 
 const nouvelleRecherche = () => ({ id: nouvelId(), debut: jourDe() });
@@ -306,6 +297,9 @@ const nouvelleRecherche = () => ({ id: nouvelId(), debut: jourDe() });
 /** Met à jour les anciennes sauvegardes (version 1) vers le modèle actuel. */
 function migrer(brut: Partial<EtatApp> & { version?: number }): EtatApp {
   const etat = { ...ETAT_INITIAL, ...brut, version: 2 } as EtatApp;
+  // Anciennes missions en file d'attente (avant le calendrier de Milo) : on ne garde que les vraies aventures
+  etat.missions = etat.missions.filter((m) => m.statut === 'en-cours' || m.statut === 'vue');
+  delete (etat as { journal?: unknown }).journal;
   if (etat.compagnon && !especeValide(etat.compagnon.espece)) etat.compagnon = { ...etat.compagnon, espece: 'renard' };
   if (etat.villeId && !VILLES.some((v) => v.id === etat.villeId)) etat.villeId = 'clairebourg';
   if (etat.onboardingTermine && etat.recherches.length === 0) etat.recherches = [nouvelleRecherche()];
@@ -451,43 +445,30 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
       if (compte.jourTaches === action.jour) return compte;
       // Nouveau jour : tâches renouvelées, nouvelle aventure possible.
       // L'énergie, elle, suit sa propre recharge en temps réel (5 h en gratuit, 3 h en Premium).
-      return {
+      return synchroniserTaches({
         ...compte,
         taches: preparerTaches(compte, action.jour),
         jourTaches: action.jour,
         aventuresDuJour: 0,
         piecesDuJour: 0,
-      };
+      });
     }
     case 'COCHER_TACHE': {
+      // Les tâches mesurables se cochent toutes seules (on ne fabrique pas une progression)
       const t = etat.taches.find((x) => x.id === action.id);
-      if (!t || t.faite) return etat;
-      const energie = appliquerEnergie(etat, ENERGIE_PAR_TACHE);
-      const energieDonnee = energie.energie - energieDisponible(etat);
-      const gain = gainPlafonne(etat, t.pieces);
-      const coche: EtatApp = {
-        ...etat,
-        ...energie,
-        taches: etat.taches.map((x) => (x.id === t.id ? { ...x, faite: true, energieDonnee, piecesDonnees: gain } : x)),
-        modelesFaits: t.modeleId && !etat.modelesFaits.includes(t.modeleId) ? [...etat.modelesFaits, t.modeleId] : etat.modelesFaits,
-      };
-      return crediterDuJour(coche, gain, gain < t.pieces ? `${t.titre} (plafond du jour)` : t.titre);
+      if (!t || t.faite || t.mesure) return etat;
+      return cocher(etat, t);
     }
     case 'DECOCHER_TACHE': {
       // On fait confiance à l'utilisateur : décocher reprend simplement la récompense.
       const t = etat.taches.find((x) => x.id === action.id);
-      if (!t || !t.faite) return etat;
-      const decoche: EtatApp = {
-        ...etat,
-        ...appliquerEnergie(etat, -(t.energieDonnee ?? 0)),
-        taches: etat.taches.map((x) => (x.id === t.id ? { ...x, faite: false, energieDonnee: 0, piecesDonnees: 0 } : x)),
-      };
-      return crediterDuJour(decoche, -(t.piecesDonnees ?? t.pieces), `Tâche décochée : ${t.titre}`);
+      if (!t || !t.faite || t.mesure) return etat;
+      return decocher(etat, t);
     }
     case 'SUPPRIMER_TACHE': {
       const t = etat.taches.find((x) => x.id === action.id);
       if (!t) return etat;
-      const sans = reducer(etat, { type: 'DECOCHER_TACHE', id: t.id });
+      const sans = t.faite ? decocher(etat, t) : etat;
       return { ...sans, taches: sans.taches.filter((x) => x.id !== t.id) };
     }
     case 'AJOUTER_TACHE':
@@ -507,20 +488,16 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
     case 'INTERAGIR': {
       const cout = COUT[action.moment];
       if (energieDisponible(etat) < cout || compagnonAbsent(etat)) return etat;
-      const fait = { ...etat, ...appliquerEnergie(etat, -cout) };
-      return action.moment === 'calin'
-        ? noterJournal(fait, '❤️', remplir(etat, 'Tu as fait un câlin à {nom}.'))
-        : noterJournal(fait, '⚽', remplir(etat, '{nom} a joué au ballon.'));
+      return { ...etat, ...appliquerEnergie(etat, -cout) };
     }
     /* ----- Missions du compagnon ----- */
-    case 'LANCER_MISSION': {
-      // Seules les missions proposées aujourd'hui peuvent partir (2 missions miroir par jour au plus)
-      const m = missionsDisponibles(etat).find((x) => x.id === action.id);
-      return m ? partirEnMission(etat, m) : etat;
+    case 'LANCER_AVENTURE': {
+      // Quota (1 par jour, ou 3 avec 3 h d'écart en Premium) et heure de son entretien
+      const maintenant = Date.now();
+      if (prochainDepart(etat, maintenant) !== null) return etat;
+      const { mission, pasAvant } = aventureDuJour(etat, maintenant);
+      return pasAvant ? etat : partirEnMission(etat, mission);
     }
-    case 'EXPLORER_LA_VILLE':
-      if (aventuresRestantes(etat) === 0) return etat;
-      return partirEnMission(etat, missionDansLaVille(etat));
     case 'PRENDRE_UN_MOMENT':
       return partirEnMission(etat, momentDuCompagnon(etat, action.moment));
     case 'DECOUVRIR_RESULTAT': {
@@ -531,7 +508,7 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
         ...etat,
         missions: etat.missions.map((x) => (x.id === m.id ? { ...x, statut: 'vue' } : x)),
         // Exploration : premier passage dans un lieu → « Découverte » et souvenir
-        ...(m.lieuId && etat.villeId
+        ...(m.type === 'recherche' && m.lieuId && etat.villeId
           ? {
               derniereAventure: {
                 le: aujourdhui,
@@ -546,7 +523,7 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
       };
       // Les moments pour souffler (repos, baignade) ne rapportent pas de pièces
       if (PIECES_MISSION[m.type] === 0) return vue;
-      return crediterDuJour(vue, gainPlafonne(etat, PIECES_MISSION[m.type]), `Mission : ${titreMission(etat, m)}`);
+      return crediterDuJour(vue, gainPlafonne(etat, PIECES_MISSION[m.type]), `Aventure : ${titreMission(etat, m)}`);
     }
 
     /* ----- Candidatures ----- */
@@ -567,43 +544,17 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
         archivee: false,
         rechercheId,
       };
-      let avec: EtatApp = { ...etat, candidatures: [c, ...etat.candidatures] };
-      // Le compagnon vit sa propre version de cette candidature (dépôt, relance ou entretien)
-      avec = missionsMiroir(avec, c, c.statut, true);
-      // 5 candidatures dans la semaine : une grande tournée de la ville en récompense
-      if (grandeTourneeMeritee(avec))
-        avec = {
-          ...avec,
-          missions: [...avec.missions, missionDansLaVille(avec, true)],
-        };
+      // Milo ne part pas tout de suite : ta candidature rejoint le calendrier de ses aventures
+      const avec: EtatApp = { ...etat, candidatures: [c, ...etat.candidatures] };
       // Pas de double saisie : une candidature envoyée aujourd'hui valide la tâche « Envoyer une candidature »
-      return c.statut === 'envoyee' && dateEnvoi === aujourdhui
-        ? validerTacheLiee(avec, (t) => t.modeleId === 'envoi' || t.modeleId === 'spontanee')
-        : avec;
+      // Pas de double saisie : les tâches « Envoyer X candidatures » avancent toutes seules
+      return synchroniserTaches(avec);
     }
-    case 'MODIFIER_CANDIDATURE': {
-      const modifiee = {
-        ...etat.candidatures.find((c) => c.id === action.id),
-        ...action.modifs,
-      } as Candidature;
+    case 'MODIFIER_CANDIDATURE':
       return {
         ...etat,
         candidatures: etat.candidatures.map((c) => (c.id === action.id ? { ...c, ...action.modifs } : c)),
-        // Les missions à venir suivent : nouveau nom d'entreprise, nouvelle date d'entretien
-        missions: etat.missions.map((m) =>
-          m.candidatureId === action.id && m.statut === 'a-venir'
-            ? {
-                ...m,
-                lieu: modifiee.entreprise,
-                metier: modifiee.poste,
-                secteur: detecterSecteur(modifiee.entreprise, modifiee.poste),
-                disponibleLe:
-                  m.type === 'entretien' && modifiee.dateEntretien && modifiee.dateEntretien >= jourDe() ? modifiee.dateEntretien : m.disponibleLe,
-              }
-            : m,
-        ),
       };
-    }
     case 'CHANGER_STATUT': {
       const avant = etat.candidatures.find((c) => c.id === action.id);
       if (!avant || avant.statut === action.statut) return etat;
@@ -615,17 +566,17 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
                 ...c,
                 statut: action.statut,
                 dateEnvoi: action.statut === 'envoyee' && !c.dateEnvoi ? jourDe() : c.dateEnvoi,
-                historique: [...c.historique, { statut: action.statut, le: jourDe() }],
+                ...(action.dateEntretien ? { dateEntretien: action.dateEntretien } : {}),
+                ...(action.raisonRefus ? { raisonRefus: action.raisonRefus } : {}),
+                historique: [...c.historique, { statut: action.statut, le: jourDe(), ...detailHistorique(action) }],
               }
             : c,
         ),
       };
-      // Miroir : ta relance, ton entretien, ta réponse deviennent une étape de la vie du compagnon
-      const miroir = missionsMiroir(apres, { ...avant, statut: action.statut }, action.statut, false);
-      if (action.statut === 'envoyee') return validerTacheLiee(miroir, (t) => t.modeleId === 'envoi' || t.modeleId === 'spontanee');
-      if (action.statut === 'relancee')
-        return validerTacheLiee(miroir, (t) => t.candidatureId === action.id || (t.modeleId === 'relance' && !t.candidatureId));
-      return miroir;
+      // Miroir : Milo vivra cette étape plus tard, avec son décalage (calendrier des aventures)
+      const miroir = apres;
+      // Les tâches de relance avancent toutes seules
+      return synchroniserTaches(miroir);
     }
     case 'ARCHIVER_CANDIDATURE':
       return {

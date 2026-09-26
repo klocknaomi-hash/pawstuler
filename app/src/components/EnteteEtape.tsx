@@ -7,7 +7,7 @@ import { couleurs } from '@/config/theme';
 
 import { Progression } from './base';
 
-export const TOTAL_ETAPES = 7;
+export const TOTAL_ETAPES = 8;
 
 export function EnteteEtape({ etape, retour = true }: { etape: number; retour?: boolean }) {
   return (

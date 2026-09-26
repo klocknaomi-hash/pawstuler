@@ -1,16 +1,16 @@
 /**
- * MISSION DU COMPAGNON (« Aventure du jour »)
- * Un seul écran pour toute la vie d'une mission, en temps réel :
- *  1. Présentation : où il va, pourquoi (en miroir de ta candidature), durée, énergie → « Envoyer {nom} ».
- *  2. En route : « {nom} est chez X · Retour à 20 h 16 », avec le compte à rebours (l'app peut être fermée).
- *  3. Retour : on découvre ce qu'il a vécu, et les pièces qu'il rapporte.
- * Animations : au départ, il s'en va avec ce qu'il emporte ; pendant la mission, le trajet en temps réel
- * (aller, il entre dans le lieu et disparaît, retour) ; au retour, il revient en courant.
- * Ouverture : `/aventure?id=<mission>` (mission miroir), `/aventure?explorer=1` (explorer la ville),
- * `/aventure?moment=repos|baignade` (moment pour souffler), ou `/aventure` tout court (mission en cours).
+ * L'AVENTURE DU JOUR DE MILO
+ * Un seul écran pour toute la vie d'une aventure, en temps réel :
+ *  1. Présentation : ce que Milo va faire (choisi d'après ton parcours à cet instant), durée, énergie.
+ *     Si ce n'est pas possible maintenant, on dit simplement pourquoi (il dort, nouvelle aventure demain,
+ *     prochaine aventure à 14 h 43 en Premium, son entretien est à 11 h 30, pas assez d'énergie).
+ *  2. Départ : il s'en va avec ce qu'il emporte.
+ *  3. Pendant : la scène animée raconte ce qu'il fait (rue, téléphone, entretien…), « Retour à 11 h 05 ».
+ *  4. Retour : d'abord son récit et sa récompense, puis, plus discret, quand il pourra repartir.
+ * Une aventure lancée ne change plus, même si tu mets une candidature à jour pendant ce temps.
+ * Ouverture : `/aventure` (l'aventure du jour) ou `/aventure?moment=repos|baignade` (moment pour souffler).
  */
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -19,51 +19,54 @@ import Animated, { Easing, FadeIn, SlideInLeft, useAnimatedStyle, useSharedValue
 import { Bouton, Ecran, Texte, Titre } from '@/components/base';
 import { Compagnon } from '@/components/Compagnon';
 import { IconePiece } from '@/components/Pieces';
-import { phaseTrajet, Trajet } from '@/components/Trajet';
+import { SceneAventure } from '@/components/SceneAventure';
+import { objetParId } from '@/config/boutique';
 import { accorder, type EspeceId } from '@/config/compagnons';
 import { AVENTURES_PAR_JOUR } from '@/config/energie';
-import { BOUTON_DEPART, COUTS_MISSION, DUREES_MINUTES, MOMENTS, OBJET_EMPORTE, PIECES_MISSION, type TypeMoment } from '@/config/missions';
+import { BOUTON_DEPART, COUTS_MISSION, DUREES_MINUTES, HEURES_ENTRE_AVENTURES_PREMIUM, MOMENTS, OBJET_EMPORTE, PIECES_MISSION, type TypeMoment } from '@/config/missions';
 import { arrondis, couleurs, espace, ombre } from '@/config/theme';
-import { villeParId } from '@/config/villes';
 import { useMaintenant } from '@/hooks/useMaintenant';
 import { imageVille } from '@/illustrations/registre';
-import { aventuresRestantes } from '@/logique/compagnon';
 import { dureeLisible, energieDisponible, tempsAvantRecharge } from '@/logique/energie';
 import {
+  aventureDuJour,
   compagnonAbsent,
   dureeMission,
+  estUnMoment,
   heureLisible,
   iconeMission,
-  missionDansLaVille,
-  estUnMoment,
   missionEnCours,
-  missionsDisponibles,
   momentDuCompagnon,
   ouEst,
-  pendantMission,
   presentationMission,
+  prochainDepart,
   remplir,
   titreMission,
 } from '@/logique/missions';
 import { estEndormi } from '@/logique/rythme';
 import { aPremium } from '@/services/abonnement';
 import { gainPlafonne, useApp } from '@/store/etat';
-import type { Mission } from '@/store/types';
+import type { EtatApp, Mission } from '@/store/types';
+
+/** Le décor de la scène : la rue pour les aventures en ville, le lac pour souffler, un coin calme pour téléphoner. */
+function decorDe(etat: EtatApp, m: Mission) {
+  const ville = etat.villeId ?? 'clairebourg';
+  if (m.type === 'repos' || m.type === 'baignade') return imageVille(ville, 'portrait');
+  if (m.type === 'relance' || m.type === 'refus') return imageVille(ville, 'paysage');
+  return imageVille(ville, 'centre');
+}
 
 export default function Aventure() {
-  const { id, explorer, moment } = useLocalSearchParams<{ id?: string; explorer?: string; moment?: string }>();
+  const { moment } = useLocalSearchParams<{ moment?: string }>();
   const { etat, dispatch } = useApp();
   const maintenant = useMaintenant();
-  // Le résultat découvert sur cet écran (et les pièces réellement gagnées, plafond compris)
-  const [decouvert, setDecouvert] = useState<{
-    id: string;
-    pieces: number;
-  } | null>(null);
-  // Aperçu de l'exploration ou du moment, figé à l'ouverture de l'écran
-  const [exploration] = useState<Mission | null>(() =>
-    explorer === '1' ? missionDansLaVille(etat) : MOMENTS.includes(moment as TypeMoment) ? momentDuCompagnon(etat, moment as TypeMoment) : null,
+  // Le récit découvert sur cet écran (et les pièces réellement gagnées, plafond compris)
+  const [decouvert, setDecouvert] = useState<{ id: string; pieces: number } | null>(null);
+  // Moment pour souffler demandé depuis l'accueil (figé à l'ouverture)
+  const [momentChoisi] = useState<Mission | null>(() =>
+    MOMENTS.includes(moment as TypeMoment) ? momentDuCompagnon(etat, moment as TypeMoment) : null,
   );
-  // Animation de départ en cours (le compagnon s'en va avec ce qu'il emporte)
+  // Animation de départ en cours (il s'en va avec ce qu'il emporte)
   const [partant, setPartant] = useState<Mission | null>(null);
   useEffect(() => {
     if (!partant) return;
@@ -72,40 +75,34 @@ export default function Aventure() {
   }, [partant]);
 
   if (!etat.compagnon || !etat.villeId) return null;
-  const ville = villeParId(etat.villeId);
-  const nom = etat.compagnon.nom;
-  const decor = imageVille(ville.id, 'paysage');
+  const compagnon = etat.compagnon;
+  const nom = compagnon.nom;
   const fermer = () => router.back();
-  const accord = (texte: string) => accorder(texte, etat.compagnon?.pronoms);
+  const accord = (texte: string) => accorder(texte, compagnon.pronoms);
 
   const enCours = missionEnCours(etat);
   const vue = decouvert ? etat.missions.find((m) => m.id === decouvert.id) : undefined;
 
-  /* 3. Résultat découvert */
+  /* 4. Retour : d'abord le récit et la récompense, puis (discret) quand il pourra repartir */
   if (vue && decouvert) {
+    const depart = prochainDepart(etat, maintenant);
+    const suite = estUnMoment(vue)
+      ? null
+      : depart === 'demain'
+        ? 'Une nouvelle aventure sera possible demain.'
+        : typeof depart === 'number'
+          ? `Prochaine aventure possible à ${heureLisible(depart)}.`
+          : 'Une autre aventure est possible aujourd’hui.';
     return (
-      <Ecran
-        defilant
-        bas={
-          <>
-            <Bouton titre="Retour à l’accueil" onPress={fermer} />
-            {(vue.type === 'recherche' || vue.type === 'travail') && aventuresRestantes(etat) === 0 && !aPremium(etat) && (
-              <Bouton
-                titre={`Avec Premium : jusqu’à ${AVENTURES_PAR_JOUR.premium} explorations par jour`}
-                variante="texte"
-                onPress={() => router.replace('/premium')}
-              />
-            )}
-          </>
-        }>
+      <Ecran defilant bas={<Bouton titre="Retour à l’accueil" onPress={fermer} />}>
         <Fermer onPress={fermer} />
         <View style={styles.centre}>
           <Compagnon
-            espece={etat.compagnon.espece}
-            pose={vue.type === 'entretien' ? 'fier' : 'content'}
+            espece={compagnon.espece}
+            pose={vue.type === 'refus' ? 'reconfort' : vue.type === 'entretien' ? 'fier' : 'content'}
             taille={170}
             reaction={1}
-            equipe={etat.equipe}
+            equipe={vue.type === 'entretien' && vue.tenue ? [vue.tenue] : etat.equipe}
           />
           <Titre style={styles.texteCentre}>{accord(`${nom} est rentré{e} !`)}</Titre>
         </View>
@@ -114,59 +111,60 @@ export default function Aventure() {
             {iconeMission(vue)} {vue.lieu}
           </Text>
           <Text style={styles.recit}>{vue.resultat}</Text>
-          {estUnMoment(vue) ? (
-            <View style={styles.recompense}>
+          <View style={styles.recompense}>
+            {estUnMoment(vue) ? (
               <Text style={styles.recompenseTexte}>{accord('💛 Un moment rien que pour {lui}.')}</Text>
-            </View>
-          ) : (
-            <View style={styles.recompense}>
-              <IconePiece taille={20} />
-              <Text style={styles.recompenseTexte}>
-                {decouvert.pieces > 0 ? `+${decouvert.pieces} pièces rapportées` : 'Plafond de pièces atteint aujourd’hui, mais quelle aventure !'}
-              </Text>
-            </View>
-          )}
+            ) : (
+              <>
+                <IconePiece taille={20} />
+                <Text style={styles.recompenseTexte}>
+                  {decouvert.pieces > 0 ? `+${decouvert.pieces} pièces rapportées` : 'Plafond de pièces atteint aujourd’hui, mais quelle aventure !'}
+                </Text>
+              </>
+            )}
+          </View>
         </Animated.View>
+        {suite && <Text style={styles.suite}>{suite}</Text>}
+        {depart === 'demain' && !estUnMoment(vue) && !aPremium(etat) && (
+          <Pressable onPress={() => router.replace('/premium')} accessibilityRole="button">
+            <Text style={styles.lien}>Avec Premium : jusqu’à {AVENTURES_PAR_JOUR.premium} aventures par jour</Text>
+          </Pressable>
+        )}
       </Ecran>
     );
   }
 
-  /* Départ : il s'en va, avec ce qu'il emporte */
+  /* 2. Départ : il s'en va, avec ce qu'il emporte */
   if (partant) {
     return (
       <Ecran fond={couleurs.ciel} style={styles.centre}>
-        {decor && <Image source={decor} style={[StyleSheet.absoluteFill, { opacity: 0.35 }]} contentFit="cover" />}
-        <Depart espece={etat.compagnon.espece} equipe={etat.equipe} objet={OBJET_EMPORTE[partant.type]} />
-        <Titre style={styles.texteCentre}>{partant.type === 'repos' ? 'Bonne sieste !' : 'Bonne route !'}</Titre>
+        <Depart
+          espece={compagnon.espece}
+          equipe={partant.type === 'entretien' && partant.tenue ? [partant.tenue] : etat.equipe}
+          objet={OBJET_EMPORTE[partant.type]}
+        />
+        <Titre style={styles.texteCentre}>{partant.type === 'repos' ? 'Bonne sieste !' : partant.type === 'entretien' ? 'Bonne chance !' : 'Bonne route !'}</Titre>
         <Texte style={styles.texteCentre}>{titreMission(etat, partant)}</Texte>
       </Ecran>
     );
   }
 
-  /* 2. Mission en cours : en route, ou déjà revenu avec un résultat à découvrir */
+  /* 3. Pendant l'aventure, ou revenu avec un récit à découvrir */
   if (enCours?.retour) {
     const absent = compagnonAbsent(etat, maintenant);
     const decouvrir = () => {
-      setDecouvert({
-        id: enCours.id,
-        pieces: gainPlafonne(etat, PIECES_MISSION[enCours.type]),
-      });
+      setDecouvert({ id: enCours.id, pieces: gainPlafonne(etat, PIECES_MISSION[enCours.type]) });
       dispatch({ type: 'DECOUVRIR_RESULTAT', id: enCours.id });
     };
     return (
       <Ecran
         fond={couleurs.ciel}
         style={styles.centre}
-        bas={
-          absent ? <Bouton titre="D’accord, à tout à l’heure !" onPress={fermer} /> : <Bouton titre="Découvrir son aventure" onPress={decouvrir} />
-        }>
-        {decor && <Image source={decor} style={[StyleSheet.absoluteFill, { opacity: 0.35 }]} contentFit="cover" />}
+        bas={absent ? <Bouton titre="D’accord, à tout à l’heure !" onPress={fermer} /> : <Bouton titre="Découvrir son aventure" onPress={decouvrir} />}>
         <Fermer onPress={fermer} flottant />
         {absent ? (
           <>
-            <View style={styles.trajet}>
-              <Trajet mission={enCours} espece={etat.compagnon.espece} equipe={etat.equipe} taille={84} />
-            </View>
+            <SceneAventure mission={enCours} espece={compagnon.espece} equipe={etat.equipe} decor={decorDe(etat, enCours)} hauteur={300} taille={96} />
             <Titre style={styles.texteCentre}>{ouEst(etat, enCours)}</Titre>
             <View style={styles.pastille}>
               <Ionicons name="time-outline" size={18} color={couleurs.brun} />
@@ -174,56 +172,45 @@ export default function Aventure() {
                 Retour à {heureLisible(enCours.retour)} · dans {dureeLisible(Math.min(enCours.retour - maintenant, dureeMission(enCours)))}
               </Text>
             </View>
-            <Texte style={styles.texteCentre}>{etapeDuTrajet(etat, enCours, maintenant)}</Texte>
             <Texte style={styles.texteCentre}>Tu peux fermer l’app : tu seras prévenu à son retour.</Texte>
           </>
         ) : (
           <>
             {/* Retour : il arrive en courant */}
             <Animated.View entering={SlideInLeft.duration(1200)}>
-              <Compagnon espece={etat.compagnon.espece} pose="excite" taille={170} reaction={1} equipe={etat.equipe} />
+              <Compagnon espece={compagnon.espece} pose="excite" taille={170} reaction={1} equipe={etat.equipe} />
             </Animated.View>
             <Titre style={styles.texteCentre}>{nom} est de retour !</Titre>
-            <Texte style={styles.texteCentre}>
-              {iconeMission(enCours)} {titreMission(etat, enCours)}
-            </Texte>
           </>
         )}
       </Ecran>
     );
   }
 
-  /* 1. Présentation d'une mission avant le départ */
-  const mission = exploration ?? missionsDisponibles(etat).find((m) => m.id === id);
-  if (!mission) {
-    return (
-      <Ecran style={styles.centre} bas={<Bouton titre="Retour à l’accueil" onPress={fermer} />}>
-        <Fermer onPress={fermer} flottant />
-        <Compagnon espece={etat.compagnon.espece} pose="neutre" taille={150} equipe={etat.equipe} />
-        <Titre style={styles.texteCentre}>Pas de mission pour l’instant</Titre>
-        <Texte style={styles.texteCentre}>Chaque candidature, relance ou entretien que tu notes donne une mission à {nom}.</Texte>
-      </Ecran>
-    );
-  }
-
+  /* 1. Présentation, avant le départ */
+  const { mission, pasAvant } = momentChoisi ? { mission: momentChoisi, pasAvant: undefined } : aventureDuJour(etat, maintenant);
   const cout = COUTS_MISSION[mission.type];
   const energie = energieDisponible(etat, maintenant);
   const recharge = tempsAvantRecharge(etat, maintenant);
-  const dort = estEndormi(etat.rythme);
-  const plusDExploration = !!exploration && !estUnMoment(exploration) && aventuresRestantes(etat) === 0;
-  const empechement = dort
+  const depart = momentChoisi ? null : prochainDepart(etat, maintenant);
+  const empechement = estEndormi(etat.rythme)
     ? `${nom} dort. On verra ça à son réveil.`
-    : plusDExploration
-      ? 'Nouvelle exploration demain.'
-      : energie < cout
-        ? accord(
-            `${nom} a besoin de ${cout} ⚡ pour partir ({il} en a ${energie}).${recharge != null ? ` Recharge complète dans ${dureeLisible(recharge)}.` : ''} Chaque tâche terminée lui en redonne.`,
-          )
-        : null;
+    : depart === 'demain'
+      ? 'Nouvelle aventure demain.'
+      : typeof depart === 'number'
+        ? `Prochaine aventure possible à ${heureLisible(depart)} (${HEURES_ENTRE_AVENTURES_PREMIUM} h entre deux départs).`
+        : pasAvant
+          ? `Son entretien est à ${heureLisible(pasAvant)} : reviens à ce moment-là pour l’encourager !`
+          : energie < cout
+            ? accord(
+                `${nom} a besoin de ${cout} ⚡ pour partir ({il} en a ${energie}).${recharge != null ? ` Recharge complète dans ${dureeLisible(recharge)}.` : ''} Chaque tâche terminée lui en redonne.`,
+              )
+            : null;
+  const tenue = mission.type === 'entretien' && mission.tenue ? objetParId(mission.tenue) : undefined;
 
   const envoyer = () => {
-    if (exploration && estUnMoment(exploration)) dispatch({ type: 'PRENDRE_UN_MOMENT', moment: exploration.type as TypeMoment });
-    else dispatch(exploration ? { type: 'EXPLORER_LA_VILLE' } : { type: 'LANCER_MISSION', id: mission.id });
+    if (momentChoisi) dispatch({ type: 'PRENDRE_UN_MOMENT', moment: momentChoisi.type as TypeMoment });
+    else dispatch({ type: 'LANCER_AVENTURE' });
     setPartant(mission);
   };
 
@@ -231,7 +218,7 @@ export default function Aventure() {
     <Ecran defilant bas={<Bouton titre={remplir(etat, BOUTON_DEPART[mission.type])} onPress={envoyer} desactive={!!empechement} />}>
       <Fermer onPress={fermer} />
       <View style={styles.centre}>
-        <Compagnon espece={etat.compagnon.espece} pose="aventure" taille={160} promenade equipe={etat.equipe} />
+        <Compagnon espece={compagnon.espece} pose="aventure" taille={160} promenade equipe={tenue ? [tenue.id] : etat.equipe} />
         <Titre style={styles.texteCentre}>{titreMission(etat, mission)}</Titre>
       </View>
       <View style={styles.carte}>
@@ -245,17 +232,19 @@ export default function Aventure() {
           {PIECES_MISSION[mission.type] > 0 && <Info icone="ellipse-outline" texte={`+${PIECES_MISSION[mission.type]} pièces`} />}
         </View>
       </View>
+      {/* Entretien : sa tenue (achetée au Shop), jamais obligatoire */}
+      {mission.type === 'entretien' &&
+        (tenue ? (
+          <Text style={styles.tenue}>👔 {accord(`{Il} portera sa tenue : ${tenue.nom}.`)}</Text>
+        ) : (
+          <Pressable onPress={() => router.push('/boutique')} accessibilityRole="button" style={styles.tenueManquante}>
+            <Text style={styles.tenue}>{accord(`👔 ${nom} n’a pas encore de tenue d’entretien. {Il} ira dans sa tenue de tous les jours…`)}</Text>
+            <Text style={styles.lien}>Voir les tenues au Shop ›</Text>
+          </Pressable>
+        ))}
       {empechement && <Texte style={styles.texteCentre}>{empechement}</Texte>}
     </Ecran>
   );
-}
-
-/** La phrase du moment, selon l'étape du trajet. */
-function etapeDuTrajet(etat: Parameters<typeof pendantMission>[0], m: Mission, maintenant: number): string {
-  const { phase } = phaseTrajet(m, maintenant);
-  if (phase === 'aller') return remplir(etat, m.type === 'repos' ? '{nom} rentre à la maison…' : '{nom} est en route…');
-  if (phase === 'retour') return remplir(etat, '{nom} est sur le chemin du retour !');
-  return pendantMission(etat, m);
 }
 
 /** Le départ : il fait un petit bond, puis s'en va vers la droite avec ce qu'il emporte. */
@@ -289,12 +278,7 @@ function Info({ icone, texte }: { icone: keyof typeof Ionicons.glyphMap; texte: 
 
 function Fermer({ onPress, flottant }: { onPress: () => void; flottant?: boolean }) {
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel="Fermer"
-      style={flottant ? styles.fermerFlottant : styles.fermer}
-      hitSlop={12}>
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel="Fermer" style={flottant ? styles.fermerFlottant : styles.fermer} hitSlop={12}>
       <Ionicons name="close" size={26} color={couleurs.brun} />
     </Pressable>
   );
@@ -304,30 +288,13 @@ const styles = StyleSheet.create({
   centre: { alignItems: 'center', justifyContent: 'center', gap: espace.m },
   texteCentre: { textAlign: 'center' },
   fermer: { alignSelf: 'flex-end' },
-  fermerFlottant: { position: 'absolute', top: espace.s, right: espace.l },
-  trajet: { width: '100%', paddingHorizontal: espace.s, marginBottom: espace.s },
+  fermerFlottant: { position: 'absolute', top: espace.s, right: espace.l, zIndex: 2 },
   depart: { alignItems: 'center' },
   objetDepart: { position: 'absolute', top: 0, right: 8, fontSize: 34, zIndex: 1 },
-  carte: {
-    backgroundColor: couleurs.carte,
-    borderRadius: arrondis.l,
-    padding: espace.l,
-    gap: espace.s,
-    ...ombre,
-  },
+  carte: { backgroundColor: couleurs.carte, borderRadius: arrondis.l, padding: espace.l, gap: espace.s, ...ombre },
   lieu: { fontWeight: '800', color: couleurs.renardFonce, fontSize: 14 },
-  recit: {
-    fontSize: 16,
-    lineHeight: 23,
-    color: couleurs.brun,
-    fontWeight: '600',
-  },
-  infos: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: espace.s,
-    marginTop: espace.s,
-  },
+  recit: { fontSize: 16, lineHeight: 23, color: couleurs.brun, fontWeight: '600' },
+  infos: { flexDirection: 'row', flexWrap: 'wrap', gap: espace.s, marginTop: espace.s },
   info: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -360,4 +327,8 @@ const styles = StyleSheet.create({
     marginTop: espace.s,
   },
   recompenseTexte: { flex: 1, fontWeight: '800', color: '#9A6400' },
+  suite: { textAlign: 'center', fontSize: 13.5, fontWeight: '600', color: couleurs.brunDoux },
+  lien: { textAlign: 'center', fontSize: 13, fontWeight: '800', color: couleurs.renardFonce },
+  tenue: { fontSize: 14, fontWeight: '700', color: couleurs.brun, lineHeight: 20 },
+  tenueManquante: { backgroundColor: couleurs.pecheClair, borderRadius: arrondis.m, padding: espace.m, gap: 4 },
 });

@@ -1,5 +1,5 @@
 /**
- * ONBOARDING 7/7 — Objectif de série 🐾
+ * ONBOARDING 8/8 — Objectif de série 🐾
  * L'utilisateur choisit combien de jours d'affilée il aimerait ouvrir l'app.
  * Ton bienveillant : chaque petite série compte, et une pause ne fait jamais rien perdre.
  * Dernière étape : on arrive ensuite sur l'accueil.
@@ -29,7 +29,7 @@ export default function Serie() {
 
   return (
     <Ecran defilant bas={<Bouton titre="C’est parti !" onPress={terminer} />}>
-      <EnteteEtape etape={7} />
+      <EnteteEtape etape={8} />
       <View style={styles.haut}>
         {etat.compagnon && <Compagnon espece={etat.compagnon.espece} pose="content" taille={110} />}
         <Titre style={{ textAlign: 'center' }}>Ton petit objectif de série</Titre>

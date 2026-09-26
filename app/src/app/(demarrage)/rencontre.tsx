@@ -32,7 +32,7 @@ export default function Rencontre() {
   );
 
   const suivante = () => (derniere ? undefined : setIndex((i) => i + 1));
-  const continuer = () => router.push('/ville-depart');
+  const continuer = () => router.push('/rythme');
 
   return (
     <Ecran

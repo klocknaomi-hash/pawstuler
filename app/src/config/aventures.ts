@@ -10,9 +10,9 @@ export type Contexte = 'recherche' | 'pro';
 
 export const RECITS: Record<Contexte, string[]> = {
   recherche: [
-    '{nom} a poussé la porte de {lieu} avec son CV encore tiède. On lui a souri et promis de le rappeler. En sortant, il avait des étoiles plein les yeux.',
-    '{nom} s’est entraîné à se présenter devant le lac : « Bonjour, je vise le poste de {metier}. » Les canards ont applaudi. Puis il a déposé sa candidature à {lieu}.',
-    'À {lieu}, {nom} a relancé une candidature envoyée la semaine dernière. Un peu intimidé, mais fier d’avoir osé. On lui a dit : « Revenez jeudi ! »',
+    '{nom} a fait le tour du quartier, carnet à la main. Il a repéré {lieu}, qui cherche peut-être un profil comme le sien : il a tout noté.',
+    '{nom} a épluché le tableau d’annonces de la place. Une offre de {metier} lui a fait briller les yeux : il garde l’idée au chaud.',
+    '{nom} a poussé la porte de {lieu} juste pour découvrir l’endroit. On lui a présenté l’équipe, et il est reparti avec plein d’idées.',
     '{nom} a passé l’après-midi à repérer les commerces de la ville. Il a noté {lieu} dans son carnet : « Ça, c’est pour moi. »',
   ],
   pro: [

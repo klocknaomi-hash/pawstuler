@@ -1,240 +1,109 @@
 /**
- * AVENTURE DU JOUR (accueil)
- * Ce que vit le compagnon aujourd'hui, en miroir de ta recherche :
- *  - sa mission en cours (« Milo est chez Boulangerie Dupain · Retour à 20 h 16 ») ou son retour ;
- *  - les missions proposées aujourd'hui (2 au plus : entretien et relance d'abord), plus l'exploration de la ville ;
- *  - la prochaine mission prévue, puis le journal de la journée.
+ * AVENTURE DU JOUR (accueil) : une seule carte verte, juste sous la scène du compagnon.
+ * Elle change selon le moment :
+ *  - disponible : ce que Milo va faire (« Milo part déposer son CV chez… ») et son coût en énergie ;
+ *  - parti : « Milo est chez … · Retour à 11 h 05 » ;
+ *  - revenu : « Milo est rentré ! Découvre son aventure » ;
+ *  - entretien à heure précise : « Son entretien est à 11 h 30 » ;
+ *  - quota atteint : « Nouvelle aventure demain », ou en Premium « Prochaine aventure à 14 h 43 ».
+ * En dessous, si Milo a un entretien qui approche, un petit rappel (avec le Shop pour sa tenue).
  */
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { accorder } from '@/config/compagnons';
-import { COUTS_MISSION, DUREES_MINUTES, PIECES_MISSION } from '@/config/missions';
-import { arrondis, couleurs, espace, polices } from '@/config/theme';
-import { villeParId } from '@/config/villes';
-import { aventuresRestantes } from '@/logique/compagnon';
+import { COUTS_MISSION } from '@/config/missions';
+import { arrondis, couleurs, espace } from '@/config/theme';
 import {
+  annonceEntretien,
+  aventureDuJour,
   compagnonAbsent,
   heureLisible,
-  iconeMission,
-  journalDuJour,
-  jourLisible,
-  missionsAVenir,
-  missionsDisponibles,
   ouEst,
+  prochainDepart,
   resultatADecouvrir,
   titreMission,
 } from '@/logique/missions';
 import type { EtatApp } from '@/store/types';
 
-/** Nombre de lignes du journal montrées avant « Voir tout ». */
-const JOURNAL_COURT = 3;
-
 export function AventureDuJour({ etat, maintenant, dort }: { etat: EtatApp; maintenant: number; dort: boolean }) {
-  const [journalOuvert, setJournalOuvert] = useState(false);
-  if (!etat.compagnon || !etat.villeId) return null;
+  if (!etat.compagnon) return null;
   const nom = etat.compagnon.nom;
-  const ville = villeParId(etat.villeId);
   const absent = compagnonAbsent(etat, maintenant);
-  const retour = resultatADecouvrir(etat, maintenant);
-  const disponibles = missionsDisponibles(etat);
-  const prochaine = missionsAVenir(etat)[0];
-  const explorations = aventuresRestantes(etat);
-  const journal = journalDuJour(etat);
-  const visibles = journalOuvert ? journal : journal.slice(0, JOURNAL_COURT);
-  const occupe = !!absent || !!retour;
+  const revenu = resultatADecouvrir(etat, maintenant);
+  const depart = prochainDepart(etat, maintenant);
+  const { mission, pasAvant } = aventureDuJour(etat, maintenant);
+  const annonce = annonceEntretien(etat);
+  const ouvrir = () => router.push('/aventure');
+
+  let sous: string;
+  let disponible = false;
+  if (absent?.retour) sous = `${ouEst(etat, absent)} · Retour à ${heureLisible(absent.retour)}`;
+  else if (revenu) sous = accorder(`${nom} est rentré{e} ! Découvre son aventure`, etat.compagnon.pronoms);
+  else if (dort) sous = `${nom} dort encore`;
+  else if (depart === 'demain') sous = 'Nouvelle aventure demain';
+  else if (typeof depart === 'number') sous = `Prochaine aventure à ${heureLisible(depart)}`;
+  else if (pasAvant) sous = `Son entretien est à ${heureLisible(pasAvant)}`;
+  else {
+    sous = `${titreMission(etat, mission)} · ${COUTS_MISSION[mission.type]} ⚡`;
+    disponible = true;
+  }
+  const termine = depart === 'demain' && !absent && !revenu;
 
   return (
-    <View style={styles.bloc}>
-      <Text style={styles.titre}>Aventure du jour</Text>
-
-      {absent?.retour && (
-        <Pressable style={[styles.statut, styles.statutAbsent]} onPress={() => router.push('/aventure')} accessibilityRole="button">
-          <Text style={styles.emoji}>{iconeMission(absent)}</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.statutTitre}>{ouEst(etat, absent)}</Text>
-            <Text style={styles.statutSous}>Retour à {heureLisible(absent.retour)}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={couleurs.blanc} />
-        </Pressable>
-      )}
-
-      {retour && (
-        <Pressable style={[styles.statut, styles.statutRetour]} onPress={() => router.push('/aventure')} accessibilityRole="button">
-          <Text style={styles.emoji}>🎒</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.statutTitre}>{accorder(`${nom} est rentré{e} !`, etat.compagnon.pronoms)}</Text>
-            <Text style={styles.statutSous}>Découvre ce qu’{accorder('{il}', etat.compagnon.pronoms)} a vécu</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={couleurs.blanc} />
-        </Pressable>
-      )}
-
-      {disponibles.map((m) => (
-        <LigneMission
-          key={m.id}
-          icone={iconeMission(m)}
-          titre={titreMission(etat, m)}
-          sous={`${DUREES_MINUTES[m.type]} min · ${COUTS_MISSION[m.type]} ⚡ · +${PIECES_MISSION[m.type]} pièces`}
-          grisee={occupe || dort}
-          onPress={() => router.push({ pathname: '/aventure', params: { id: m.id } })}
-        />
-      ))}
-
-      {explorations > 0 ? (
-        <LigneMission
-          icone={etat.contexte === 'pro' ? '💼' : '🔎'}
-          titre={etat.contexte === 'pro' ? `Une journée au travail` : `Explorer ${ville.nom}`}
-          sous={`${DUREES_MINUTES[etat.contexte === 'pro' ? 'travail' : 'recherche']} min · ${COUTS_MISSION[etat.contexte === 'pro' ? 'travail' : 'recherche']} ⚡`}
-          grisee={occupe || dort}
-          onPress={() => router.push({ pathname: '/aventure', params: { explorer: '1' } })}
-        />
-      ) : (
-        <View style={styles.demain}>
-          <Ionicons name="moon" size={16} color={couleurs.brunDoux} />
-          <Text style={styles.demainTexte}>Nouvelle exploration demain</Text>
+    <View style={{ gap: espace.s }}>
+      <Pressable
+        style={[termine ? styles.faite : styles.carte, !disponible && !absent && !revenu && !termine && { opacity: 0.6 }]}
+        onPress={ouvrir}
+        accessibilityRole="button"
+        accessibilityLabel={`Aventure du jour. ${sous}`}>
+        <Ionicons name={termine ? 'moon' : 'map'} size={20} color={termine ? couleurs.saugeFonce : couleurs.blanc} />
+        <View style={{ flex: 1 }}>
+          <Text style={termine ? styles.titreFaite : styles.titre}>Aventure du jour</Text>
+          <Text style={termine ? styles.sousFaite : styles.sous} numberOfLines={2}>
+            {sous}
+          </Text>
         </View>
-      )}
+        <Ionicons name="chevron-forward" size={20} color={termine ? couleurs.saugeFonce : couleurs.blanc} />
+      </Pressable>
 
-      {prochaine && (
-        <Text style={styles.prochaine}>
-          Prochaine mission {jourLisible(prochaine.disponibleLe)} : {iconeMission(prochaine)} {titreMission(etat, prochaine)}
-        </Text>
-      )}
-
-      {journal.length > 0 && (
-        <View style={styles.journal}>
-          <Text style={styles.journalTitre}>Journal de {nom}</Text>
-          {visibles.map((e) => (
-            <View key={e.id} style={styles.entree}>
-              <Text style={styles.entreeHeure}>{heureLisible(e.le)}</Text>
-              <Text style={styles.entreeTexte}>
-                {e.icone} {e.texte}
-              </Text>
-            </View>
-          ))}
-          {journal.length > JOURNAL_COURT && (
-            <Pressable onPress={() => setJournalOuvert((o) => !o)} accessibilityRole="button" hitSlop={8}>
-              <Text style={styles.voirTout}>{journalOuvert ? 'Voir moins' : `Voir tout (${journal.length})`}</Text>
-            </Pressable>
-          )}
-        </View>
+      {annonce && (
+        <Pressable
+          style={styles.annonce}
+          onPress={() => annonce.versLeShop && router.push('/boutique')}
+          disabled={!annonce.versLeShop}
+          accessibilityRole={annonce.versLeShop ? 'button' : 'text'}>
+          <Text style={styles.annonceTexte}>{annonce.texte}</Text>
+          {annonce.versLeShop && <Text style={styles.annonceLien}>Voir les tenues au Shop ›</Text>}
+        </Pressable>
       )}
     </View>
   );
 }
 
-function LigneMission({ icone, titre, sous, grisee, onPress }: { icone: string; titre: string; sous: string; grisee: boolean; onPress: () => void }) {
-  return (
-    <Pressable style={[styles.mission, grisee && { opacity: 0.55 }]} onPress={onPress} accessibilityRole="button" accessibilityLabel={titre}>
-      <Text style={styles.emoji}>{icone}</Text>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.missionTitre} numberOfLines={2}>
-          {titre}
-        </Text>
-        <Text style={styles.missionSous} numberOfLines={1}>
-          {sous}
-        </Text>
-      </View>
-      <Ionicons name="chevron-forward" size={18} color={couleurs.brunDoux} />
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
-  bloc: { gap: espace.s },
-  titre: {
-    fontFamily: polices.titre,
-    fontSize: 19,
-    fontWeight: '800',
-    color: couleurs.brun,
-    marginBottom: 2,
-  },
-  statut: {
+  carte: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: espace.m,
+    backgroundColor: couleurs.saugeFonce,
     borderRadius: arrondis.m,
     padding: espace.l,
   },
-  statutAbsent: { backgroundColor: couleurs.saugeFonce },
-  statutRetour: { backgroundColor: couleurs.renardFonce },
-  statutTitre: { color: couleurs.blanc, fontWeight: '800', fontSize: 15.5 },
-  statutSous: {
-    color: couleurs.blanc,
-    opacity: 0.92,
-    fontWeight: '600',
-    fontSize: 13,
-    marginTop: 2,
-  },
-  emoji: { fontSize: 24 },
-  mission: {
+  titre: { color: couleurs.blanc, fontWeight: '800', fontSize: 16 },
+  sous: { color: couleurs.blanc, opacity: 0.92, fontWeight: '600', fontSize: 13, marginTop: 2 },
+  faite: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: espace.m,
-    backgroundColor: couleurs.carte,
-    borderRadius: arrondis.m,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
-    padding: espace.m,
-  },
-  missionTitre: { fontWeight: '800', color: couleurs.brun, fontSize: 14.5 },
-  missionSous: {
-    fontWeight: '600',
-    color: couleurs.brunDoux,
-    fontSize: 12.5,
-    marginTop: 2,
-  },
-  demain: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: espace.s,
     backgroundColor: couleurs.saugeClair,
     borderRadius: arrondis.m,
-    padding: espace.m,
+    padding: espace.l,
   },
-  demainTexte: { fontWeight: '800', color: couleurs.saugeFonce },
-  prochaine: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: couleurs.brunDoux,
-    paddingHorizontal: 2,
-  },
-  journal: {
-    backgroundColor: couleurs.pecheClair,
-    borderRadius: arrondis.m,
-    padding: espace.m,
-    gap: 6,
-    marginTop: 2,
-  },
-  journalTitre: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: couleurs.renardFonce,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  entree: { flexDirection: 'row', gap: espace.s },
-  entreeHeure: {
-    width: 48,
-    fontSize: 12.5,
-    fontWeight: '800',
-    color: couleurs.brunDoux,
-    fontVariant: ['tabular-nums'],
-  },
-  entreeTexte: {
-    flex: 1,
-    fontSize: 13.5,
-    fontWeight: '600',
-    color: couleurs.brun,
-    lineHeight: 18,
-  },
-  voirTout: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: couleurs.renardFonce,
-    marginTop: 2,
-  },
+  titreFaite: { color: couleurs.saugeFonce, fontWeight: '800', fontSize: 15 },
+  sousFaite: { color: couleurs.brunDoux, fontWeight: '600', fontSize: 13, marginTop: 2 },
+  annonce: { backgroundColor: couleurs.pecheClair, borderRadius: arrondis.m, padding: espace.m, gap: 4 },
+  annonceTexte: { fontWeight: '700', color: couleurs.brun, lineHeight: 19 },
+  annonceLien: { fontWeight: '800', color: couleurs.renardFonce, fontSize: 13 },
 });

@@ -161,3 +161,10 @@ export const CATALOGUE_BOUTIQUE: ObjetBoutique[] = [
 ];
 
 export const objetParId = (id: string) => CATALOGUE_BOUTIQUE.find((o) => o.id === id);
+
+/**
+ * Les tenues qui comptent comme « tenue d'entretien » pour Milo (la plus habillée d'abord).
+ * S'il en possède une, il la porte à son entretien ; sinon il y va dans sa tenue de tous les jours.
+ */
+const TENUES_ENTRETIEN = ['costume', 'chemise-cravate', 'veste-tailleur', 'chemise-bleue', 'cravate-grise', 'cravate'];
+export const tenuesEntretien = () => TENUES_ENTRETIEN;
