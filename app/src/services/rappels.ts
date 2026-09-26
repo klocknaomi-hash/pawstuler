@@ -20,7 +20,7 @@ import { JOURS_ESSAI } from '@/config/abonnement';
 import { JOURS_AVANT_RELANCE } from '@/config/taches';
 import { jourDe } from '@/logique/dates';
 import { ANNONCES_ENTRETIEN } from '@/config/missions';
-import { ajouterJours, compagnonAbsent, entrepriseDeMilo, estUnMoment, heureLisible, prochainEntretienDeMilo, remplir, tenueEntretienPossedee } from '@/logique/missions';
+import { ajouterJours, compagnonAbsent, candidatureMiloDe, estUnMoment, heureLisible, prochainEntretienDeMilo, remplir, tenueEntretienPossedee } from '@/logique/missions';
 import { candidaturesActives, jourDeRelance } from '@/logique/tachesDuJour';
 import { essaiDisponible } from '@/services/abonnement';
 import type { EtatApp } from '@/store/types';
@@ -151,8 +151,9 @@ export async function synchroniserRappels(etat: EtatApp): Promise<Autorisation> 
 
   // 5. L'entretien de Milo : demande reçue, veille (sa tenue), jour J
   const entretien = prochainEntretienDeMilo(etat);
-  if (entretien) {
-    const lieu = entrepriseDeMilo(etat, entretien.candidature);
+  const lieuEntretien = entretien ? candidatureMiloDe(etat, entretien.candidature) : undefined;
+  if (entretien && lieuEntretien) {
+    const lieu = lieuEntretien;
     const extra = { jour: 'le ' + new Date(`${entretien.le}T00:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric' }), heure: heureLisible(entretien.heure) };
     const tenue = !!tenueEntretienPossedee(etat);
     await programmerLe(dateA(entretien.annonceLe, 0, heureEveillee(etat, etat.rythme.reveil + 1)), `${nom} a une nouvelle 📩`, remplir(etat, ANNONCES_ENTRETIEN.annonce, lieu, extra));
