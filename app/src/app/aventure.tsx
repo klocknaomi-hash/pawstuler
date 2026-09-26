@@ -198,7 +198,7 @@ export default function Aventure() {
     : depart === 'demain'
       ? 'Nouvelle aventure demain.'
       : typeof depart === 'number'
-        ? `Prochaine aventure possible à ${heureLisible(depart)} (${HEURES_ENTRE_AVENTURES_PREMIUM} h entre deux départs).`
+        ? `Prochaine aventure possible à ${heureLisible(depart)} (${HEURES_ENTRE_AVENTURES_PREMIUM} h après son retour).`
         : pasAvant
           ? `Son entretien est à ${heureLisible(pasAvant)} : reviens à ce moment-là pour l’encourager !`
           : energie < cout
