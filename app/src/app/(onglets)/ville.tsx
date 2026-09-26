@@ -15,9 +15,8 @@ import { useMaintenant } from '@/hooks/useMaintenant';
 import { arrondis, couleurs, espace, polices } from '@/config/theme';
 import { villeParId } from '@/config/villes';
 import { imageVille } from '@/illustrations/registre';
-import { LIBELLES_ETAPES, rechercheDuCompagnon, type EtapeLieu } from '@/logique/compagnon';
 import { dateLisible } from '@/logique/dates';
-import { compagnonAbsent, heureLisible, iconeMission, ouEst, parcoursDuCompagnon } from '@/logique/missions';
+import { compagnonAbsent, heureLisible, iconeMission, LIBELLES_ETAPES, lieuxDeMilo, ouEst, parcoursDuCompagnon, type EtapeLieu } from '@/logique/missions';
 import { estEndormi } from '@/logique/rythme';
 import { useApp } from '@/store/etat';
 
@@ -25,7 +24,6 @@ const COULEUR_ETAPE: Record<EtapeLieu, string> = {
   'a-visiter': couleurs.ligne,
   visite: couleurs.lac,
   candidature: couleurs.saugeFonce,
-  entretien: couleurs.corail,
   embauche: couleurs.or,
 };
 
@@ -39,7 +37,7 @@ export default function Ville() {
   const dort = estEndormi(etat.rythme);
   // En mission, il n'est pas dans le centre-ville : on dit où il est
   const absent = compagnonAbsent(etat, maintenant);
-  const suivi = rechercheDuCompagnon(etat);
+  const suivi = lieuxDeMilo(etat);
   const derniere = etat.derniereAventure;
   const lieuAventure = ville.lieux.find((l) => l.id === derniere?.lieuId);
   // Ses propres candidatures, dans les lieux de sa ville
@@ -103,7 +101,7 @@ export default function Ville() {
               <View style={[styles.puce, { backgroundColor: COULEUR_ETAPE[etape] }]} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.lieuNom}>{lieu.nom}</Text>
-                <Text style={[styles.lieuEtat, etape === 'entretien' && { color: couleurs.corail }]}>
+                <Text style={styles.lieuEtat}>
                   {etape === 'embauche' && etat.compagnon?.metier ? etat.compagnon.metier.intitule : lieu.metier} · {LIBELLES_ETAPES[etape]}
                 </Text>
               </View>

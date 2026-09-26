@@ -17,7 +17,6 @@ import { COUTS_MISSION, PIECES_MISSION, type TypeMoment } from '@/config/mission
 import { OBJECTIF_SERIE_PAR_DEFAUT } from '@/config/serie';
 import { PIECES_OBJECTIF, PIECES_TACHE_PERSO, PLAFOND_PIECES_JOUR } from '@/config/taches';
 import { VILLES, type VilleId } from '@/config/villes';
-import { lieuEmbauche } from '@/logique/compagnon';
 import { jourDe, joursEntre, nouvelId } from '@/logique/dates';
 import { appliquerEnergie, energieDisponible, energieMax } from '@/logique/energie';
 import {
@@ -25,6 +24,7 @@ import {
   compagnonAbsent,
   dureeMission,
   estUnMoment,
+  lieuEmbauche,
   momentDuCompagnon,
   prochainDepart,
   resultatADecouvrir,
@@ -309,6 +309,12 @@ function migrer(brut: Partial<EtatApp> & { version?: number }): EtatApp {
   // Anciennes missions en file d'attente (avant le calendrier de Milo) : on ne garde que les vraies aventures
   etat.missions = etat.missions.filter((m) => m.statut === 'en-cours' || m.statut === 'vue');
   delete (etat as { journal?: unknown }).journal;
+  // Un seul nom par lieu : les candidatures de Milo reprennent le nom du lieu de sa ville
+  const lieuxVille = VILLES.find((v) => v.id === etat.villeId)?.lieux ?? [];
+  etat.candidaturesMilo = (etat.candidaturesMilo ?? []).map((cm) => {
+    const lieu = lieuxVille.find((l) => l.id === cm.lieuId);
+    return lieu ? { ...cm, lieu: lieu.nom, metier: lieu.metier ?? cm.metier } : cm;
+  });
   if (etat.compagnon && !especeValide(etat.compagnon.espece)) etat.compagnon = { ...etat.compagnon, espece: 'renard' };
   if (etat.villeId && !VILLES.some((v) => v.id === etat.villeId)) etat.villeId = 'clairebourg';
   if (etat.onboardingTermine && etat.recherches.length === 0) etat.recherches = [nouvelleRecherche()];

@@ -12,8 +12,8 @@ import { Bouton, CarteChoix, Champ, Ecran, SousTitre, Texte, Titre } from '@/com
 import { Compagnon } from '@/components/Compagnon';
 import { Confettis } from '@/components/Confettis';
 import { couleurs, espace } from '@/config/theme';
-import { lieuEmbauche } from '@/logique/compagnon';
 import { lireDateFr } from '@/logique/dates';
+import { lieuEmbauche } from '@/logique/missions';
 import { useApp } from '@/store/etat';
 
 export default function Decroche() {

@@ -75,7 +75,11 @@ export function remplir(
   extra: Record<string, string> = {},
 ): string {
   const personne = m ? SECTEURS[m.secteur].personne : '';
+  const metier = (m?.metier ?? '').toLowerCase();
+  // « de apprenti » → « d’apprenti »
+  const de = /^[aeéèêiîoôuûyh]/i.test(metier) ? 'd’' : 'de ';
   let rempli = texte
+    .replaceAll('de {metier}', `${de}{metier}`)
     .replaceAll('{nom}', etat.compagnon?.nom ?? 'Ton compagnon')
     .replaceAll('{ville}', etat.villeId ? villeParId(etat.villeId).nom : 'sa ville')
     .replaceAll('{lieu}', m?.lieu ?? '')
@@ -95,18 +99,14 @@ export function detecterSecteur(entreprise: string, poste = ''): SecteurId {
   return trouve ?? 'entreprise';
 }
 
-/** Nom du lieu aujourd'hui : les commerces de la ville changent de nom d'un jour à l'autre. */
+/** Nom du lieu : un seul nom par lieu, le même partout (accueil, aventures, onglet ville). */
 export function nomDuJour(etat: EtatApp, lieu: Lieu, jour: string): string {
-  if (!lieu.secteur) return lieu.nom;
-  const ville = etat.villeId ? villeParId(etat.villeId).nom : '';
-  const noms = [lieu.nom, ...SECTEURS[lieu.secteur].noms.map((n) => n.replaceAll('{ville}', ville))];
-  return choisir([...new Set(noms)], `${jour}-${lieu.id}`);
+  return lieu.nom;
 }
 
-/** Métier du jour dans un lieu (cohérent avec son secteur). */
+/** Métier proposé dans un lieu (toujours le même pour ce lieu). */
 export function metierDuJour(lieu: Lieu, jour: string): string {
-  if (!lieu.secteur) return lieu.metier ?? 'Nouvelle opportunité';
-  return choisir([lieu.metier ?? SECTEURS[lieu.secteur].metiers[0], ...SECTEURS[lieu.secteur].metiers], `${jour}-${lieu.id}-metier`);
+  return lieu.metier ?? (lieu.secteur ? SECTEURS[lieu.secteur].metiers[0] : 'Nouvelle opportunité');
 }
 
 /* ---------- Les candidatures de Milo, dans SA ville ---------- */
@@ -443,4 +443,39 @@ export function parcoursDuCompagnon(etat: EtatApp, jour = jourDe()): EtapeCompag
     if (faite('relance')) return { ...base, etape: 'A relancé par téléphone' };
     return { ...base, etape: 'CV déposé' };
   });
+}
+
+/* ---------- Les lieux de sa ville (onglet ville) ---------- */
+
+export type EtapeLieu = 'a-visiter' | 'visite' | 'candidature' | 'embauche';
+
+export const LIBELLES_ETAPES: Record<EtapeLieu, string> = {
+  'a-visiter': 'Pas encore visité',
+  visite: 'Déjà visité',
+  candidature: 'Candidature déposée',
+  embauche: 'Il y travaille',
+};
+
+/** Où en est Milo dans chaque lieu de sa ville : uniquement d'après ce que LUI a fait. */
+export function lieuxDeMilo(etat: EtatApp): { lieu: Lieu; etape: EtapeLieu }[] {
+  if (!etat.villeId) return [];
+  const villeId = etat.villeId;
+  return villeParId(villeId)
+    .lieux.filter((l) => l.metier)
+    .map((lieu) => {
+      if (etat.compagnon?.metier?.lieuId === lieu.id) return { lieu, etape: 'embauche' as const };
+      if (etat.candidaturesMilo.some((cm) => cm.lieuId === lieu.id)) return { lieu, etape: 'candidature' as const };
+      if (etat.decouvertes.some((d) => d.villeId === villeId && d.lieuId === lieu.id)) return { lieu, etape: 'visite' as const };
+      return { lieu, etape: 'a-visiter' as const };
+    });
+}
+
+/** Le lieu où Milo décroche son job : là où il a passé un entretien, sinon sa dernière candidature. */
+export function lieuEmbauche(etat: EtatApp): Lieu | undefined {
+  if (!etat.villeId) return undefined;
+  const lieux = villeParId(etat.villeId).lieux;
+  const avecEntretien = etat.missions.find((m) => m.type === 'entretien' && m.depart && m.lieuId);
+  const derniere = etat.candidaturesMilo[etat.candidaturesMilo.length - 1];
+  const id = avecEntretien?.lieuId ?? derniere?.lieuId;
+  return lieux.find((l) => l.id === id) ?? lieux.find((l) => l.metier);
 }
