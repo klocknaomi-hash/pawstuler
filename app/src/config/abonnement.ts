@@ -58,6 +58,15 @@ export const FORMULES: Formule[] = [
 
 export const formuleParId = (id: FormuleId) => FORMULES.find((f) => f.id === id) ?? FORMULES[0];
 
+/** Prix en euros, pour calculer l'économie de l'annuel. */
+export const PRIX_ANNUEL = 39.99;
+export const PRIX_MENSUEL = 5.99;
+/** Économie de l'annuel par rapport à 12 mois au mensuel, en % arrondi (aujourd'hui : 44 %). */
+export const REMISE_ANNUEL = Math.round((1 - PRIX_ANNUEL / (PRIX_MENSUEL * 12)) * 100);
+
+/** En une phrase, ce qui reste gratuit (le détail s'ouvre sur l'écran d'abonnement). */
+export const RESUME_GRATUIT = 'Tes tâches, tes candidatures et ton compagnon restent gratuits.';
+
 export const INCLUS_GRATUIT = [
   'Tâches du jour et tâches personnelles',
   'Suivi de toutes tes candidatures',
@@ -73,6 +82,14 @@ export const INCLUS_PREMIUM = [
   'Plus de lieux et d’histoires dans ta ville',
   'Recommandations personnalisées et analyses de ton parcours',
   'Aide avancée pour ton CV, tes offres et tes entretiens',
+];
+
+/** Les 4 points forts affichés en haut de l'écran d'abonnement (le détail complet s'ouvre en dessous). */
+export const POINTS_FORTS_PREMIUM: { icone: 'compass' | 'flash' | 'shirt' | 'sparkles'; texte: string }[] = [
+  { icone: 'compass', texte: 'Jusqu’à 3 aventures par jour' },
+  { icone: 'flash', texte: 'Énergie 100, recharge en 3 h' },
+  { icone: 'shirt', texte: 'Tenues et événements exclusifs' },
+  { icone: 'sparkles', texte: 'Aide avancée CV et entretiens' },
 ];
 
 /** Mention légale affichée en bas de l'écran d'abonnement (exigée par l'App Store). */

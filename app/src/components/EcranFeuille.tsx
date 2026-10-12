@@ -5,7 +5,8 @@
  */
 import type { ReactNode } from 'react';
 import { Image } from 'expo-image';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { EspeceId, Pose } from '@/config/compagnons';
@@ -24,6 +25,7 @@ export function EcranFeuille({
   pose = 'salut',
   hauteurDecor = 260,
   tailleMascotte = 150,
+  onFermer,
 }: {
   children: ReactNode;
   /** Zone fixée en bas de la feuille (boutons). */
@@ -36,6 +38,8 @@ export function EcranFeuille({
   pose?: Pose;
   hauteurDecor?: number;
   tailleMascotte?: number;
+  /** Fenêtre qu'on peut refermer (ex. abonnement) : une croix en haut à droite du décor. */
+  onFermer?: () => void;
 }) {
   const { top, bottom } = useSafeAreaInsets();
   return (
@@ -45,6 +49,16 @@ export function EcranFeuille({
         <Image source={imageVille(ville, 'paysage')} style={StyleSheet.absoluteFill} contentFit="cover" />
         <View style={styles.voile} />
         <Compagnon espece={espece} pose={pose} taille={tailleMascotte} style={styles.mascotte} />
+        {onFermer ? (
+          <Pressable
+            onPress={onFermer}
+            accessibilityRole="button"
+            accessibilityLabel="Fermer"
+            hitSlop={10}
+            style={[styles.fermer, { top: top + espace.m }]}>
+            <Ionicons name="close" size={22} color={couleurs.brun} />
+          </Pressable>
+        ) : null}
       </View>
 
       {/* Feuille blanche */}
@@ -67,6 +81,16 @@ const styles = StyleSheet.create({
   // Léger voile crème pour que la mascotte se détache du décor
   voile: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: couleurs.creme, opacity: 0.15 },
   mascotte: { marginBottom: ARRONDI_FEUILLE - 14 },
+  fermer: {
+    position: 'absolute',
+    right: espace.l,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   feuille: {
     flex: 1,
     backgroundColor: couleurs.carte,
