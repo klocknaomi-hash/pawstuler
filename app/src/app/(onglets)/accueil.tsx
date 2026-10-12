@@ -44,6 +44,9 @@ import { jourEssai, offreBienvenueAMontrer, rappelEssai, rappelEssaiDisponible }
 import { gainPlafonne, useApp } from '@/store/etat';
 import type { Tache } from '@/store/types';
 
+/** Hauteur de la scène du compagnon sur l'accueil. */
+const HAUTEUR_SCENE = 360;
+
 const vibrer = () => {
   if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
 };
@@ -247,6 +250,17 @@ export default function Accueil() {
             <View style={[StyleSheet.absoluteFill, { backgroundColor: ville.couleur }]} />
           )}
           {dort && <View style={[StyleSheet.absoluteFill, styles.nuit]} />}
+          {absent?.retour ? (
+            // Parti à l'aventure : toute la scène raconte ce qu'il fait, en temps réel
+            // (sur le trajet, le décor de sa ville défile derrière lui)
+            <Pressable
+              style={StyleSheet.absoluteFill}
+              onPress={() => router.push('/aventure')}
+              accessibilityRole="button"
+              accessibilityLabel={`${ouEst(etat, absent)}. Retour à ${heureMission(absent.retour)}`}>
+              <SceneAventure mission={absent} espece={compagnon.espece} equipe={etat.equipe} ville={etat.villeId} hauteur={HAUTEUR_SCENE} taille={100} />
+            </Pressable>
+          ) : null}
           <Pressable style={styles.bulle} onPress={() => router.push('/boutique')} disabled={!bulleVersShop} accessibilityRole={bulleVersShop ? 'button' : 'text'}>
             <Text style={styles.bulleTexte}>{bulle}</Text>
             {bulleVersShop && <Text style={styles.bulleLien}>Voir les tenues au Shop ›</Text>}
@@ -255,12 +269,7 @@ export default function Accueil() {
             {effet?.type === 'calin' && <CoeursCalin key={effet.cle} />}
             {effet?.type === 'jeu' && <BallonJeu key={effet.cle} />}
             {effet?.type === 'zzz' && <Zzz key={effet.cle} />}
-            {absent?.retour ? (
-              // Parti à l'aventure : la scène raconte ce qu'il fait, en temps réel
-              <Pressable style={styles.panneau} onPress={() => router.push('/aventure')} accessibilityRole="button" accessibilityLabel={`${ouEst(etat, absent)}. Retour à ${heureMission(absent.retour)}`}>
-                <SceneAventure mission={absent} espece={compagnon.espece} equipe={etat.equipe} hauteur={170} taille={70} />
-              </Pressable>
-            ) : (
+            {absent?.retour ? null : (
               // Quand il revient de mission, il arrive en courant depuis le bord de l'écran
               <Animated.View entering={SlideInLeft.duration(1200)} exiting={SlideOutRight.duration(900)}>
                 <Pressable
@@ -489,7 +498,7 @@ const styles = StyleSheet.create({
     textTransform: 'capitalize',
   },
   scene: {
-    height: 360,
+    height: HAUTEUR_SCENE,
     marginHorizontal: espace.l,
     borderRadius: arrondis.l,
     overflow: 'hidden',
@@ -542,9 +551,6 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   moments: { marginHorizontal: espace.l, marginTop: espace.m, gap: espace.s },
-  // Panneau « parti en mission » à la place du compagnon
-  // Scène de l'aventure à la place du compagnon (sur le décor de la ville)
-  panneau: { alignSelf: 'stretch' },
   petitsMoments: { flexDirection: 'row', gap: espace.s },
   moment: {
     flex: 1,

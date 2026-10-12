@@ -99,5 +99,11 @@ export function accorder(texte: string, pronoms?: Pronoms): string {
     .replaceAll('{e}', accord);
 }
 
+/**
+ * Sens du dessin de la pose « aventure » : la plupart regardent vers la droite, le crocodile
+ * vers la gauche. Sert à le faire marcher dans le bon sens (vers la droite à l'aller, à gauche au retour).
+ */
+export const REGARDE_A_GAUCHE: EspeceId[] = ['crocodile'];
+
 export const compagnonParId = (id: EspeceId) => COMPAGNONS.find((c) => c.id === id) ?? COMPAGNONS[0];
 export const especeValide = (id: string): id is EspeceId => COMPAGNONS.some((c) => c.id === id);
