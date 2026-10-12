@@ -1,9 +1,13 @@
-/** Les 5 onglets : Accueil · Candidatures · Shop · la ville du compagnon · Compte. */
+/**
+ * Les 5 onglets : Accueil · Candidatures · Shop · la ville du compagnon · Compte.
+ * Barre flottante : une capsule arrondie posée au-dessus du bas de l'écran, l'onglet actif dans une pastille.
+ */
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router/js-tabs';
 import type { ColorValue } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { couleurs, polices } from '@/config/theme';
+import { barreOnglets, couleurs, ombre, polices, relief } from '@/config/theme';
 import { villeParId } from '@/config/villes';
 import { useApp } from '@/store/etat';
 
@@ -18,15 +22,35 @@ function icone(nom: NomIcone, actif: NomIcone) {
 export default function LayoutOnglets() {
   const { etat } = useApp();
   const nomVille = etat.villeId ? villeParId(etat.villeId).nom : 'Ma ville';
+  const { bottom } = useSafeAreaInsets();
 
   return (
     <Tabs
+      // La barre gère elle-même la zone de sécurité (elle flotte au-dessus)
+      safeAreaInsets={{ bottom: 0 }}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: couleurs.renardFonce,
         tabBarInactiveTintColor: couleurs.brunDoux,
-        tabBarStyle: { backgroundColor: couleurs.carte, borderTopColor: couleurs.ligne },
-        tabBarLabelStyle: { fontFamily: polices.texte, fontWeight: '700', fontSize: 10.5 },
+        tabBarStyle: {
+          position: 'absolute',
+          left: barreOnglets.marge,
+          right: barreOnglets.marge,
+          bottom: Math.max(bottom, barreOnglets.marge),
+          height: barreOnglets.hauteur,
+          borderRadius: barreOnglets.hauteur / 2,
+          backgroundColor: couleurs.carte,
+          paddingTop: 7,
+          paddingBottom: 7,
+          paddingHorizontal: 6,
+          ...relief,
+          borderTopWidth: 1.5,
+          borderTopColor: couleurs.ligne,
+          ...ombre,
+        },
+        tabBarItemStyle: { borderRadius: 24, marginHorizontal: 2 },
+        tabBarActiveBackgroundColor: couleurs.pecheClair,
+        tabBarLabelStyle: { fontFamily: polices.titre, fontWeight: '800', fontSize: 10 },
         sceneStyle: { backgroundColor: couleurs.creme },
       }}>
       <Tabs.Screen name="accueil" options={{ title: 'Accueil', tabBarIcon: icone('home-outline', 'home') }} />

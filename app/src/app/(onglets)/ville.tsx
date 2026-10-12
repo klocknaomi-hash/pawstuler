@@ -12,8 +12,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Compagnon } from '@/components/Compagnon';
 import { useMaintenant } from '@/hooks/useMaintenant';
-import { arrondis, couleurs, espace, polices } from '@/config/theme';
+import { arrondis, couleurs, espace, polices, relief } from '@/config/theme';
 import { villeParId } from '@/config/villes';
+import { useEspaceBarre } from '@/hooks/useEspaceBarre';
 import { imageVille } from '@/illustrations/registre';
 import { dateLisible } from '@/logique/dates';
 import { compagnonAbsent, heureLisible, iconeMission, LIBELLES_ETAPES, lieuxDeMilo, ouEst, parcoursDuCompagnon, type EtapeLieu } from '@/logique/missions';
@@ -28,6 +29,7 @@ const COULEUR_ETAPE: Record<EtapeLieu, string> = {
 };
 
 export default function Ville() {
+  const espaceBarre = useEspaceBarre();
   const { etat } = useApp();
   const maintenant = useMaintenant();
   if (!etat.villeId || !etat.compagnon) return null;
@@ -45,7 +47,7 @@ export default function Ville() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: couleurs.creme }} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.contenu}>
+      <ScrollView contentContainerStyle={[styles.contenu, { paddingBottom: espaceBarre }]}>
         <Text style={styles.titre}>{ville.nom}</Text>
 
         <View style={[styles.carte, { backgroundColor: ville.couleur }]}>
@@ -120,16 +122,16 @@ export default function Ville() {
 
 const styles = StyleSheet.create({
   contenu: { padding: espace.l, gap: espace.m, paddingBottom: espace.xxl },
-  titre: { fontFamily: polices.titre, fontSize: 28, fontWeight: '800', color: couleurs.brun },
+  titre: { fontFamily: polices.titre, fontSize: 32, fontWeight: '900', color: couleurs.brun, letterSpacing: -0.4 },
   carte: { height: 330, borderRadius: arrondis.l, overflow: 'hidden', justifyContent: 'flex-end' },
   compagnon: { alignItems: 'center', paddingBottom: 6 },
   absent: { margin: espace.m, backgroundColor: couleurs.carte, borderRadius: arrondis.m, padding: espace.m },
   absentTexte: { fontWeight: '800', color: couleurs.brun, textAlign: 'center' },
-  souvenir: { backgroundColor: couleurs.carte, borderRadius: arrondis.m, borderWidth: 1, borderColor: couleurs.ligne, padding: espace.l, gap: 4 },
+  souvenir: { backgroundColor: couleurs.carte, borderRadius: arrondis.m, ...relief, padding: espace.l, gap: 4 },
   souvenirTitre: { fontSize: 12, fontWeight: '800', color: couleurs.renardFonce, textTransform: 'uppercase', letterSpacing: 0.4 },
   souvenirTexte: { fontSize: 14.5, fontWeight: '600', color: couleurs.brun, lineHeight: 20 },
-  sousTitre: { fontFamily: polices.titre, fontSize: 19, fontWeight: '800', color: couleurs.brun, marginTop: espace.s },
-  bloc: { backgroundColor: couleurs.carte, borderRadius: arrondis.m, borderWidth: 1, borderColor: couleurs.ligne },
+  sousTitre: { fontFamily: polices.titre, fontSize: 22, fontWeight: '900', color: couleurs.brun, marginTop: espace.s },
+  bloc: { backgroundColor: couleurs.carte, borderRadius: arrondis.m, ...relief },
   lieu: { flexDirection: 'row', alignItems: 'center', gap: espace.m, padding: espace.l },
   separateur: { borderTopWidth: 1, borderTopColor: couleurs.ligne },
   puce: { width: 12, height: 12, borderRadius: 6 },

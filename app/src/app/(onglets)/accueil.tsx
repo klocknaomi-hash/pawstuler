@@ -26,8 +26,9 @@ import { PREMIER_PAS } from '@/config/dialogues';
 import { COUT, ENERGIE_PAR_TACHE } from '@/config/energie';
 import { COUTS_MISSION } from '@/config/missions';
 import { PLAFOND_PIECES_JOUR } from '@/config/taches';
-import { arrondis, couleurs, espace, ombre, polices } from '@/config/theme';
+import { arrondis, couleurs, espace, ombre, polices, relief } from '@/config/theme';
 import { villeParId } from '@/config/villes';
+import { useEspaceBarre } from '@/hooks/useEspaceBarre';
 import { useMaintenant } from '@/hooks/useMaintenant';
 import { imageVille } from '@/illustrations/registre';
 import { jourDe } from '@/logique/dates';
@@ -44,6 +45,7 @@ const vibrer = () => {
 };
 
 export default function Accueil() {
+  const espaceBarre = useEspaceBarre();
   const { etat, dispatch } = useApp();
   const [reaction, setReaction] = useState(0);
   const [moment, setMoment] = useState<{ pose: Pose; texte: string } | null>(null);
@@ -211,7 +213,7 @@ export default function Accueil() {
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: espace.xxl }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ paddingBottom: espaceBarre }} keyboardShouldPersistTaps="handled">
         {/* Le compagnon dans sa ville */}
         <View style={styles.scene}>
           {decor ? (
@@ -426,8 +428,9 @@ const styles = StyleSheet.create({
   },
   bonjour: {
     fontFamily: polices.titre,
-    fontSize: 22,
-    fontWeight: '800',
+    fontSize: 26,
+    fontWeight: '900',
+    letterSpacing: -0.3,
     color: couleurs.brun,
   },
   date: {
@@ -507,8 +510,7 @@ const styles = StyleSheet.create({
     gap: 6,
     backgroundColor: couleurs.carte,
     borderRadius: arrondis.m,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    ...relief,
     paddingHorizontal: espace.m,
     paddingVertical: 10,
   },
@@ -551,8 +553,8 @@ const styles = StyleSheet.create({
   },
   titre: {
     fontFamily: polices.titre,
-    fontSize: 21,
-    fontWeight: '800',
+    fontSize: 24,
+    fontWeight: '900',
     color: couleurs.brun,
   },
   compte: {

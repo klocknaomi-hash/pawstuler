@@ -8,7 +8,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Bouton, Ecran, Texte, Titre } from '@/components/base';
 import { Compagnon } from '@/components/Compagnon';
-import { arrondis, couleurs, espace, polices } from '@/config/theme';
+import { arrondis, couleurs, espace, polices, relief } from '@/config/theme';
 
 const POINTS: { icone: keyof typeof Ionicons.glyphMap; texte: string }[] = [
   { icone: 'checkbox-outline', texte: 'Des petites tâches chaque jour, adaptées à ta recherche' },
@@ -69,8 +69,7 @@ const styles = StyleSheet.create({
     borderRadius: arrondis.l,
     padding: espace.l,
     gap: espace.m,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    ...relief,
   },
   point: { flexDirection: 'row', alignItems: 'center', gap: espace.m },
   pastilleIcone: {

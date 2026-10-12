@@ -13,7 +13,7 @@ import { Bouton, Champ, Ecran, SousTitre, Titre } from '@/components/base';
 import { Compagnon } from '@/components/Compagnon';
 import { IconePiece } from '@/components/Pieces';
 import { CATALOGUE_TACHES, PIECES_OBJECTIF } from '@/config/taches';
-import { arrondis, couleurs, espace, polices } from '@/config/theme';
+import { arrondis, couleurs, espace, polices, relief } from '@/config/theme';
 import { villeParId } from '@/config/villes';
 import { dateEnSaisie, dateLisible, joursEntre, lireDateFr } from '@/logique/dates';
 import { emploiActuel } from '@/logique/tachesDuJour';
@@ -230,8 +230,7 @@ const styles = StyleSheet.create({
   carte: {
     backgroundColor: couleurs.carte,
     borderRadius: arrondis.l,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    ...relief,
     padding: espace.l,
     gap: espace.m,
   },
@@ -255,8 +254,7 @@ const styles = StyleSheet.create({
     gap: espace.m,
     backgroundColor: couleurs.carte,
     borderRadius: arrondis.m,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    ...relief,
     padding: espace.m,
   },
   objectifAtteint: { backgroundColor: couleurs.saugeClair, borderColor: 'transparent' },
@@ -278,8 +276,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: couleurs.carte,
     borderRadius: arrondis.m,
-    borderWidth: 1.5,
-    borderColor: couleurs.ligne,
+    ...relief,
     paddingHorizontal: espace.l,
     paddingVertical: 12,
     fontSize: 15,
@@ -298,13 +295,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: couleurs.carte,
     borderRadius: arrondis.m,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    ...relief,
     padding: espace.m,
     alignItems: 'center',
   },
   statValeur: { fontFamily: polices.titre, fontSize: 22, fontWeight: '800', color: couleurs.brun, fontVariant: ['tabular-nums'] },
   statLibelle: { fontSize: 11.5, fontWeight: '700', color: couleurs.brunDoux, textAlign: 'center' },
-  ancien: { backgroundColor: couleurs.carte, borderRadius: arrondis.m, borderWidth: 1, borderColor: couleurs.ligne, padding: espace.m },
+  ancien: { backgroundColor: couleurs.carte, borderRadius: arrondis.m, ...relief, padding: espace.m },
   note: { fontSize: 12.5, color: couleurs.brunDoux, textAlign: 'center' },
 });

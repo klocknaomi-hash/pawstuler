@@ -12,7 +12,8 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { STATUTS, statutParId } from '@/config/candidatures';
-import { arrondis, couleurs, espace, polices } from '@/config/theme';
+import { arrondis, couleurs, espace, polices, relief } from '@/config/theme';
+import { useBasBarre, useEspaceBarre } from '@/hooks/useEspaceBarre';
 import { dateLisible, jourDe, joursEntre } from '@/logique/dates';
 import { candidaturesActives, emploiActuel, relanceDue } from '@/logique/tachesDuJour';
 import { useApp } from '@/store/etat';
@@ -21,6 +22,8 @@ import type { StatutCandidature } from '@/store/types';
 type Vue = 'en-cours' | 'historique';
 
 export default function Candidatures() {
+  const espaceBarre = useEspaceBarre();
+  const basBarre = useBasBarre();
   const { etat } = useApp();
   const [vue, setVue] = useState<Vue>(etat.contexte === 'pro' ? 'historique' : 'en-cours');
   const [filtre, setFiltre] = useState<StatutCandidature | 'toutes'>('toutes');
@@ -47,7 +50,7 @@ export default function Candidatures() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: couleurs.creme }} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.contenu} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.contenu, { paddingBottom: espaceBarre + 70 }]} keyboardShouldPersistTaps="handled">
         <Text style={styles.titre}>{etat.contexte === 'pro' ? 'Mon parcours' : 'Candidatures'}</Text>
 
         {etat.contexte === 'pro' && emploi && (
@@ -180,7 +183,7 @@ export default function Candidatures() {
 
       {etat.contexte === 'recherche' && (
         <Pressable
-          style={styles.fab}
+          style={[styles.fab, { bottom: basBarre + 12 }]}
           onPress={() => router.push('/nouvelle-candidature')}
           accessibilityRole="button"
           accessibilityLabel="Ajouter une candidature">
@@ -202,7 +205,7 @@ function Stat({ valeur, libelle, accent }: { valeur: number; libelle: string; ac
 
 const styles = StyleSheet.create({
   contenu: { padding: espace.l, gap: espace.m, paddingBottom: 100 },
-  titre: { fontFamily: polices.titre, fontSize: 28, fontWeight: '800', color: couleurs.brun },
+  titre: { fontFamily: polices.titre, fontSize: 32, fontWeight: '900', color: couleurs.brun, letterSpacing: -0.4 },
   pro: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -218,8 +221,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: couleurs.carte,
     borderRadius: arrondis.m,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    ...relief,
     paddingVertical: espace.m,
     alignItems: 'center',
   },
@@ -235,16 +237,14 @@ const styles = StyleSheet.create({
     gap: espace.s,
     backgroundColor: couleurs.carte,
     borderRadius: arrondis.m,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    ...relief,
     paddingHorizontal: espace.m,
   },
   rechercheChamp: { flex: 1, paddingVertical: 12, fontSize: 15, color: couleurs.brun, fontWeight: '600' },
   filtres: { gap: 6 },
   filtre: {
     borderRadius: 999,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    ...relief,
     backgroundColor: couleurs.carte,
     paddingHorizontal: 12,
     paddingVertical: 7,
@@ -257,8 +257,7 @@ const styles = StyleSheet.create({
   carte: {
     backgroundColor: couleurs.carte,
     borderRadius: arrondis.m,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    ...relief,
     padding: espace.l,
     gap: espace.s,
   },

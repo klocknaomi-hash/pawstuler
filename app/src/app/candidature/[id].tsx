@@ -19,7 +19,7 @@ import { ChoixStatut } from '@/components/ChoixStatut';
 import { Compagnon } from '@/components/Compagnon';
 import { emailValide, statutParId } from '@/config/candidatures';
 import { DELAIS_RELANCE } from '@/config/missions';
-import { arrondis, couleurs, espace } from '@/config/theme';
+import { arrondis, couleurs, espace, relief } from '@/config/theme';
 import { ajouterJours } from '@/logique/missions';
 import { dateEnSaisie, dateLisible, jourDe, joursEntre, lireDateFr } from '@/logique/dates';
 import { jourDeRelance, relanceDue } from '@/logique/tachesDuJour';
@@ -335,8 +335,7 @@ const styles = StyleSheet.create({
   historique: {
     backgroundColor: couleurs.carte,
     borderRadius: arrondis.m,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    ...relief,
     padding: espace.m,
     gap: espace.s,
   },

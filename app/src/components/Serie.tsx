@@ -2,7 +2,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { couleurs, polices } from '@/config/theme';
+import { couleurs, polices, relief } from '@/config/theme';
 import type { Serie } from '@/store/types';
 
 export function BadgeSerie({ serie, grand = false }: { serie: Serie; grand?: boolean }) {
@@ -28,8 +28,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 11,
     paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    ...relief,
   },
   atteint: { backgroundColor: couleurs.pecheClair, borderColor: couleurs.saumon },
   grand: { paddingHorizontal: 14, paddingVertical: 8, gap: 6 },

@@ -35,7 +35,9 @@ export const couleurs = {
   corailClair: '#FFE2E4',
 
   // Divers
-  ligne: '#EEDCCB',
+  ligne: '#EBD3BE', // contours des cartes et des champs (assez marqués pour bien dessiner les formes)
+  relief: '#E2C3A6', // bord du bas des cartes « autocollant »
+  renardRelief: '#9C4128', // bord du bas des boutons orange (effet bouton qu'on enfonce)
   // Bouton qu'on ne peut pas encore utiliser (champs obligatoires vides…)
   desactive: '#DAD5D0',
   texteDesactive: '#8E8781',
@@ -53,10 +55,30 @@ export const polices = {
 export const tailles = {
   petit: 13,
   texte: 16,
-  moyen: 18,
-  titre: 26,
-  grandTitre: 32,
+  moyen: 19,
+  titre: 30,
+  grandTitre: 36,
 } as const;
+
+/**
+ * Fonds pastel par catégorie de tâche (avec un emoji) : chaque carte a sa couleur, pour une
+ * liste plus vivante sans changer la palette de la marque.
+ */
+export const pastels = {
+  preparer: { fond: '#FFE9DA', emoji: '📝' },
+  chercher: { fond: '#E1F1F5', emoji: '🔎' },
+  candidater: { fond: '#EAF1DF', emoji: '📮' },
+  relancer: { fond: '#FFF1CF', emoji: '📞' },
+  reseau: { fond: '#EEE7FB', emoji: '🤝' },
+  entretien: { fond: '#FFE2E4', emoji: '👔' },
+  moral: { fond: '#E3F5EC', emoji: '🌿' },
+  integration: { fond: '#E1F1F5', emoji: '🏢' },
+  progression: { fond: '#EEE7FB', emoji: '📈' },
+  perso: { fond: '#FDE4D7', emoji: '⭐' },
+} as const;
+
+/** Barre d'onglets flottante : elle laisse cette place en bas des écrans à onglets. */
+export const barreOnglets = { hauteur: 66, marge: 14 } as const;
 
 export const espace = {
   xs: 4,
@@ -76,8 +98,19 @@ export const arrondis = {
 
 export const ombre = {
   shadowColor: '#5E3A2C',
-  shadowOpacity: 0.1,
-  shadowRadius: 12,
+  shadowOpacity: 0.12,
+  shadowRadius: 14,
   shadowOffset: { width: 0, height: 6 },
-  elevation: 3,
+  elevation: 4,
+} as const;
+
+/**
+ * Effet « autocollant » des cartes : un contour net et un bord du bas un peu plus épais,
+ * comme une carte posée sur la page. À mettre sur les cartes qu'on peut toucher.
+ */
+export const relief = {
+  borderWidth: 1.5,
+  borderColor: '#EBD3BE',
+  borderBottomWidth: 4,
+  borderBottomColor: '#E2C3A6',
 } as const;
