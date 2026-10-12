@@ -1,6 +1,6 @@
 /**
  * COMPOSANTS DE BASE
- * Écran, textes, bouton, champ de saisie, carte à choisir, points de progression.
+ * Écran, textes, bouton, champ de saisie, carte à choisir, barre de progression.
  * Tous prennent leurs couleurs et tailles dans src/config/theme.ts.
  */
 import type { ReactNode } from 'react';
@@ -193,15 +193,16 @@ export function Pastille({ libelle, choisi, onPress }: { libelle: string; choisi
 
 /* ---------- Progression de l'onboarding ---------- */
 
+/** Barre de progression de l'onboarding, avec « 1/8 » à droite. */
 export function Progression({ etape, total }: { etape: number; total: number }) {
   return (
     <View style={styles.progression} accessibilityLabel={`Étape ${etape} sur ${total}`}>
-      {Array.from({ length: total }, (_, i) => (
-        <View
-          key={i}
-          style={[styles.point, i < etape && { backgroundColor: couleurs.saumon }, i === etape - 1 && { width: 22 }]}
-        />
-      ))}
+      <View style={styles.piste}>
+        <View style={[styles.rempli, { width: `${(etape / total) * 100}%` }]} />
+      </View>
+      <Text style={styles.compteEtapes}>
+        {etape}/{total}
+      </Text>
     </View>
   );
 }
@@ -212,26 +213,25 @@ const styles = StyleSheet.create({
   titre: {
     fontFamily: polices.titre,
     fontSize: tailles.titre,
-    fontWeight: '900',
+    fontWeight: '800',
     color: couleurs.brun,
-    lineHeight: 36,
-    letterSpacing: -0.4,
+    lineHeight: 32,
   },
-  sousTitre: { fontFamily: polices.titre, fontSize: tailles.moyen, fontWeight: '800', color: couleurs.brun },
+  sousTitre: { fontFamily: polices.titre, fontSize: tailles.moyen, fontWeight: '700', color: couleurs.brun },
   texte: { fontFamily: polices.texte, fontSize: tailles.texte, color: couleurs.brunDoux, lineHeight: 22 },
   bouton: {
     borderRadius: arrondis.rond,
-    paddingVertical: 15,
+    paddingVertical: 13,
     paddingHorizontal: espace.xl,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
   },
   boutonLigne: { flexDirection: 'row', alignItems: 'center', gap: espace.s },
-  boutonTexte: { fontFamily: polices.titre, fontSize: 17, fontWeight: '800' },
+  boutonTexte: { fontFamily: polices.titre, fontSize: tailles.texte, fontWeight: '700' },
   label: {
-    fontSize: 12.5,
-    fontWeight: '900',
+    fontSize: 12,
+    fontWeight: '800',
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     color: couleurs.brunDoux,
@@ -242,9 +242,9 @@ const styles = StyleSheet.create({
     borderColor: couleurs.ligne,
     borderRadius: arrondis.m,
     paddingHorizontal: espace.l,
-    paddingVertical: 15,
+    paddingVertical: 14,
     fontFamily: polices.texte,
-    fontSize: tailles.moyen,
+    fontSize: tailles.texte,
     fontWeight: '600',
     color: couleurs.brun,
   },
@@ -261,11 +261,13 @@ const styles = StyleSheet.create({
     ...relief,
     borderBottomWidth: 3,
     backgroundColor: couleurs.carte,
-    paddingHorizontal: espace.l,
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
   pastilleChoisie: { backgroundColor: couleurs.brun, borderColor: couleurs.brun, borderBottomColor: '#3E2419' },
-  pastilleTexte: { fontFamily: polices.texte, fontSize: 15, fontWeight: '800', color: couleurs.brun },
-  progression: { flexDirection: 'row', gap: 6, alignItems: 'center' },
-  point: { width: 8, height: 8, borderRadius: 4, backgroundColor: couleurs.ligne },
+  pastilleTexte: { fontFamily: polices.texte, fontSize: 14, fontWeight: '700', color: couleurs.brun },
+  progression: { flex: 1, flexDirection: 'row', gap: espace.m, alignItems: 'center' },
+  piste: { flex: 1, height: 8, borderRadius: 4, backgroundColor: couleurs.ligne, overflow: 'hidden' },
+  rempli: { height: 8, borderRadius: 4, backgroundColor: couleurs.renardFonce },
+  compteEtapes: { fontFamily: polices.texte, fontSize: 13, fontWeight: '800', color: couleurs.brunDoux, fontVariant: ['tabular-nums'] },
 });

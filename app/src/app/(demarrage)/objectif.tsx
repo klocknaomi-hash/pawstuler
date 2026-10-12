@@ -1,10 +1,11 @@
-/** ONBOARDING 2/6 — Ce que l'utilisateur recherche (emploi + type de contrat, facultatif). */
+/** ONBOARDING 2/8 — Ce que l'utilisateur recherche (emploi + type de contrat, facultatif). */
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Bouton, CarteChoix, Ecran, Pastille, SousTitre, Texte, Titre } from '@/components/base';
+import { Bouton, CarteChoix, Pastille, SousTitre, Texte, Titre } from '@/components/base';
+import { EcranFeuille } from '@/components/EcranFeuille';
 import { EnteteEtape } from '@/components/EnteteEtape';
 import { couleurs, espace } from '@/config/theme';
 import { useApp } from '@/store/etat';
@@ -31,8 +32,12 @@ export default function Objectif() {
   }
 
   return (
-    <Ecran defilant bas={<Bouton titre="Continuer" onPress={continuer} />}>
-      <EnteteEtape etape={2} />
+    <EcranFeuille
+      pose="content"
+      hauteurDecor={170}
+      tailleMascotte={115}
+      entete={<EnteteEtape etape={2} />}
+      bas={<Bouton titre="Continuer" onPress={continuer} />}>
       <Titre>Qu’est-ce que tu recherches ?</Titre>
 
       <CarteChoix choisi onPress={() => {}} libelle="Un emploi">
@@ -50,14 +55,14 @@ export default function Objectif() {
 
       <View style={{ gap: espace.s, marginTop: espace.s }}>
         <SousTitre>Quel type de contrat ?</SousTitre>
-        <Texte>Facultatif, plusieurs choix possibles. Ça nous aide à te proposer les bonnes tâches.</Texte>
+        <Texte>Facultatif, plusieurs choix possibles.</Texte>
       </View>
       <View style={styles.pastilles}>
         {CONTRATS.map((c) => (
           <Pastille key={c.id} libelle={c.libelle} choisi={contrats.includes(c.id)} onPress={() => basculer(c.id)} />
         ))}
       </View>
-    </Ecran>
+    </EcranFeuille>
   );
 }
 

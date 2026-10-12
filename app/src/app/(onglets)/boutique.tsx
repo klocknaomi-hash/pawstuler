@@ -144,7 +144,7 @@ export default function Shop() {
                   <Text style={[styles.etat, { color: couleurs.renardFonce }]}>🔒 Premium</Text>
                 ) : (
                   <View style={styles.prix}>
-                    <IconePiece taille={14} />
+                    <IconePiece taille={18} />
                     <Text style={styles.prixTexte}>{o.prix}</Text>
                   </View>
                 )}
@@ -213,7 +213,7 @@ function LigneSolde({ libelle, valeur, fort }: { libelle: string; valeur: number
         <Text style={[styles.soldeValeur, fort && { fontSize: 18 }, valeur < 0 && { color: couleurs.danger }]}>
           {valeur < 0 ? `−${-valeur}` : valeur}
         </Text>
-        <IconePiece taille={15} />
+        <IconePiece taille={18} />
       </View>
     </View>
   );
@@ -222,7 +222,7 @@ function LigneSolde({ libelle, valeur, fort }: { libelle: string; valeur: number
 const styles = StyleSheet.create({
   contenu: { padding: espace.l, gap: espace.l, paddingBottom: espace.xxl },
   entete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  titre: { fontFamily: polices.titre, fontSize: 32, fontWeight: '900', color: couleurs.brun, letterSpacing: -0.4 },
+  titre: { fontFamily: polices.titre, fontSize: 26, fontWeight: '800', color: couleurs.brun },
   vitrine: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -4,7 +4,7 @@
  */
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router/js-tabs';
-import type { ColorValue } from 'react-native';
+import { Text, type ColorValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { barreOnglets, couleurs, ombre, polices, relief } from '@/config/theme';
@@ -15,8 +15,21 @@ type NomIcone = keyof typeof Ionicons.glyphMap;
 
 function icone(nom: NomIcone, actif: NomIcone) {
   return function IconeOnglet({ color, focused }: { color: ColorValue; focused: boolean }) {
-    return <Ionicons name={focused ? actif : nom} size={24} color={color as string} />;
+    return <Ionicons name={focused ? actif : nom} size={22} color={color as string} />;
   };
+}
+
+/** Nom de l'onglet, toujours en entier (« Candidatures », « Clairebourg ») : la police rétrécit un peu si besoin. */
+function Etiquette({ color, children }: { color: ColorValue; children: string }) {
+  return (
+    <Text
+      numberOfLines={1}
+      adjustsFontSizeToFit
+      minimumFontScale={0.8}
+      style={{ color, fontFamily: polices.texte, fontWeight: '700', fontSize: 10, lineHeight: 14, minHeight: 15, flexShrink: 0, letterSpacing: -0.3, marginTop: 1 }}>
+      {children}
+    </Text>
+  );
 }
 
 export default function LayoutOnglets() {
@@ -40,17 +53,17 @@ export default function LayoutOnglets() {
           height: barreOnglets.hauteur,
           borderRadius: barreOnglets.hauteur / 2,
           backgroundColor: couleurs.carte,
-          paddingTop: 7,
-          paddingBottom: 7,
-          paddingHorizontal: 6,
+          paddingTop: 6,
+          paddingBottom: 8,
+          paddingHorizontal: 4,
           ...relief,
           borderTopWidth: 1.5,
           borderTopColor: couleurs.ligne,
           ...ombre,
         },
-        tabBarItemStyle: { borderRadius: 24, marginHorizontal: 2 },
+        tabBarItemStyle: { borderRadius: 22, overflow: 'hidden', marginHorizontal: 0, paddingHorizontal: 0 },
         tabBarActiveBackgroundColor: couleurs.pecheClair,
-        tabBarLabelStyle: { fontFamily: polices.titre, fontWeight: '800', fontSize: 10 },
+        tabBarLabel: Etiquette,
         sceneStyle: { backgroundColor: couleurs.creme },
       }}>
       <Tabs.Screen name="accueil" options={{ title: 'Accueil', tabBarIcon: icone('home-outline', 'home') }} />

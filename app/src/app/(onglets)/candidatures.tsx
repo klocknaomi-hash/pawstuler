@@ -205,7 +205,7 @@ function Stat({ valeur, libelle, accent }: { valeur: number; libelle: string; ac
 
 const styles = StyleSheet.create({
   contenu: { padding: espace.l, gap: espace.m, paddingBottom: 100 },
-  titre: { fontFamily: polices.titre, fontSize: 32, fontWeight: '900', color: couleurs.brun, letterSpacing: -0.4 },
+  titre: { fontFamily: polices.titre, fontSize: 26, fontWeight: '800', color: couleurs.brun },
   pro: {
     flexDirection: 'row',
     alignItems: 'center',

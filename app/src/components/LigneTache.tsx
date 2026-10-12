@@ -57,14 +57,14 @@ export function LigneTache({
       <View style={{ alignItems: 'center', gap: 6 }}>
         <View style={[styles.gain, tache.faite && { opacity: 0.6 }]}>
           <Text style={styles.gainTexte}>+{tache.pieces}</Text>
-          <IconePiece taille={14} />
+          <IconePiece taille={18} />
         </View>
       </View>
       <View style={[styles.coche, tache.faite && styles.cocheFaite, mesure && !tache.faite && styles.cocheAuto]}>
         {tache.faite ? (
-          <Ionicons name="checkmark" size={20} color={couleurs.blanc} />
+          <Ionicons name="checkmark" size={17} color={couleurs.blanc} />
         ) : mesure ? (
-          <Ionicons name="sync" size={15} color={couleurs.brunDoux} />
+          <Ionicons name="sync" size={13} color={couleurs.brunDoux} />
         ) : null}
       </View>
     </Pressable>
@@ -83,20 +83,20 @@ const styles = StyleSheet.create({
     ...relief,
   },
   faite: { backgroundColor: couleurs.saugeClair, borderColor: '#CFE0BC', borderBottomColor: '#B9D0A2' },
-  icone: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  emoji: { fontSize: 22 },
+  icone: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  emoji: { fontSize: 18 },
   coche: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    borderWidth: 2.5,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
     borderColor: couleurs.relief,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cocheFaite: { backgroundColor: couleurs.saugeFonce, borderColor: couleurs.saugeFonce },
   cocheAuto: { borderStyle: 'dashed' },
-  titre: { fontFamily: polices.titre, fontSize: 15.5, fontWeight: '800', color: couleurs.brun, lineHeight: 20 },
+  titre: { fontFamily: polices.texte, fontSize: 15, fontWeight: '700', color: couleurs.brun, lineHeight: 19 },
   titreFait: { color: couleurs.saugeFonce, textDecorationLine: 'line-through' },
   mesure: { flexDirection: 'row', alignItems: 'center', gap: espace.s, marginTop: 6 },
   barre: { flex: 1, height: 6, borderRadius: 3, backgroundColor: couleurs.ligne, overflow: 'hidden' },

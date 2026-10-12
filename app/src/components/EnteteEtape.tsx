@@ -1,9 +1,9 @@
-/** En-tête commun aux étapes de l'onboarding : retour + points de progression. */
+/** En-tête commun aux étapes de l'onboarding : retour + barre de progression « 1/8 ». */
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { couleurs } from '@/config/theme';
+import { couleurs, espace } from '@/config/theme';
 
 import { Progression } from './base';
 
@@ -20,11 +20,10 @@ export function EnteteEtape({ etape, retour = true }: { etape: number; retour?: 
         <View style={{ width: 26 }} />
       )}
       <Progression etape={etape} total={TOTAL_ETAPES} />
-      <View style={{ width: 26 }} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  entete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 32 },
+  entete: { flexDirection: 'row', alignItems: 'center', gap: espace.m, minHeight: 32 },
 });

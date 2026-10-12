@@ -350,7 +350,7 @@ export default function Accueil() {
             </Text>
           </View>
           <View style={styles.plafond} accessibilityLabel={`${etat.piecesDuJour} pièces gagnées aujourd’hui sur ${PLAFOND_PIECES_JOUR}`}>
-            <IconePiece taille={14} />
+            <IconePiece taille={18} />
             <Text style={styles.plafondTexte}>
               {etat.piecesDuJour}/{PLAFOND_PIECES_JOUR} pièces gagnées aujourd’hui
             </Text>
@@ -428,9 +428,8 @@ const styles = StyleSheet.create({
   },
   bonjour: {
     fontFamily: polices.titre,
-    fontSize: 26,
-    fontWeight: '900',
-    letterSpacing: -0.3,
+    fontSize: 22,
+    fontWeight: '800',
     color: couleurs.brun,
   },
   date: {
@@ -553,8 +552,8 @@ const styles = StyleSheet.create({
   },
   titre: {
     fontFamily: polices.titre,
-    fontSize: 24,
-    fontWeight: '900',
+    fontSize: 19,
+    fontWeight: '800',
     color: couleurs.brun,
   },
   compte: {
