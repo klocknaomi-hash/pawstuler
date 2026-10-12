@@ -21,7 +21,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { arrondis, couleurs, espace, ombre, polices, tailles } from '@/config/theme';
+import { arrondis, couleurs, espace, polices, relief, tailles } from '@/config/theme';
 
 /* ---------- Écran ---------- */
 
@@ -95,6 +95,8 @@ export function Bouton({
   // Bouton désactivé : gris (il redevient orange dès qu'on peut l'utiliser)
   const plein = variante === 'principal' || variante === 'victoire' || variante === 'noir';
   const v = desactive && plein ? { fond: couleurs.desactive, texte: couleurs.texteDesactive, bord: couleurs.desactive } : VARIANTES[variante];
+  // Bord du bas plus foncé : le bouton a un petit relief, qui s'enfonce quand on appuie
+  const basRelief = desactive || variante === 'texte' ? undefined : v.relief;
   return (
     <Pressable
       accessibilityRole="button"
@@ -104,9 +106,10 @@ export function Bouton({
       style={({ pressed }) => [
         styles.bouton,
         { backgroundColor: v.fond, borderColor: v.bord ?? v.fond },
+        basRelief && { borderBottomWidth: 4, borderBottomColor: basRelief },
         variante === 'texte' && { paddingVertical: espace.s },
         (desactive || chargement) && !(desactive && plein) && { opacity: 0.45 },
-        pressed && { transform: [{ scale: 0.98 }], opacity: 0.9 },
+        pressed && { transform: [{ translateY: 2 }], borderBottomWidth: basRelief ? 2 : undefined, opacity: 0.95 },
         style,
       ]}>
       {chargement ? (
@@ -121,13 +124,13 @@ export function Bouton({
   );
 }
 
-const VARIANTES: Record<VarianteBouton, { fond: string; texte: string; bord?: string }> = {
-  principal: { fond: couleurs.renardFonce, texte: couleurs.blanc },
-  secondaire: { fond: couleurs.pecheClair, texte: couleurs.renardFonce },
+const VARIANTES: Record<VarianteBouton, { fond: string; texte: string; bord?: string; relief?: string }> = {
+  principal: { fond: couleurs.renardFonce, texte: couleurs.blanc, relief: couleurs.renardRelief },
+  secondaire: { fond: couleurs.pecheClair, texte: couleurs.renardFonce, bord: '#F6CDB8', relief: '#F0B89C' },
   texte: { fond: 'transparent', texte: couleurs.renardFonce },
-  noir: { fond: couleurs.noir, texte: couleurs.blanc },
-  blanc: { fond: couleurs.carte, texte: couleurs.brun, bord: couleurs.ligne },
-  victoire: { fond: couleurs.corail, texte: couleurs.blanc },
+  noir: { fond: couleurs.noir, texte: couleurs.blanc, relief: '#000000' },
+  blanc: { fond: couleurs.carte, texte: couleurs.brun, bord: couleurs.ligne, relief: couleurs.relief },
+  victoire: { fond: couleurs.corail, texte: couleurs.blanc, relief: '#C93542' },
 };
 
 /* ---------- Champ de saisie ---------- */
@@ -209,11 +212,12 @@ const styles = StyleSheet.create({
   titre: {
     fontFamily: polices.titre,
     fontSize: tailles.titre,
-    fontWeight: '700',
+    fontWeight: '900',
     color: couleurs.brun,
-    lineHeight: 32,
+    lineHeight: 36,
+    letterSpacing: -0.4,
   },
-  sousTitre: { fontFamily: polices.texte, fontSize: tailles.moyen, fontWeight: '600', color: couleurs.brun },
+  sousTitre: { fontFamily: polices.titre, fontSize: tailles.moyen, fontWeight: '800', color: couleurs.brun },
   texte: { fontFamily: polices.texte, fontSize: tailles.texte, color: couleurs.brunDoux, lineHeight: 22 },
   bouton: {
     borderRadius: arrondis.rond,
@@ -224,17 +228,17 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   boutonLigne: { flexDirection: 'row', alignItems: 'center', gap: espace.s },
-  boutonTexte: { fontFamily: polices.texte, fontSize: tailles.texte, fontWeight: '700' },
+  boutonTexte: { fontFamily: polices.titre, fontSize: 17, fontWeight: '800' },
   label: {
-    fontSize: 12,
-    fontWeight: '800',
+    fontSize: 12.5,
+    fontWeight: '900',
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     color: couleurs.brunDoux,
   },
   champ: {
     backgroundColor: couleurs.carte,
-    borderWidth: 1.5,
+    borderWidth: 2,
     borderColor: couleurs.ligne,
     borderRadius: arrondis.m,
     paddingHorizontal: espace.l,
@@ -247,23 +251,21 @@ const styles = StyleSheet.create({
   carteChoix: {
     backgroundColor: couleurs.carte,
     borderRadius: arrondis.l,
-    borderWidth: 2,
-    borderColor: couleurs.ligne,
     padding: espace.m,
-    ...ombre,
-    shadowOpacity: 0.05,
+    ...relief,
+    borderWidth: 2,
   },
-  carteChoisie: { borderColor: couleurs.renardFonce, backgroundColor: couleurs.pecheClair },
+  carteChoisie: { borderColor: couleurs.renardFonce, borderBottomColor: couleurs.renardRelief, backgroundColor: couleurs.pecheClair },
   pastille: {
     borderRadius: arrondis.rond,
-    borderWidth: 1.5,
-    borderColor: couleurs.ligne,
+    ...relief,
+    borderBottomWidth: 3,
     backgroundColor: couleurs.carte,
     paddingHorizontal: espace.l,
     paddingVertical: 10,
   },
-  pastilleChoisie: { backgroundColor: couleurs.brun, borderColor: couleurs.brun },
-  pastilleTexte: { fontFamily: polices.texte, fontSize: 15, fontWeight: '700', color: couleurs.brun },
+  pastilleChoisie: { backgroundColor: couleurs.brun, borderColor: couleurs.brun, borderBottomColor: '#3E2419' },
+  pastilleTexte: { fontFamily: polices.texte, fontSize: 15, fontWeight: '800', color: couleurs.brun },
   progression: { flexDirection: 'row', gap: 6, alignItems: 'center' },
   point: { width: 8, height: 8, borderRadius: 4, backgroundColor: couleurs.ligne },
 });

@@ -17,7 +17,7 @@ import { BadgeSerie } from '@/components/Serie';
 import { objetsPour } from '@/logique/garderobe';
 import { LIBELLES_PRONOMS, accorder, compagnonParId } from '@/config/compagnons';
 import { OBJECTIFS_SERIE } from '@/config/serie';
-import { arrondis, couleurs, espace, ombre, polices } from '@/config/theme';
+import { arrondis, couleurs, espace, ombre, polices, relief } from '@/config/theme';
 import { villeParId } from '@/config/villes';
 import { imageVille } from '@/illustrations/registre';
 import { dateLisible, joursEntre } from '@/logique/dates';
@@ -259,8 +259,7 @@ const styles = StyleSheet.create({
   carte: {
     backgroundColor: couleurs.carte,
     borderRadius: arrondis.m,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    ...relief,
     padding: espace.l,
     gap: espace.s,
   },
@@ -275,7 +274,7 @@ const styles = StyleSheet.create({
   modifier: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   section: { gap: espace.s },
   sectionEntete: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
-  sectionTitre: { fontFamily: polices.titre, fontSize: 19, fontWeight: '800', color: couleurs.brun },
+  sectionTitre: { fontFamily: polices.titre, fontSize: 22, fontWeight: '900', color: couleurs.brun },
   compte: { fontSize: 13, fontWeight: '700', color: couleurs.brunDoux },
   sousSection: { fontSize: 12.5, fontWeight: '800', color: couleurs.renardFonce, textTransform: 'uppercase', letterSpacing: 0.4 },
   grille: { flexDirection: 'row', flexWrap: 'wrap', gap: espace.s },
@@ -286,8 +285,7 @@ const styles = StyleSheet.create({
     aspectRatio: 0.9,
     backgroundColor: couleurs.carte,
     borderRadius: arrondis.m,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    ...relief,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 4,

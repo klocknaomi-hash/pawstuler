@@ -2,11 +2,14 @@
  * Une tâche du jour : cocher / décocher d'un toucher, supprimer d'un appui long.
  * Tâche mesurable (candidatures, relances) : pas de case à cocher à la main, sa progression
  * (3/5) suit tes vraies données et elle se coche toute seule.
+ * Style « carte vive » : une pastille de couleur avec un emoji selon la catégorie, les pièces,
+ * puis une grosse coche à droite.
  */
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { arrondis, couleurs, espace, polices } from '@/config/theme';
+import { modeleParId } from '@/config/taches';
+import { arrondis, couleurs, espace, pastels, polices, relief } from '@/config/theme';
 import type { Tache } from '@/store/types';
 
 import { IconePiece } from './Pieces';
@@ -22,6 +25,8 @@ export function LigneTache({
 }) {
   const mesure = tache.mesure;
   const progres = Math.min(tache.progres ?? 0, mesure?.objectif ?? 0);
+  const categorie = tache.perso ? 'perso' : (modeleParId(tache.modeleId ?? '')?.categorie ?? 'perso');
+  const pastel = pastels[categorie];
   return (
     <Pressable
       onPress={onBasculer}
@@ -31,8 +36,8 @@ export function LigneTache({
       accessibilityLabel={`${tache.titre}, ${tache.pieces} pièces${mesure ? `, ${progres} sur ${mesure.objectif}` : ''}`}
       accessibilityHint="Appui long pour supprimer"
       style={({ pressed }) => [styles.ligne, tache.faite && styles.faite, pressed && { opacity: 0.85 }]}>
-      <View style={[styles.coche, tache.faite && styles.cocheFaite]}>
-        {tache.faite && <Ionicons name="checkmark" size={18} color={couleurs.blanc} />}
+      <View style={[styles.icone, { backgroundColor: pastel.fond }]}>
+        <Text style={styles.emoji}>{pastel.emoji}</Text>
       </View>
       <View style={{ flex: 1 }}>
         <Text style={[styles.titre, tache.faite && styles.titreFait]}>{tache.titre}</Text>
@@ -49,9 +54,18 @@ export function LigneTache({
         )}
         {mesure && !tache.faite && <Text style={styles.sous}>Avance toute seule quand tu enregistres tes {mesure.quoi === 'candidatures' ? 'candidatures' : 'relances'}</Text>}
       </View>
-      <View style={[styles.gain, tache.faite && { opacity: 0.6 }]}>
-        <Text style={styles.gainTexte}>+{tache.pieces}</Text>
-        <IconePiece taille={14} />
+      <View style={{ alignItems: 'center', gap: 6 }}>
+        <View style={[styles.gain, tache.faite && { opacity: 0.6 }]}>
+          <Text style={styles.gainTexte}>+{tache.pieces}</Text>
+          <IconePiece taille={14} />
+        </View>
+      </View>
+      <View style={[styles.coche, tache.faite && styles.cocheFaite, mesure && !tache.faite && styles.cocheAuto]}>
+        {tache.faite ? (
+          <Ionicons name="checkmark" size={20} color={couleurs.blanc} />
+        ) : mesure ? (
+          <Ionicons name="sync" size={15} color={couleurs.brunDoux} />
+        ) : null}
       </View>
     </Pressable>
   );
@@ -63,24 +77,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: espace.m,
     backgroundColor: couleurs.carte,
-    borderRadius: arrondis.m,
-    paddingHorizontal: espace.l,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    borderRadius: arrondis.l,
+    paddingHorizontal: espace.m,
+    paddingVertical: 12,
+    ...relief,
   },
-  faite: { backgroundColor: couleurs.saugeClair, borderColor: 'transparent' },
+  faite: { backgroundColor: couleurs.saugeClair, borderColor: '#CFE0BC', borderBottomColor: '#B9D0A2' },
+  icone: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  emoji: { fontSize: 22 },
   coche: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     borderWidth: 2.5,
-    borderColor: couleurs.ligne,
+    borderColor: couleurs.relief,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cocheFaite: { backgroundColor: couleurs.saugeFonce, borderColor: couleurs.saugeFonce },
-  titre: { fontFamily: polices.texte, fontSize: 15.5, fontWeight: '700', color: couleurs.brun, lineHeight: 20 },
+  cocheAuto: { borderStyle: 'dashed' },
+  titre: { fontFamily: polices.titre, fontSize: 15.5, fontWeight: '800', color: couleurs.brun, lineHeight: 20 },
   titreFait: { color: couleurs.saugeFonce, textDecorationLine: 'line-through' },
   mesure: { flexDirection: 'row', alignItems: 'center', gap: espace.s, marginTop: 6 },
   barre: { flex: 1, height: 6, borderRadius: 3, backgroundColor: couleurs.ligne, overflow: 'hidden' },

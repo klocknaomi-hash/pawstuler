@@ -23,7 +23,7 @@ import {
   formuleParId,
   type FormuleId,
 } from '@/config/abonnement';
-import { arrondis, couleurs, espace, polices } from '@/config/theme';
+import { arrondis, couleurs, espace, polices, relief } from '@/config/theme';
 import { dateLisible, jourDe } from '@/logique/dates';
 import { acheterFormule, aPremium, essaiDisponible, joursRestantsEssai, libelleAbonnement, restaurerAchats } from '@/services/abonnement';
 import { useApp } from '@/store/etat';
@@ -238,8 +238,7 @@ const styles = StyleSheet.create({
   liste: {
     backgroundColor: couleurs.carte,
     borderRadius: arrondis.l,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    ...relief,
     padding: espace.l,
     gap: espace.s,
   },
@@ -267,7 +266,7 @@ const styles = StyleSheet.create({
   badgeEssaiTexte: { color: couleurs.blanc, fontSize: 11.5, fontWeight: '800' },
   formulePrix: { fontFamily: polices.titre, fontWeight: '800', color: couleurs.brun, fontSize: 16 },
   formuleDetail: { fontSize: 12.5, color: couleurs.brunDoux, fontWeight: '600' },
-  frise: { backgroundColor: couleurs.carte, borderRadius: arrondis.l, borderWidth: 1, borderColor: couleurs.ligne, padding: espace.l },
+  frise: { backgroundColor: couleurs.carte, borderRadius: arrondis.l, ...relief, padding: espace.l },
   etape: { flexDirection: 'row', gap: espace.m },
   etapeIcone: { width: 28, height: 28, borderRadius: 14, backgroundColor: couleurs.renardFonce, alignItems: 'center', justifyContent: 'center' },
   etapeTrait: { width: 2, flex: 1, backgroundColor: couleurs.ligne, marginVertical: 2 },

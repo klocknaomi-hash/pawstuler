@@ -240,6 +240,7 @@ Chaque tâche rapporte des **pièces** (valeurs ci-dessous, réglables dans `app
 - Style **kawaii mais pas enfantin**, formes rondes, ambiance cosy, typographie arrondie (SF Pro Rounded).
 - **Palette tirée de Ziggy et de Clairebourg** : crème (fond), saumon du pelage (couleur de marque), brun du contour (texte), sauge, bleu du lac, or pour les pièces. **Corail vif réservé aux grandes victoires** (entretien, poste décroché).
 - Toutes les couleurs, polices et espacements sont dans `app/src/config/theme.ts`.
+- **Style « relief » (étape 1 du plan design, faite le 12/10)** : titres plus gras (900), cartes et boutons avec un contour et un bord du bas plus épais et plus foncé (`relief` dans `theme.ts`), boutons qui s'enfoncent quand on appuie, une **couleur pastel et un emoji par catégorie de tâche** (`pastels`), textes plus courts. **Barre d'onglets flottante** (pilule arrondie détachée du bas, `barreOnglets` dans `theme.ts`) ; les écrans d'onglets réservent la place en bas avec `useEspaceBarre()`.
 - **Icône de l'app** : Ziggy qui fait coucou, sur fond crème (`app/assets/images/`, écran de lancement compris).
 - **Illustrations** : créées avec Dimini (et ChatGPT/Gemini pour les premières). Ce sont la source principale : ne jamais les remplacer par des illustrations génériques quand les fichiers existent. Fond transparent, sans contour blanc.
 
@@ -294,6 +295,13 @@ Ces valeurs ne viennent pas de mes consignes : Claude les a choisies pour que l'
 
 ## 12. Questions ouvertes
 Aucune question bloquante. À ajuster après tes premiers tests sur iPhone : les valeurs de la section 11.
+- **Plan design validé (d'après les références Dribbble), une étape à la fois, avec mon feu vert avant chacune** :
+  1. Nouveau style général + barre d'onglets flottante : **fait**.
+  2. Connexion / inscription / onboarding : mascotte et décor en haut, feuille blanche en bas ; inscription e-mail avec œil (voir le mot de passe), barre de solidité, case « J'accepte les conditions d'utilisation et la politique de confidentialité » ; barre de progression « 1/8 » dans l'onboarding (Supabase seul, pas de Clerk).
+  3. Écran d'abonnement : mascotte en haut, annuel mis en avant « −44 % par rapport au mensuel », « Voir les autres formules », gros bouton d'essai.
+  4. Accueil : grande scène, pastille « Bonjour Naomi » + date, cloche de notifications, semaine 🐾, aventure avec énergie en segments ⚡ et compteur « 1/1 » ou « 2/3 », cartes de tâches vives « Encore X tâches aujourd'hui ».
+  5. Écrans de fête : « Journée terminée 🎉 » (une fois par jour, toutes les tâches faites, sans niveau) ; écran quotidien pour les non-abonnés comptant les jours restants d'une offre promo sur l'annuel seulement (remise et durée à me demander).
+  6. Plus tard (illustrations nécessaires) : la chambre de Milo, une par ville, vide avec une porte et une fenêtre, à remplir d'objets ; onglet « Chambre » dans le Shop.
 - **Vêtements superposés** (haut + bas + chaussures + accessoire en même temps) : demandé, **à faire plus tard** ; il faudra une image par vêtement seul, calée sur la silhouette de chaque animal.
 - **Corrections du 27/09 (faites)** : un seul nom par lieu partout ; lieux de la ville d'après ce que Milo a fait ; plus aucune mention du compagnon sur les pages Candidatures ; délai Premium compté à partir du retour de Milo. Milo n'a plus aucun lien avec tes entreprises (ses candidatures sont les siennes, dans sa ville ; seules tes nouvelles le font avancer, en décalé) ; carte verte comme à l'origine (titre dans la carte, une phrase qui change, sans heure) ; annonces de son entretien dans sa bulle. Rappel : supprimer le compte remet la série 🐾 à zéro.
 - **Corrections du 26/09 (faites)** : accueil restauré (une carte verte « Aventure du jour » sous la scène), récit avant « nouvelle aventure demain », système miroir décalé (calendrier de Milo, entreprises de sa ville, tenue d'entretien, raison des refus, 3 h entre deux aventures Premium), scènes animées par type, tâches mesurables et adaptées à la situation, formulaire (relance +1/+3/+5, bouton gris), rythme du compagnon à l'onboarding. À venir : illustration d'un **intérieur de bureau** pour l'entretien (à déposer dans `app/assets/villes/<ville>/`), tâches générées par l'IA avec Supabase.

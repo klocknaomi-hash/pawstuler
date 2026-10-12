@@ -18,12 +18,14 @@ import { Compagnon } from '@/components/Compagnon';
 import { CompteurPieces, IconePiece } from '@/components/Pieces';
 import { COLLECTIONS, LIBELLES_TYPES, RAYONS, estPremium, type ObjetBoutique, type TypeObjet } from '@/config/boutique';
 import { objetsPour } from '@/logique/garderobe';
-import { arrondis, couleurs, espace, polices } from '@/config/theme';
+import { arrondis, couleurs, espace, polices, relief } from '@/config/theme';
+import { useEspaceBarre } from '@/hooks/useEspaceBarre';
 import { imageObjet, imageTenue } from '@/illustrations/registre';
 import { aPremium } from '@/services/abonnement';
 import { useApp } from '@/store/etat';
 
 export default function Shop() {
+  const espaceBarre = useEspaceBarre();
   const { etat, dispatch } = useApp();
   const plus = aPremium(etat);
   const espece = etat.compagnon?.espece ?? 'renard';
@@ -51,7 +53,7 @@ export default function Shop() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: couleurs.creme }} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.contenu}>
+      <ScrollView contentContainerStyle={[styles.contenu, { paddingBottom: espaceBarre }]}>
         <View style={styles.entete}>
           <Text style={styles.titre}>Shop</Text>
           <Pressable onPress={() => router.push('/compte/portefeuille')} accessibilityRole="button" accessibilityLabel="Mon portefeuille">
@@ -220,7 +222,7 @@ function LigneSolde({ libelle, valeur, fort }: { libelle: string; valeur: number
 const styles = StyleSheet.create({
   contenu: { padding: espace.l, gap: espace.l, paddingBottom: espace.xxl },
   entete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  titre: { fontFamily: polices.titre, fontSize: 28, fontWeight: '800', color: couleurs.brun },
+  titre: { fontFamily: polices.titre, fontSize: 32, fontWeight: '900', color: couleurs.brun, letterSpacing: -0.4 },
   vitrine: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -241,8 +243,7 @@ const styles = StyleSheet.create({
   essayage: { width: 170, height: 210 },
   filtre: {
     borderRadius: 999,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    ...relief,
     backgroundColor: couleurs.carte,
     paddingHorizontal: 12,
     paddingVertical: 7,
@@ -254,8 +255,7 @@ const styles = StyleSheet.create({
     width: '31.8%',
     backgroundColor: couleurs.carte,
     borderRadius: arrondis.m,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    ...relief,
     padding: espace.s,
     alignItems: 'center',
     gap: 4,
@@ -289,8 +289,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     backgroundColor: couleurs.carte,
     borderRadius: arrondis.m,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    ...relief,
     padding: espace.l,
     gap: espace.s,
   },

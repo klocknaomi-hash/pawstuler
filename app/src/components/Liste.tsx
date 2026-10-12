@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
-import { arrondis, couleurs, espace } from '@/config/theme';
+import { arrondis, couleurs, espace, relief } from '@/config/theme';
 
 export function Groupe({ titre, children }: { titre?: string; children: ReactNode }) {
   return (
@@ -88,8 +88,7 @@ const styles = StyleSheet.create({
   groupe: {
     backgroundColor: couleurs.carte,
     borderRadius: arrondis.m,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    ...relief,
     overflow: 'hidden',
   },
   ligne: { flexDirection: 'row', alignItems: 'center', gap: espace.m, paddingHorizontal: espace.l, paddingVertical: 14 },

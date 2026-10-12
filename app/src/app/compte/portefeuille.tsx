@@ -6,7 +6,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Ecran } from '@/components/base';
 import { IconePiece } from '@/components/Pieces';
-import { arrondis, couleurs, espace, polices } from '@/config/theme';
+import { arrondis, couleurs, espace, polices, relief } from '@/config/theme';
 import { dateLisible } from '@/logique/dates';
 import { useApp } from '@/store/etat';
 
@@ -58,9 +58,9 @@ const styles = StyleSheet.create({
   ligneSolde: { flexDirection: 'row', alignItems: 'center', gap: espace.s },
   soldeValeur: { fontFamily: polices.titre, fontSize: 44, fontWeight: '800', color: couleurs.brun, fontVariant: ['tabular-nums'] },
   soldeDetail: { fontWeight: '600', color: couleurs.brunDoux },
-  titre: { fontFamily: polices.titre, fontSize: 19, fontWeight: '800', color: couleurs.brun },
+  titre: { fontFamily: polices.titre, fontSize: 22, fontWeight: '900', color: couleurs.brun },
   vide: { color: couleurs.brunDoux, fontWeight: '600', textAlign: 'center' },
-  liste: { backgroundColor: couleurs.carte, borderRadius: arrondis.m, borderWidth: 1, borderColor: couleurs.ligne },
+  liste: { backgroundColor: couleurs.carte, borderRadius: arrondis.m, ...relief },
   mouvement: { flexDirection: 'row', alignItems: 'center', gap: espace.m, padding: espace.l },
   separateur: { borderTopWidth: 1, borderTopColor: couleurs.ligne },
   libelle: { fontWeight: '700', color: couleurs.brun, fontSize: 14.5 },

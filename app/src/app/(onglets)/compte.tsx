@@ -13,6 +13,7 @@ import { Groupe, Ligne } from '@/components/Liste';
 import { compagnonParId } from '@/config/compagnons';
 import { arrondis, couleurs, espace, polices } from '@/config/theme';
 import { villeParId } from '@/config/villes';
+import { useEspaceBarre } from '@/hooks/useEspaceBarre';
 import { emploiActuel } from '@/logique/tachesDuJour';
 import { libelleAbonnement } from '@/services/abonnement';
 import { deconnecter, supprimerCompte } from '@/services/compte';
@@ -28,6 +29,7 @@ function confirmer(titre: string, message: string, action: string, onOk: () => v
 }
 
 export default function Compte() {
+  const espaceBarre = useEspaceBarre();
   const { etat, dispatch } = useApp();
   const compagnon = etat.compagnon;
   const infos = compagnon ? compagnonParId(compagnon.espece) : undefined;
@@ -63,7 +65,7 @@ export default function Compte() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: couleurs.creme }} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.contenu}>
+      <ScrollView contentContainerStyle={[styles.contenu, { paddingBottom: espaceBarre }]}>
         <Text style={styles.titre}>Compte</Text>
 
         <View style={styles.profil}>
@@ -118,7 +120,7 @@ export default function Compte() {
 
 const styles = StyleSheet.create({
   contenu: { padding: espace.l, gap: espace.l, paddingBottom: espace.xxl },
-  titre: { fontFamily: polices.titre, fontSize: 28, fontWeight: '800', color: couleurs.brun },
+  titre: { fontFamily: polices.titre, fontSize: 32, fontWeight: '900', color: couleurs.brun, letterSpacing: -0.4 },
   profil: {
     flexDirection: 'row',
     alignItems: 'center',

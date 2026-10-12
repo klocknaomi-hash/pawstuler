@@ -7,7 +7,7 @@ import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Bouton, Ecran, SousTitre } from '@/components/base';
-import { arrondis, couleurs, espace } from '@/config/theme';
+import { arrondis, couleurs, espace, relief } from '@/config/theme';
 import { exporterDonnees } from '@/services/compte';
 import { useApp } from '@/store/etat';
 
@@ -48,7 +48,7 @@ export default function Confidentialite() {
 }
 
 const styles = StyleSheet.create({
-  bloc: { backgroundColor: couleurs.carte, borderRadius: arrondis.m, borderWidth: 1, borderColor: couleurs.ligne, padding: espace.l, gap: espace.s },
+  bloc: { backgroundColor: couleurs.carte, borderRadius: arrondis.m, ...relief, padding: espace.l, gap: espace.s },
   texte: { fontSize: 14.5, lineHeight: 21, color: couleurs.brun, fontWeight: '500' },
   note: { fontSize: 12.5, color: couleurs.brunDoux, textAlign: 'center', lineHeight: 18 },
 });

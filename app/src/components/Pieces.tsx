@@ -1,7 +1,7 @@
 /** Les pièces : l'icône et le compteur affiché en haut de l'écran. */
 import { StyleSheet, Text, View } from 'react-native';
 
-import { couleurs, polices } from '@/config/theme';
+import { couleurs, polices, relief } from '@/config/theme';
 
 export function IconePiece({ taille = 18 }: { taille?: number }) {
   return (
@@ -47,8 +47,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: couleurs.ligne,
+    ...relief,
   },
   nombre: { fontFamily: polices.texte, fontWeight: '800', fontSize: 15, color: couleurs.brun, fontVariant: ['tabular-nums'] },
 });
