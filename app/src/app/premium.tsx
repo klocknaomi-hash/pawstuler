@@ -1,5 +1,8 @@
 /**
  * PAWSTULER PREMIUM — écran de présentation de l'abonnement (paywall).
+ * Mise en page : le compagnon dans sa ville en haut, une feuille blanche en bas avec
+ * 4 points forts, l'annuel mis en avant (« −44 % par rapport au mensuel »),
+ * « Voir les autres formules » pour le mensuel, et un gros bouton d'essai.
  * Règles de l'offre :
  *  - essai gratuit de 7 jours réservé à l'abonnement annuel (proposé une seule fois) ;
  *  - le mensuel n'a pas d'essai ;
@@ -11,8 +14,8 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Bouton, Ecran, Texte, Titre } from '@/components/base';
-import { Compagnon } from '@/components/Compagnon';
+import { Bouton, Texte, Titre } from '@/components/base';
+import { EcranFeuille } from '@/components/EcranFeuille';
 import {
   FORMULES,
   INCLUS_GRATUIT,
@@ -20,7 +23,11 @@ import {
   JOURS_ESSAI,
   MENTION_RENOUVELLEMENT,
   NOM_OFFRE,
+  POINTS_FORTS_PREMIUM,
+  REMISE_ANNUEL,
+  RESUME_GRATUIT,
   formuleParId,
+  type Formule,
   type FormuleId,
 } from '@/config/abonnement';
 import { arrondis, couleurs, espace, polices, relief } from '@/config/theme';
@@ -37,14 +44,17 @@ const dansNJours = (n: number) => dateLisible(jourDe(new Date(Date.now() + n * 8
 export default function Premium() {
   const { etat, dispatch } = useApp();
   const [choix, setChoix] = useState<FormuleId>('annuel');
+  const [autresFormules, setAutresFormules] = useState(false);
+  const [toutVoir, setToutVoir] = useState(false);
   const [enCours, setEnCours] = useState(false);
   const [message, setMessage] = useState('');
 
   const dejaPremium = aPremium(etat);
   const restants = joursRestantsEssai(etat);
   const formule = formuleParId(choix);
+  const essaiPossible = essaiDisponible(etat);
   // L'essai ne s'applique qu'à l'annuel, et seulement s'il n'a jamais été utilisé
-  const avecEssai = formule.essai && essaiDisponible(etat);
+  const avecEssai = formule.essai && essaiPossible;
 
   async function acheter() {
     setMessage('');
@@ -71,9 +81,17 @@ export default function Premium() {
     }
   }
 
+  const annuel = formuleParId('annuel');
+  const autres = FORMULES.filter((f) => f.id !== 'annuel');
+
   return (
-    <Ecran
-      defilant
+    <EcranFeuille
+      espece={etat.compagnon?.espece ?? 'renard'}
+      ville={etat.villeId ?? 'clairebourg'}
+      pose="celebration"
+      hauteurDecor={190}
+      tailleMascotte={130}
+      onFermer={() => router.back()}
       bas={
         dejaPremium ? (
           <View style={{ gap: espace.s }}>
@@ -90,7 +108,12 @@ export default function Premium() {
           </View>
         ) : (
           <>
-            <Bouton titre={avecEssai ? formule.bouton : `M’abonner pour ${formule.prix}`} chargement={enCours} onPress={acheter} />
+            <Bouton
+              titre={avecEssai ? formule.bouton : `M’abonner pour ${formule.prix}`}
+              chargement={enCours}
+              onPress={acheter}
+              style={styles.grosBouton}
+            />
             <Text style={styles.conditions}>
               {avecEssai
                 ? formule.conditions
@@ -101,19 +124,13 @@ export default function Premium() {
           </>
         )
       }>
-      <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Fermer" style={styles.fermer} hitSlop={12}>
-        <Ionicons name="close" size={26} color={couleurs.brun} />
-      </Pressable>
-
       <View style={styles.haut}>
-        <Compagnon espece={etat.compagnon?.espece ?? 'renard'} pose="celebration" taille={130} />
         <Text style={styles.surtitre}>{NOM_OFFRE}</Text>
-        <Titre style={{ textAlign: 'center' }}>
-          {essaiDisponible(etat) ? `Essaie Premium gratuitement pendant ${JOURS_ESSAI} jours` : 'Va plus loin avec ton compagnon'}
+        <Titre style={styles.centre}>
+          {essaiPossible ? `${JOURS_ESSAI} jours offerts pour tout essayer` : 'Va plus loin avec ton compagnon'}
         </Titre>
-        {essaiDisponible(etat) && <Texte style={{ textAlign: 'center' }}>Essai gratuit inclus avec l’abonnement annuel.</Texte>}
         {dejaPremium && (
-          <Texte style={{ textAlign: 'center', color: couleurs.renardFonce, fontWeight: '700' }}>
+          <Texte style={[styles.centre, { color: couleurs.renardFonce, fontWeight: '700' }]}>
             {restants === null
               ? `${libelleAbonnement(etat)}. Merci !`
               : etat.abonnement.resiliationPrevue
@@ -123,58 +140,69 @@ export default function Premium() {
         )}
       </View>
 
-      <View style={styles.liste}>
-        <Text style={styles.listeTitre}>Toujours gratuit</Text>
-        {INCLUS_GRATUIT.map((t) => (
-          <Ligne key={t} texte={t} couleur={couleurs.saugeFonce} />
+      {/* Les 4 points forts, en grille */}
+      <View style={styles.points}>
+        {POINTS_FORTS_PREMIUM.map((p) => (
+          <View key={p.texte} style={styles.point}>
+            <View style={styles.pointIcone}>
+              <Ionicons name={p.icone} size={17} color={couleurs.renardFonce} />
+            </View>
+            <Text style={styles.pointTexte}>{p.texte}</Text>
+          </View>
         ))}
       </View>
-      <View style={[styles.liste, { backgroundColor: couleurs.pecheClair, borderColor: 'transparent' }]}>
-        <Text style={styles.listeTitre}>En plus avec Premium</Text>
-        {INCLUS_PREMIUM.map((t) => (
-          <Ligne key={t} texte={t} couleur={couleurs.renardFonce} icone="sparkles" />
-        ))}
-      </View>
+      <Text style={styles.gratuit}>{RESUME_GRATUIT}</Text>
 
       {!dejaPremium && (
-        <>
-          <View style={styles.formules} accessibilityRole="radiogroup">
-            {FORMULES.map((f) => {
-              const choisie = choix === f.id;
-              const essai = f.essai && essaiDisponible(etat);
-              return (
-                <Pressable
-                  key={f.id}
-                  onPress={() => setChoix(f.id)}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: choisie }}
-                  accessibilityLabel={`${f.libelle}, ${f.prix}${essai ? `, ${JOURS_ESSAI} jours gratuits` : ', sans essai gratuit'}`}
-                  style={[styles.formule, choisie && styles.formuleChoisie]}>
-                  <View style={[styles.rond, choisie && styles.rondChoisi]}>{choisie && <View style={styles.rondPlein} />}</View>
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <View style={styles.formuleLigne}>
-                      <Text style={styles.formuleNom}>{f.libelle}</Text>
-                      {essai && (
-                        <View style={styles.badgeEssai}>
-                          <Text style={styles.badgeEssaiTexte}>{JOURS_ESSAI} jours gratuits</Text>
-                        </View>
-                      )}
-                    </View>
-                    <Text style={styles.formuleDetail}>{essai ? `Après l’essai · ${f.detail.toLowerCase()}` : f.detail}</Text>
-                  </View>
-                  <Text style={styles.formulePrix}>{f.prix}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          {avecEssai && (
-            <View style={styles.frise}>
-              <Etape icone="lock-open" titre="Aujourd’hui" texte="Premium débloqué. Tu ne paies rien." />
-              <Etape icone="notifications" titre={`Le ${dansNJours(JOURS_ESSAI - 3)}`} texte="On te rappelle que l’essai se termine bientôt." />
-              <Etape icone="card" titre={`Le ${dansNJours(JOURS_ESSAI)}`} texte="Premier paiement de 39,99 €, sauf si tu as résilié avant." dernier />
-            </View>
+        <View style={styles.formules} accessibilityRole="radiogroup">
+          {/* L'annuel, mis en avant */}
+          <CarteFormule
+            f={annuel}
+            choisie={choix === 'annuel'}
+            essai={essaiPossible}
+            vedette
+            onPress={() => setChoix('annuel')}
+          />
+          {autresFormules ? (
+            autres.map((f) => (
+              <CarteFormule key={f.id} f={f} choisie={choix === f.id} essai={false} onPress={() => setChoix(f.id)} />
+            ))
+          ) : (
+            <Pressable onPress={() => setAutresFormules(true)} accessibilityRole="button" style={styles.voirAutres} hitSlop={6}>
+              <Text style={styles.voirAutresTexte}>Voir les autres formules</Text>
+              <Ionicons name="chevron-down" size={15} color={couleurs.brunDoux} />
+            </Pressable>
           )}
+        </View>
+      )}
+
+      {avecEssai && !dejaPremium && (
+        <View style={styles.frise}>
+          <Etape icone="lock-open" titre="Aujourd’hui" texte="Premium débloqué. Tu ne paies rien." />
+          <Etape icone="notifications" titre={`Le ${dansNJours(JOURS_ESSAI - 3)}`} texte="On te rappelle que l’essai se termine bientôt." />
+          <Etape icone="card" titre={`Le ${dansNJours(JOURS_ESSAI)}`} texte="Premier paiement de 39,99 €, sauf si tu as résilié avant." dernier />
+        </View>
+      )}
+
+      {/* Tout le détail : ce qui reste gratuit et ce que Premium ajoute */}
+      <Pressable onPress={() => setToutVoir(!toutVoir)} accessibilityRole="button" style={styles.voirAutres} hitSlop={6}>
+        <Text style={styles.voirAutresTexte}>{toutVoir ? 'Masquer le détail' : 'Voir tout ce qui est inclus'}</Text>
+        <Ionicons name={toutVoir ? 'chevron-up' : 'chevron-down'} size={15} color={couleurs.brunDoux} />
+      </Pressable>
+      {toutVoir && (
+        <>
+          <View style={styles.liste}>
+            <Text style={styles.listeTitre}>Toujours gratuit</Text>
+            {INCLUS_GRATUIT.map((t) => (
+              <Ligne key={t} texte={t} couleur={couleurs.saugeFonce} />
+            ))}
+          </View>
+          <View style={[styles.liste, { backgroundColor: couleurs.pecheClair }]}>
+            <Text style={styles.listeTitre}>En plus avec Premium</Text>
+            {INCLUS_PREMIUM.map((t) => (
+              <Ligne key={t} texte={t} couleur={couleurs.renardFonce} icone="sparkles" />
+            ))}
+          </View>
         </>
       )}
 
@@ -186,7 +214,50 @@ export default function Premium() {
         <Lien texte="Conditions d’utilisation" onPress={() => router.push('/legal/conditions')} />
         <Lien texte="Confidentialité" onPress={() => router.push('/legal/confidentialite')} />
       </View>
-    </Ecran>
+    </EcranFeuille>
+  );
+}
+
+/** Une formule à choisir. L'annuel (« vedette ») porte le badge de remise et l'essai. */
+function CarteFormule({
+  f,
+  choisie,
+  essai,
+  vedette,
+  onPress,
+}: {
+  f: Formule;
+  choisie: boolean;
+  essai: boolean;
+  vedette?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="radio"
+      accessibilityState={{ selected: choisie }}
+      accessibilityLabel={`${f.libelle}, ${f.prix}${essai ? `, ${JOURS_ESSAI} jours gratuits` : ', sans essai gratuit'}${vedette ? `, moins ${REMISE_ANNUEL} % par rapport au mensuel` : ''}`}
+      style={[styles.formule, choisie && styles.formuleChoisie, vedette && { marginTop: espace.s }]}>
+      {vedette && (
+        <View style={styles.badgeRemise}>
+          <Text style={styles.badgeRemiseTexte}>−{REMISE_ANNUEL} % par rapport au mensuel</Text>
+        </View>
+      )}
+      <View style={[styles.rond, choisie && styles.rondChoisi]}>{choisie && <View style={styles.rondPlein} />}</View>
+      <View style={{ flex: 1, gap: 2 }}>
+        <View style={styles.formuleLigne}>
+          <Text style={styles.formuleNom}>{f.libelle}</Text>
+          {essai && (
+            <View style={styles.badgeEssai}>
+              <Text style={styles.badgeEssaiTexte}>{JOURS_ESSAI} jours gratuits</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.formuleDetail}>{essai ? `Après l’essai · ${f.detail.toLowerCase()}` : f.detail}</Text>
+      </View>
+      <Text style={styles.formulePrix}>{f.prix}</Text>
+    </Pressable>
   );
 }
 
@@ -226,15 +297,29 @@ function Lien({ texte, onPress }: { texte: string; onPress: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  fermer: { alignSelf: 'flex-end' },
-  haut: { alignItems: 'center', gap: espace.s },
+  haut: { alignItems: 'center', gap: espace.xs },
+  centre: { textAlign: 'center' },
   surtitre: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '800',
     color: couleurs.renardFonce,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
+  points: { flexDirection: 'row', flexWrap: 'wrap', gap: espace.s },
+  point: {
+    width: '48%',
+    flexGrow: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espace.s,
+    backgroundColor: couleurs.creme,
+    borderRadius: arrondis.m,
+    padding: espace.s,
+  },
+  pointIcone: { width: 30, height: 30, borderRadius: 10, backgroundColor: couleurs.pecheClair, alignItems: 'center', justifyContent: 'center' },
+  pointTexte: { flex: 1, fontSize: 13, fontWeight: '700', color: couleurs.brun, lineHeight: 17 },
+  gratuit: { fontSize: 12.5, color: couleurs.saugeFonce, fontWeight: '700', textAlign: 'center' },
   liste: {
     backgroundColor: couleurs.carte,
     borderRadius: arrondis.l,
@@ -242,9 +327,9 @@ const styles = StyleSheet.create({
     padding: espace.l,
     gap: espace.s,
   },
-  listeTitre: { fontFamily: polices.titre, fontSize: 16, fontWeight: '800', color: couleurs.brun, marginBottom: 2 },
+  listeTitre: { fontFamily: polices.titre, fontSize: 15, fontWeight: '800', color: couleurs.brun, marginBottom: 2 },
   ligne: { flexDirection: 'row', gap: espace.s, alignItems: 'flex-start' },
-  ligneTexte: { flex: 1, fontSize: 14.5, color: couleurs.brun, fontWeight: '600', lineHeight: 19 },
+  ligneTexte: { flex: 1, fontSize: 14, color: couleurs.brun, fontWeight: '600', lineHeight: 19 },
   formules: { gap: espace.s },
   formule: {
     flexDirection: 'row',
@@ -252,29 +337,42 @@ const styles = StyleSheet.create({
     gap: espace.m,
     backgroundColor: couleurs.carte,
     borderRadius: arrondis.m,
+    ...relief,
     borderWidth: 2,
-    borderColor: couleurs.ligne,
     padding: espace.m,
   },
-  formuleChoisie: { borderColor: couleurs.renardFonce, backgroundColor: couleurs.pecheClair },
+  formuleChoisie: { borderColor: couleurs.renardFonce, borderBottomColor: couleurs.renardRelief, backgroundColor: couleurs.pecheClair },
+  badgeRemise: {
+    position: 'absolute',
+    top: -11,
+    right: espace.m,
+    backgroundColor: couleurs.saugeFonce,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  badgeRemiseTexte: { color: couleurs.blanc, fontSize: 11, fontWeight: '800' },
   rond: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: couleurs.ligne, alignItems: 'center', justifyContent: 'center' },
   rondChoisi: { borderColor: couleurs.renardFonce },
   rondPlein: { width: 11, height: 11, borderRadius: 6, backgroundColor: couleurs.renardFonce },
   formuleLigne: { flexDirection: 'row', alignItems: 'center', gap: espace.s, flexWrap: 'wrap' },
   formuleNom: { fontFamily: polices.titre, fontWeight: '800', color: couleurs.brun, fontSize: 16 },
   badgeEssai: { backgroundColor: couleurs.renardFonce, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
-  badgeEssaiTexte: { color: couleurs.blanc, fontSize: 11.5, fontWeight: '800' },
-  formulePrix: { fontFamily: polices.titre, fontWeight: '800', color: couleurs.brun, fontSize: 16 },
+  badgeEssaiTexte: { color: couleurs.blanc, fontSize: 11, fontWeight: '800' },
+  formulePrix: { fontFamily: polices.titre, fontWeight: '800', color: couleurs.brun, fontSize: 15 },
   formuleDetail: { fontSize: 12.5, color: couleurs.brunDoux, fontWeight: '600' },
-  frise: { backgroundColor: couleurs.carte, borderRadius: arrondis.l, ...relief, padding: espace.l },
+  voirAutres: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: espace.xs },
+  voirAutresTexte: { fontSize: 13.5, fontWeight: '700', color: couleurs.brunDoux, textDecorationLine: 'underline' },
+  frise: { backgroundColor: couleurs.creme, borderRadius: arrondis.l, padding: espace.l },
   etape: { flexDirection: 'row', gap: espace.m },
-  etapeIcone: { width: 28, height: 28, borderRadius: 14, backgroundColor: couleurs.renardFonce, alignItems: 'center', justifyContent: 'center' },
+  etapeIcone: { width: 26, height: 26, borderRadius: 13, backgroundColor: couleurs.renardFonce, alignItems: 'center', justifyContent: 'center' },
   etapeTrait: { width: 2, flex: 1, backgroundColor: couleurs.ligne, marginVertical: 2 },
-  etapeTitre: { fontWeight: '800', color: couleurs.brun, fontSize: 14 },
-  etapeTexte: { color: couleurs.brunDoux, fontWeight: '600', fontSize: 13.5, lineHeight: 18 },
-  conditions: { textAlign: 'center', fontSize: 12.5, color: couleurs.brunDoux, fontWeight: '600', lineHeight: 17 },
+  etapeTitre: { fontWeight: '800', color: couleurs.brun, fontSize: 13.5 },
+  etapeTexte: { color: couleurs.brunDoux, fontWeight: '600', fontSize: 13, lineHeight: 18 },
+  grosBouton: { paddingVertical: 16 },
+  conditions: { textAlign: 'center', fontSize: 12, color: couleurs.brunDoux, fontWeight: '600', lineHeight: 16 },
   message: { textAlign: 'center', color: couleurs.saugeFonce, fontWeight: '700' },
-  mention: { fontSize: 11.5, color: couleurs.brunDoux, lineHeight: 16 },
+  mention: { fontSize: 11, color: couleurs.brunDoux, lineHeight: 15 },
   liens: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: espace.l },
   lien: { fontSize: 12.5, color: couleurs.brun, fontWeight: '700', textDecorationLine: 'underline' },
 });
