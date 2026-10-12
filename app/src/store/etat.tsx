@@ -150,7 +150,9 @@ export type Action =
   | { type: 'BASCULER_RESILIATION' }
   | { type: 'VOIR_JOUR_ESSAI'; jour: number }
   | { type: 'VOIR_FIN_ESSAI' }
-  | { type: 'VOIR_RAPPEL_ESSAI'; jour: string };
+  | { type: 'VOIR_RAPPEL_ESSAI'; jour: string }
+  | { type: 'VOIR_OFFRE_BIENVENUE'; jour: string }
+  | { type: 'FETER_JOURNEE'; jour: string };
 
 /* ---------- Petits outils ---------- */
 
@@ -318,6 +320,8 @@ function migrer(brut: Partial<EtatApp> & { version?: number }): EtatApp {
   if (etat.compagnon && !especeValide(etat.compagnon.espece)) etat.compagnon = { ...etat.compagnon, espece: 'renard' };
   if (etat.villeId && !VILLES.some((v) => v.id === etat.villeId)) etat.villeId = 'clairebourg';
   if (etat.onboardingTermine && etat.recherches.length === 0) etat.recherches = [nouvelleRecherche()];
+  // Comptes créés avant l'offre de bienvenue : elle commence à la mise à jour de l'app
+  if (etat.onboardingTermine && !etat.offreBienvenue) etat.offreBienvenue = { debut: jourDe() };
   const rechercheId = etat.recherches[0]?.id ?? '';
   etat.candidatures = etat.candidatures.map((brute) => {
     // Anciens statuts : « À envoyer » devient « Envoyé », « Offre reçue » devient « Décroché »
@@ -440,6 +444,8 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
           rappelEssaiLe: etat.abonnement.rappelEssaiLe ?? jourDe(),
         },
         inventaire: [...new Set([...etat.inventaire, ...cadeaux])],
+        // L'offre de bienvenue sur l'annuel commence le jour de l'inscription
+        offreBienvenue: etat.offreBienvenue ?? { debut: jourDe() },
       };
       return compterJourSerie(
         {
@@ -789,6 +795,10 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
         ...etat,
         abonnement: { ...etat.abonnement, finEssaiAVoir: false },
       };
+    case 'VOIR_OFFRE_BIENVENUE':
+      return etat.offreBienvenue ? { ...etat, offreBienvenue: { ...etat.offreBienvenue, vueLe: action.jour } } : etat;
+    case 'FETER_JOURNEE':
+      return { ...etat, journeeFeteeLe: action.jour };
     case 'VOIR_RAPPEL_ESSAI':
       return {
         ...etat,

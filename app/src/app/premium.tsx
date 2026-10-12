@@ -23,6 +23,7 @@ import {
   JOURS_ESSAI,
   MENTION_RENOUVELLEMENT,
   NOM_OFFRE,
+  OFFRE_BIENVENUE,
   POINTS_FORTS_PREMIUM,
   REMISE_ANNUEL,
   RESUME_GRATUIT,
@@ -32,7 +33,15 @@ import {
 } from '@/config/abonnement';
 import { arrondis, couleurs, espace, polices, relief } from '@/config/theme';
 import { dateLisible, jourDe } from '@/logique/dates';
-import { acheterFormule, aPremium, essaiDisponible, joursRestantsEssai, libelleAbonnement, restaurerAchats } from '@/services/abonnement';
+import {
+  acheterFormule,
+  aPremium,
+  essaiDisponible,
+  jourOffreBienvenue,
+  joursRestantsEssai,
+  libelleAbonnement,
+  restaurerAchats,
+} from '@/services/abonnement';
 import { useApp } from '@/store/etat';
 
 /** Page de l'App Store où l'on gère ou résilie ses abonnements. */
@@ -81,7 +90,19 @@ export default function Premium() {
     }
   }
 
-  const annuel = formuleParId('annuel');
+  // Offre de bienvenue (7 jours après l'inscription) : l'annuel à −30 % la première année
+  const offre = !dejaPremium && jourOffreBienvenue(etat, jourDe()) !== null;
+  const annuelBase = formuleParId('annuel');
+  const annuel: Formule = offre
+    ? {
+        ...annuelBase,
+        prix: OFFRE_BIENVENUE.prixAn,
+        detail: `La 1re année, puis ${OFFRE_BIENVENUE.prixNormal}`,
+        conditions: `Gratuit pendant ${JOURS_ESSAI} jours, puis ${OFFRE_BIENVENUE.prix} pour la première année, puis 39,99 € par an. L'abonnement se renouvelle automatiquement chaque année. Pour ne rien payer, résilie au moins 24 h avant la fin de l'essai.`,
+      }
+    : annuelBase;
+  const formuleChoisie = choix === 'annuel' ? annuel : formule;
+  const premierPaiement = offre ? OFFRE_BIENVENUE.prix : '39,99 €';
   const autres = FORMULES.filter((f) => f.id !== 'annuel');
 
   return (
@@ -109,16 +130,18 @@ export default function Premium() {
         ) : (
           <>
             <Bouton
-              titre={avecEssai ? formule.bouton : `M’abonner pour ${formule.prix}`}
+              titre={avecEssai ? formule.bouton : `M’abonner pour ${formuleChoisie.prix}`}
               chargement={enCours}
               onPress={acheter}
               style={styles.grosBouton}
             />
             <Text style={styles.conditions}>
               {avecEssai
-                ? formule.conditions
+                ? formuleChoisie.conditions
                 : choix === 'annuel'
-                  ? "39,99 € par an, prélevés dès la confirmation de l'achat. L'abonnement se renouvelle automatiquement chaque année. Résiliable à tout moment."
+                  ? offre
+                    ? `${OFFRE_BIENVENUE.prix} pour la première année, prélevés dès la confirmation de l'achat, puis 39,99 € par an. L'abonnement se renouvelle automatiquement chaque année. Résiliable à tout moment.`
+                    : "39,99 € par an, prélevés dès la confirmation de l'achat. L'abonnement se renouvelle automatiquement chaque année. Résiliable à tout moment."
                   : formule.conditions}
             </Text>
           </>
@@ -161,6 +184,7 @@ export default function Premium() {
             choisie={choix === 'annuel'}
             essai={essaiPossible}
             vedette
+            offre={offre}
             onPress={() => setChoix('annuel')}
           />
           {autresFormules ? (
@@ -180,7 +204,7 @@ export default function Premium() {
         <View style={styles.frise}>
           <Etape icone="lock-open" titre="Aujourd’hui" texte="Premium débloqué. Tu ne paies rien." />
           <Etape icone="notifications" titre={`Le ${dansNJours(JOURS_ESSAI - 3)}`} texte="On te rappelle que l’essai se termine bientôt." />
-          <Etape icone="card" titre={`Le ${dansNJours(JOURS_ESSAI)}`} texte="Premier paiement de 39,99 €, sauf si tu as résilié avant." dernier />
+          <Etape icone="card" titre={`Le ${dansNJours(JOURS_ESSAI)}`} texte={`Premier paiement de ${premierPaiement}, sauf si tu as résilié avant.`} dernier />
         </View>
       )}
 
@@ -224,12 +248,15 @@ function CarteFormule({
   choisie,
   essai,
   vedette,
+  offre,
   onPress,
 }: {
   f: Formule;
   choisie: boolean;
   essai: boolean;
   vedette?: boolean;
+  /** Offre de bienvenue en cours : badge « −30 % » à la place de l'économie sur le mensuel. */
+  offre?: boolean;
   onPress: () => void;
 }) {
   return (
@@ -241,7 +268,9 @@ function CarteFormule({
       style={[styles.formule, choisie && styles.formuleChoisie, vedette && { marginTop: espace.s }]}>
       {vedette && (
         <View style={styles.badgeRemise}>
-          <Text style={styles.badgeRemiseTexte}>−{REMISE_ANNUEL} % par rapport au mensuel</Text>
+          <Text style={styles.badgeRemiseTexte}>
+            {offre ? `−${OFFRE_BIENVENUE.remise} % · offre de bienvenue` : `−${REMISE_ANNUEL} % par rapport au mensuel`}
+          </Text>
         </View>
       )}
       <View style={[styles.rond, choisie && styles.rondChoisi]}>{choisie && <View style={styles.rondPlein} />}</View>
