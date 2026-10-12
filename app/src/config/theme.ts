@@ -67,7 +67,7 @@ export const tailles = {
 export const pastels = {
   preparer: { fond: '#FFE9DA', emoji: '📝' },
   chercher: { fond: '#E1F1F5', emoji: '🔎' },
-  candidater: { fond: '#EAF1DF', emoji: '📮' },
+  candidater: { fond: '#DCEBFF', emoji: '📮' },
   relancer: { fond: '#FFF1CF', emoji: '📞' },
   reseau: { fond: '#EEE7FB', emoji: '🤝' },
   entretien: { fond: '#FFE2E4', emoji: '👔' },

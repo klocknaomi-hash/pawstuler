@@ -50,4 +50,55 @@ const styles = StyleSheet.create({
   remplissage: { height: '100%', borderRadius: 999, backgroundColor: '#F4C23F' },
   valeur: { fontFamily: polices.texte, fontWeight: '800', fontSize: 13, color: couleurs.brun, fontVariant: ['tabular-nums'] },
   recharge: { fontSize: 11.5, fontWeight: '700', color: couleurs.brunDoux, textAlign: 'right' },
+  segments: { flex: 1, flexDirection: 'row', gap: 3 },
+  segment: { flex: 1, height: 9, borderRadius: 3 },
 });
+
+/**
+ * Énergie en segments ⚡ (dans la carte « Aventure du jour ») : 10 petits blocs qui se remplissent,
+ * « 25/30 » à droite et, si elle n'est pas pleine, le temps avant la recharge complète.
+ * Pensée pour un fond foncé (la carte verte) : blocs dorés sur fond translucide.
+ */
+export function EnergieSegments({
+  energie,
+  max,
+  recharge,
+  clair = true,
+}: {
+  energie: number;
+  max: number;
+  recharge?: number | null;
+  /** Texte blanc (sur la carte verte) ou brun (sur fond clair). */
+  clair?: boolean;
+}) {
+  const SEGMENTS = 10;
+  const pleins = Math.round(Math.max(0, Math.min(1, energie / max)) * SEGMENTS);
+  const texteRecharge = recharge != null ? `Recharge dans ${dureeLisible(recharge)}` : null;
+  const couleurTexte = clair ? couleurs.blanc : couleurs.brun;
+  return (
+    <View
+      style={{ gap: 4 }}
+      accessibilityRole="progressbar"
+      accessibilityLabel={`Énergie ${energie} sur ${max}${texteRecharge ? `. ${texteRecharge}` : ''}`}
+      accessibilityValue={{ min: 0, max, now: energie }}>
+      <View style={styles.ligne}>
+        <Ionicons name="flash" size={15} color="#FFD25A" />
+        <View style={styles.segments}>
+          {Array.from({ length: SEGMENTS }, (_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.segment,
+                { backgroundColor: i < pleins ? '#FFD25A' : clair ? 'rgba(255,255,255,0.22)' : '#FFF1CF' },
+              ]}
+            />
+          ))}
+        </View>
+        <Text style={[styles.valeur, { color: couleurTexte }]}>
+          {energie}/{max}
+        </Text>
+      </View>
+      {texteRecharge ? <Text style={[styles.recharge, { color: couleurTexte, opacity: 0.85 }]}>{texteRecharge}</Text> : null}
+    </View>
+  );
+}
