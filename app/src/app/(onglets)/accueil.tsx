@@ -40,7 +40,7 @@ import { dureeLisible, energieDisponible, tempsAvantRecharge } from '@/logique/e
 import { annonceEntretien, compagnonAbsent, heureLisible as heureMission, ouEst, resultatADecouvrir } from '@/logique/missions';
 import { estEndormi, heureLisible } from '@/logique/rythme';
 import { emploiActuel } from '@/logique/tachesDuJour';
-import { jourEssai, rappelEssai, rappelEssaiDisponible } from '@/services/abonnement';
+import { jourEssai, offreBienvenueAMontrer, rappelEssai, rappelEssaiDisponible } from '@/services/abonnement';
 import { gainPlafonne, useApp } from '@/store/etat';
 import type { Tache } from '@/store/types';
 
@@ -69,14 +69,27 @@ export default function Accueil() {
   const energie = energieDisponible(etat, maintenant);
   const recharge = tempsAvantRecharge(etat, maintenant);
 
-  // Essai Premium : l'écran « Jour X / 7 » une fois par jour d'essai, puis le message de fin
+  // Essai Premium : l'écran « Jour X / 7 » une fois par jour d'essai, puis le message de fin ;
+  // sinon, pour les non-abonnés, l'offre de bienvenue (une fois par jour pendant 7 jours)
   const jourDEssai = jourEssai(etat);
   const jourVu = etat.abonnement.jourEssaiVu ?? 0;
   const finAVoir = !!etat.abonnement.finEssaiAVoir;
+  const offreAVoir = offreBienvenueAMontrer(etat, jourDe());
   useEffect(() => {
     if (jourDEssai !== null && jourVu < jourDEssai) router.push('/essai-jour');
     else if (finAVoir) router.push({ pathname: '/essai-jour', params: { fin: '1' } });
-  }, [jourDEssai, jourVu, finAVoir]);
+    else if (offreAVoir) router.push('/offre');
+  }, [jourDEssai, jourVu, finAVoir, offreAVoir]);
+
+  // Journée terminée 🎉 : quand la dernière tâche du jour est faite, une fois par jour au plus
+  // (petit délai pour laisser le compagnon réagir et les pièces s'envoler)
+  const toutesFaites = etat.taches.length > 0 && etat.taches.every((t) => t.faite);
+  const dejaFetee = etat.journeeFeteeLe === jourDe();
+  useEffect(() => {
+    if (!toutesFaites || dejaFetee) return;
+    const minuterie = setTimeout(() => router.push('/journee-terminee'), 1600);
+    return () => clearTimeout(minuterie);
+  }, [toutesFaites, dejaFetee]);
 
   const compagnon = etat.compagnon;
   if (!compagnon || !etat.villeId) return null;

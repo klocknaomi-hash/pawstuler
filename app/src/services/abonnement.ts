@@ -8,7 +8,7 @@
  * `acheterFormule` et `restaurerAchats` changeront : les écrans resteront identiques.
  * Étapes détaillées : docs/connexion-et-abonnement.md.
  */
-import { JOURS_ESSAI, NOM_OFFRE, formuleParId, type FormuleId } from '@/config/abonnement';
+import { JOURS_ESSAI, NOM_OFFRE, OFFRE_BIENVENUE, formuleParId, type FormuleId } from '@/config/abonnement';
 import { joursEntre } from '@/logique/dates';
 import type { EtatApp } from '@/store/types';
 
@@ -59,9 +59,26 @@ export function abonnementDuJour(etat: EtatApp): EtatApp['abonnement'] {
 /** Rappel doux « tes 7 jours d'essai t'attendent toujours » : au plus tous les 4 jours. */
 export function rappelEssaiDisponible(etat: EtatApp, aujourdhui: string): boolean {
   if (!essaiDisponible(etat) || !etat.onboardingTermine) return false;
+  // Pendant l'offre de bienvenue, son écran du jour suffit : pas de bandeau en plus
+  if (jourOffreBienvenue(etat, aujourdhui) !== null) return false;
   const dernier = etat.abonnement.rappelEssaiLe;
   return !dernier || joursEntre(dernier, aujourdhui) >= 4;
 }
+
+/**
+ * Offre de bienvenue : le jour de l'offre (1 à 7), ou null si elle ne concerne pas (ou plus)
+ * cette personne. Réservée à la version gratuite (ni essai en cours, ni abonnement).
+ */
+export function jourOffreBienvenue(etat: EtatApp, aujourdhui: string): number | null {
+  const offre = etat.offreBienvenue;
+  if (!offre || etat.abonnement.statut !== 'gratuit' || aPremium(etat)) return null;
+  const jour = joursEntre(offre.debut, aujourdhui) + 1;
+  return jour >= 1 && jour <= OFFRE_BIENVENUE.jours ? jour : null;
+}
+
+/** L'écran de l'offre est à montrer aujourd'hui (une seule fois par jour). */
+export const offreBienvenueAMontrer = (etat: EtatApp, aujourdhui: string) =>
+  etat.onboardingTermine && jourOffreBienvenue(etat, aujourdhui) !== null && etat.offreBienvenue?.vueLe !== aujourdhui;
 
 /** L'essai gratuit n'est proposé qu'une fois (et seulement avec l'annuel). */
 export const essaiDisponible = (etat: EtatApp) => !etat.abonnement.essaiUtilise && etat.abonnement.statut === 'gratuit';

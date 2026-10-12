@@ -57,6 +57,9 @@ function Navigation() {
       <Stack.Screen name="compagnon" options={avecEntete('Mon compagnon')} />
       <Stack.Screen name="premium" options={{ presentation: 'modal' }} />
       <Stack.Screen name="essai-jour" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+      {/* Écrans de fête et offre de bienvenue */}
+      <Stack.Screen name="journee-terminee" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+      <Stack.Screen name="offre" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
       {/* Textes légaux : en fenêtre, pour s'ouvrir aussi par-dessus l'écran d'abonnement */}
       <Stack.Screen name="legal/[doc]" options={{ ...avecEntete('Informations'), presentation: 'modal' }} />
     </Stack>

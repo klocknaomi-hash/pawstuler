@@ -84,6 +84,31 @@ export const INCLUS_PREMIUM = [
   'Aide avancée pour ton CV, tes offres et tes entretiens',
 ];
 
+/**
+ * OFFRE DE BIENVENUE (non-abonnés uniquement) : l'annuel à −30 % la première année,
+ * pendant les 7 jours qui suivent l'inscription. Un petit écran par jour compte les jours restants.
+ * Paiement réel : offre promotionnelle App Store à créer sur le produit annuel (via RevenueCat).
+ */
+export const OFFRE_BIENVENUE = {
+  remise: 30,
+  jours: 7,
+  prix: '27,99 €',
+  prixAn: '27,99 €/an',
+  /** Prix normal, barré à côté. */
+  prixNormal: '39,99 €/an',
+} as const;
+
+/** Le petit mot du jour de l'écran d'offre (jour 1 à 7). */
+export const MESSAGES_OFFRE: Record<number, { titre: string; texte: string }> = {
+  1: { titre: 'Bienvenue 🎁', texte: 'Pour ton arrivée, Premium est à −30 % sur l’annuel pendant 7 jours. Rien ne presse : la version gratuite te suffit pour avancer.' },
+  2: { titre: 'Deuxième jour ensemble ✨', texte: 'Tu es revenu ! Avec Premium, ton compagnon peut partir jusqu’à 3 fois par jour à l’aventure.' },
+  3: { titre: 'Ça prend forme 🐾', texte: 'Petit à petit, ta recherche s’organise. Premium ajoute des tenues et des événements exclusifs.' },
+  4: { titre: 'Mi-parcours 🌿', texte: 'Plus d’énergie, une recharge en 3 h : ton compagnon te suit encore plus souvent.' },
+  5: { titre: 'Encore 3 jours ⏳', texte: 'L’offre de bienvenue se termine bientôt. Tes tâches et tes candidatures restent gratuites, quoi qu’il arrive.' },
+  6: { titre: 'Avant-dernier jour 💛', texte: 'Merci d’être là chaque jour. Si Premium te tente, c’est le moment d’en profiter à −30 %.' },
+  7: { titre: 'Dernier jour 🎁', texte: 'C’est le dernier jour de ton offre de bienvenue. Demain, l’annuel revient à 39,99 €.' },
+};
+
 /** Les 4 points forts affichés en haut de l'écran d'abonnement (le détail complet s'ouvre en dessous). */
 export const POINTS_FORTS_PREMIUM: { icone: 'compass' | 'flash' | 'shirt' | 'sparkles'; texte: string }[] = [
   { icone: 'compass', texte: 'Jusqu’à 3 aventures par jour' },

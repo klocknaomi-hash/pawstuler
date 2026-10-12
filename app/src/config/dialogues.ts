@@ -48,3 +48,15 @@ export const DIALOGUES: Record<EspeceId, Replique[]> = {
 
 /** Premier message du compagnon sur l'accueil, tant qu'aucune candidature n'est enregistrée. */
 export const PREMIER_PAS = 'On commence doucement : ajoute ta première candidature… ou juste une offre qui te plaît 🐾';
+
+/**
+ * « Journée terminée 🎉 » : le petit mot du compagnon quand toutes les tâches du jour sont faites.
+ * Un message par jour (choisi selon la date), {nom} = le prénom de l'utilisateur.
+ */
+export const MESSAGES_JOURNEE_TERMINEE = [
+  'Tu as tout fait aujourd’hui, {nom} ! Je suis tellement content{e} pour nous. 🐾',
+  'Mission accomplie ! Ce soir, on peut se reposer l’esprit tranquille.',
+  'Chaque petit pas d’aujourd’hui nous rapproche du bon poste. Merci, {nom} !',
+  'Toutes les tâches cochées ! Moi aussi, j’ai bien avancé de mon côté.',
+  'Quelle journée ! Demain, on continue à notre rythme.',
+];

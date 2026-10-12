@@ -255,5 +255,12 @@ export type EtatApp = {
   equipe: string[]; // objets portés par le compagnon
 
   abonnement: Abonnement;
+  /**
+   * Offre de bienvenue (non-abonnés) : l'annuel à prix réduit pendant quelques jours après
+   * l'inscription. `debut` = jour d'inscription, `vueLe` = dernier jour où l'écran a été montré.
+   */
+  offreBienvenue?: { debut: string; vueLe?: string };
+  /** Dernier jour fêté par l'écran « Journée terminée 🎉 » (une fois par jour au plus). */
+  journeeFeteeLe?: string;
   parametres: Parametres;
 };
