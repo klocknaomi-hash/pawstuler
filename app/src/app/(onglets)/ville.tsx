@@ -2,7 +2,7 @@
  * LA VILLE DU COMPAGNON (Clairebourg par défaut)
  * Son univers : ses lieux, sa propre recherche d'emploi (miroir de celle de l'utilisateur),
  * ses propres candidatures (mêmes entreprises que les tiennes), son poste une fois embauché,
- * et le souvenir de sa dernière aventure.
+ * sa chambre (à décorer avec les objets du Shop) et le souvenir de sa dernière aventure.
  * Base prévue pour la suite : déplacements, événements, rencontres, progression.
  */
 import { Image } from 'expo-image';
@@ -11,6 +11,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Compagnon } from '@/components/Compagnon';
+import { VueChambre } from '@/components/VueChambre';
 import { useMaintenant } from '@/hooks/useMaintenant';
 import { arrondis, couleurs, espace, polices, relief } from '@/config/theme';
 import { villeParId } from '@/config/villes';
@@ -64,6 +65,19 @@ export default function Ville() {
             </View>
           )}
         </View>
+
+        {/* Sa chambre : il y dort la nuit, on la décore avec les objets du Shop */}
+        <Pressable onPress={() => router.push('/chambre')} accessibilityRole="button" accessibilityLabel={`La chambre de ${nom}`} style={styles.chambre}>
+          <View style={styles.chambreEntete}>
+            <Text style={styles.chambreTitre}>La chambre de {nom}</Text>
+            <Text style={styles.chambreLien}>Décorer ›</Text>
+          </View>
+          <VueChambre
+            ville={ville.id}
+            chambre={etat.chambre ?? {}}
+            compagnon={absent ? undefined : dort ? { espece: etat.compagnon.espece, pose: 'dort', equipe: etat.equipe } : undefined}
+          />
+        </Pressable>
 
         {derniere && (
           <Pressable style={styles.souvenir} onPress={() => router.push('/aventure')} accessibilityRole="button">
@@ -122,6 +136,10 @@ export default function Ville() {
 
 const styles = StyleSheet.create({
   contenu: { padding: espace.l, gap: espace.m, paddingBottom: espace.xxl },
+  chambre: { backgroundColor: couleurs.carte, borderRadius: arrondis.l, padding: espace.s, gap: espace.s, ...relief },
+  chambreEntete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: espace.s, paddingTop: 4 },
+  chambreTitre: { fontFamily: polices.titre, fontSize: 16, fontWeight: '800', color: couleurs.brun },
+  chambreLien: { fontSize: 13.5, fontWeight: '800', color: couleurs.renardFonce },
   titre: { fontFamily: polices.titre, fontSize: 26, fontWeight: '800', color: couleurs.brun },
   carte: { height: 330, borderRadius: arrondis.l, overflow: 'hidden', justifyContent: 'flex-end' },
   compagnon: { alignItems: 'center', paddingBottom: 6 },

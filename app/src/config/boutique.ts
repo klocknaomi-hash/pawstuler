@@ -7,7 +7,9 @@
  * La liste réellement visible pour un animal est calculée par src/logique/garderobe.ts.
  */
 
-export type TypeObjet = 'tenue' | 'saison' | 'haut' | 'bas' | 'chaussures' | 'chapeau' | 'cou' | 'accessoire' | 'objet';
+import type { TypeEmplacement } from './chambre';
+
+export type TypeObjet = 'tenue' | 'saison' | 'haut' | 'bas' | 'chaussures' | 'chapeau' | 'cou' | 'accessoire' | 'objet' | 'meuble';
 
 export type ObjetBoutique = {
   id: string;
@@ -32,6 +34,13 @@ export type ObjetBoutique = {
    * (déclarée dans src/illustrations/registre.ts, dossier assets/tenues/<animal>).
    */
   illustre?: boolean;
+  /**
+   * Objet de la chambre (rayon « Chambre ») : l'endroit où il se pose.
+   * Il ne se porte pas : il décore la chambre du compagnon.
+   */
+  emplacement?: TypeEmplacement;
+  /** Tapis : sa couleur (dessiné comme un tapis rond, en attendant une illustration). */
+  couleur?: string;
 };
 
 export type Collection = 'halloween' | 'noel' | 'saint-valentin' | 'thanksgiving';
@@ -47,7 +56,7 @@ export const COLLECTIONS: Record<Collection, string> = {
 export const estPremium = (o: ObjetBoutique) => Boolean(o.premium || o.collection);
 
 /** Les deux rayons du Shop. */
-export const RAYONS = { tenues: 'Tenues complètes', objets: 'Objets' } as const;
+export const RAYONS = { tenues: 'Tenues', objets: 'Objets', chambre: 'Chambre' } as const;
 
 /** Catégories à l'intérieur du rayon « Tenues complètes ». */
 export const LIBELLES_TYPES: Record<TypeObjet, string> = {
@@ -60,7 +69,19 @@ export const LIBELLES_TYPES: Record<TypeObjet, string> = {
   cou: 'Autour du cou',
   accessoire: 'Accessoires',
   objet: 'Objets',
+  meuble: 'Chambre',
 };
+
+/** Raccourci pour un objet de la chambre. */
+const meuble = (id: string, nom: string, emplacement: TypeEmplacement, prix: number, emoji: string, extra: Partial<ObjetBoutique> = {}): ObjetBoutique => ({
+  id,
+  nom,
+  type: 'meuble',
+  prix,
+  emoji,
+  emplacement,
+  ...extra,
+});
 
 /** Raccourci pour une tenue illustrée (images dans assets/tenues/<animal>/<id>.png). */
 const illustre = (id: string, nom: string, type: TypeObjet, prix: number, emoji: string, collection?: Collection): ObjetBoutique => ({
@@ -87,6 +108,25 @@ export const CATALOGUE_BOUTIQUE: ObjetBoutique[] = [
   { id: 'plante', nom: 'Petite plante', type: 'objet', prix: 25, emoji: '🪴' },
   { id: 'tasse', nom: 'Tasse de café', type: 'objet', prix: 20, emoji: '☕' },
   { id: 'couronne', nom: 'Couronne des victoires', type: 'chapeau', prix: 150, emoji: '👑', premium: true },
+
+  /* ---------- Chambre (emojis provisoires en attendant les illustrations) ---------- */
+  meuble('ch-lit', 'Lit douillet', 'sol', 100, '🛏️'),
+  meuble('ch-fauteuil', 'Fauteuil', 'sol', 80, '🛋️'),
+  meuble('ch-bureau', 'Petit bureau', 'sol', 90, '🖥️'),
+  meuble('ch-bibliotheque', 'Bibliothèque', 'sol', 60, '📚'),
+  meuble('ch-plante', 'Grande plante', 'sol', 40, '🪴'),
+  meuble('ch-tableau', 'Tableau', 'mur', 40, '🖼️'),
+  meuble('ch-horloge', 'Horloge', 'mur', 35, '🕰️'),
+  meuble('ch-guirlande', 'Guirlande lumineuse', 'mur', 30, '✨'),
+  meuble('ch-cactus', 'Petit cactus', 'petit', 15, '🌵'),
+  meuble('ch-bougie', 'Bougie parfumée', 'petit', 15, '🕯️'),
+  meuble('ch-fleurs', 'Bouquet de fleurs', 'petit', 20, '💐'),
+  meuble('ch-radio', 'Radio', 'petit', 25, '📻'),
+  meuble('ch-tapis-peche', 'Tapis pêche', 'tapis', 45, '🟠', { couleur: '#F6B99B' }),
+  meuble('ch-tapis-sauge', 'Tapis sauge', 'tapis', 45, '🟢', { couleur: '#B7D19E' }),
+  meuble('ch-trophee', 'Trophée des victoires', 'petit', 120, '🏆', { premium: true }),
+  meuble('ch-citrouille', 'Citrouille', 'petit', 30, '🎃', { collection: 'halloween' }),
+  meuble('ch-sapin', 'Sapin de Noël', 'sol', 70, '🎄', { collection: 'noel' }),
 
   /* ---------- Tenues complètes illustrées (chat, crocodile ; les autres animaux arrivent) ---------- */
   // Hauts

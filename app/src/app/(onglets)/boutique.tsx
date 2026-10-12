@@ -1,14 +1,15 @@
 /**
  * SHOP
  * Les pièces gagnées avec les tâches servent à personnaliser le compagnon.
- * Deux rayons : « Tenues complètes » (le compagnon habillé en entier, une tenue à la fois,
- * seulement celles illustrées pour son espèce) et « Objets ».
+ * Trois rayons : « Tenues » (le compagnon habillé en entier, une tenue à la fois,
+ * seulement celles illustrées pour son espèce), « Objets » et « Chambre » (pour décorer sa chambre).
+ * Ouvert avec `rayon=chambre`, le Shop arrive directement sur le rayon Chambre.
  * On peut essayer une tenue avant de l'acheter : l'aperçu montre le compagnon habillé.
  * Le portefeuille est réellement débité à chaque achat, et le solde est le même partout.
  * Aucune pièce ne s'achète avec de l'argent.
  */
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bouton } from '@/components/base';
 import { Compagnon } from '@/components/Compagnon';
 import { CompteurPieces, IconePiece } from '@/components/Pieces';
+import { VueChambre } from '@/components/VueChambre';
 import { COLLECTIONS, LIBELLES_TYPES, RAYONS, estPremium, type ObjetBoutique, type TypeObjet } from '@/config/boutique';
 import { objetsPour } from '@/logique/garderobe';
 import { arrondis, couleurs, espace, polices, relief } from '@/config/theme';
@@ -29,18 +31,27 @@ export default function Shop() {
   const { etat, dispatch } = useApp();
   const plus = aPremium(etat);
   const espece = etat.compagnon?.espece ?? 'renard';
-  const [rayon, setRayon] = useState<keyof typeof RAYONS>('tenues');
+  const params = useLocalSearchParams<{ rayon?: string }>();
+  const [rayon, setRayon] = useState<keyof typeof RAYONS>(params.rayon === 'chambre' ? 'chambre' : 'tenues');
+  // Arrivée depuis la chambre (« Objets pour la chambre ») : on ouvre le bon rayon
+  const [rayonDemande, setRayonDemande] = useState(params.rayon);
+  if (params.rayon !== rayonDemande) {
+    setRayonDemande(params.rayon);
+    if (params.rayon === 'chambre') setRayon('chambre');
+  }
   const [type, setType] = useState<TypeObjet | 'tout'>('tout');
   const [achat, setAchat] = useState<ObjetBoutique | null>(null);
   // Seuls les objets prévus pour cet animal (les tenues illustrées arrivent animal par animal)
   const disponibles = objetsPour(espece);
   const portes = disponibles.filter((o) => etat.equipe.includes(o.id));
-  const duRayon = disponibles.filter((o) => (rayon === 'tenues' ? o.habit : !o.habit));
+  const duRayon = disponibles.filter((o) => (rayon === 'tenues' ? o.habit : rayon === 'chambre' ? !!o.emplacement : !o.habit && !o.emplacement));
   const typesDuRayon = [...new Set(duRayon.map((o) => o.type))];
   const catalogue = duRayon.filter((o) => type === 'tout' || o.type === type);
   const apercu = achat ? imageTenue(espece, achat.id) : undefined;
 
   function toucher(o: ObjetBoutique) {
+    // Objet de la chambre déjà acheté : on va le placer dans la chambre
+    if (etat.inventaire.includes(o.id) && o.emplacement) return router.push('/chambre');
     if (etat.inventaire.includes(o.id)) return dispatch({ type: 'EQUIPER', objetId: o.id });
     if (estPremium(o) && !plus) return router.push('/premium');
     setAchat(o);
@@ -93,6 +104,14 @@ export default function Shop() {
           </Text>
         )}
 
+        {rayon === 'chambre' && etat.villeId && (
+          <Pressable onPress={() => router.push('/chambre')} accessibilityRole="button" accessibilityLabel={`Voir la chambre de ${etat.compagnon?.nom}`} style={{ gap: espace.s }}>
+            <VueChambre ville={etat.villeId} chambre={etat.chambre ?? {}} />
+            <Text style={styles.lienChambre}>Voir et ranger la chambre de {etat.compagnon?.nom} ›</Text>
+          </Pressable>
+        )}
+
+        {rayon !== 'chambre' && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtres}>
           {(['tout', ...typesDuRayon] as (TypeObjet | 'tout')[]).map((t) => (
             <Pressable
@@ -105,6 +124,7 @@ export default function Shop() {
             </Pressable>
           ))}
         </ScrollView>
+        )}
 
         <View style={styles.grille}>
           {catalogue.map((o) => {
@@ -138,7 +158,9 @@ export default function Shop() {
                   {o.nom}
                 </Text>
                 {o.collection ? <Text style={styles.collection}>{COLLECTIONS[o.collection]}</Text> : null}
-                {possede ? (
+                {possede && o.emplacement ? (
+                  <Text style={styles.etat}>{Object.values(etat.chambre ?? {}).includes(o.id) ? 'Dans sa chambre' : 'À placer'}</Text>
+                ) : possede ? (
                   <Text style={styles.etat}>{porte ? 'Porté' : o.offert ? 'Offert · Porter' : 'Porter'}</Text>
                 ) : verrou ? (
                   <Text style={[styles.etat, { color: couleurs.renardFonce }]}>🔒 Premium</Text>
@@ -203,6 +225,7 @@ const CADRAGE: Record<TypeObjet, 'top' | 'center' | 'bottom'> = {
   saison: 'center',
   accessoire: 'center',
   objet: 'center',
+  meuble: 'center',
 };
 
 function LigneSolde({ libelle, valeur, fort }: { libelle: string; valeur: number; fort?: boolean }) {
@@ -234,6 +257,7 @@ const styles = StyleSheet.create({
   nom: { fontFamily: polices.titre, fontSize: 22, fontWeight: '800', color: couleurs.brun },
   detail: { fontSize: 13.5, color: couleurs.brunDoux, fontWeight: '600', lineHeight: 18 },
   filtres: { gap: 6 },
+  lienChambre: { fontSize: 13.5, fontWeight: '800', color: couleurs.renardFonce, textAlign: 'center' },
   rayons: { flexDirection: 'row', backgroundColor: couleurs.pecheClair, borderRadius: 999, padding: 4 },
   rayon: { flex: 1, paddingVertical: 9, borderRadius: 999, alignItems: 'center' },
   rayonChoisi: { backgroundColor: couleurs.carte },

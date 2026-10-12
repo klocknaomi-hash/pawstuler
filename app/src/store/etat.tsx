@@ -10,6 +10,7 @@ import { AppState } from 'react-native';
 
 import type { FormuleId } from '@/config/abonnement';
 import { CATALOGUE_BOUTIQUE, estPremium, objetParId } from '@/config/boutique';
+import { CHAMBRES, type TypeEmplacement } from '@/config/chambre';
 import { emailValide } from '@/config/candidatures';
 import { especeValide, type EspeceId, type Pronoms } from '@/config/compagnons';
 import { COUT, ENERGIE_PAR_TACHE, NIVEAUX_ENERGIE } from '@/config/energie';
@@ -67,6 +68,7 @@ export const ETAT_INITIAL: EtatApp = {
   candidatures: [],
   inventaire: [],
   equipe: [],
+  chambre: {},
   abonnement: { statut: 'gratuit' },
   parametres: {
     notifications: true,
@@ -152,7 +154,9 @@ export type Action =
   | { type: 'VOIR_FIN_ESSAI' }
   | { type: 'VOIR_RAPPEL_ESSAI'; jour: string }
   | { type: 'VOIR_OFFRE_BIENVENUE'; jour: string }
-  | { type: 'FETER_JOURNEE'; jour: string };
+  | { type: 'FETER_JOURNEE'; jour: string }
+  /** Pose un objet de la chambre sur un emplacement (ou le vide, sans objet). */
+  | { type: 'PLACER_MEUBLE'; emplacement: string; objetId?: string };
 
 /* ---------- Petits outils ---------- */
 
@@ -250,6 +254,26 @@ function compterJourSerie(etat: EtatApp, jour: string): EtatApp {
  * Met (ou enlève) un objet. Un vêtement (« habit ») remplace le vêtement déjà porté,
  * car chaque illustration montre le compagnon habillé en entier.
  */
+/** Pose un objet possédé sur un emplacement (en le retirant de son ancienne place), ou vide l'emplacement. */
+function placerMeuble(etat: EtatApp, emplacement: string, objetId?: string): Record<string, string> {
+  const chambre = Object.fromEntries(Object.entries(etat.chambre ?? {}).filter(([, id]) => id !== objetId));
+  if (objetId && etat.inventaire.includes(objetId)) chambre[emplacement] = objetId;
+  else if (!objetId) delete chambre[emplacement];
+  return chambre;
+}
+
+/** Pose un objet qu'on vient d'acheter sur la première place libre qui lui convient (sinon il attend). */
+function placerAuto(etat: EtatApp, objetId: string, type: TypeEmplacement): Record<string, string> {
+  const place = placeLibre(etat, type);
+  return place ? placerMeuble(etat, place, objetId) : (etat.chambre ?? {});
+}
+
+/** Une place libre de la chambre pour ce type d'objet (dans la ville du compagnon), s'il en reste une. */
+function placeLibre(etat: EtatApp, type: TypeEmplacement): string | undefined {
+  const places = CHAMBRES[etat.villeId ?? 'clairebourg'].emplacements;
+  return places.find((p) => p.type === type && !etat.chambre?.[p.id])?.id;
+}
+
 function porter(equipe: string[], objetId: string): string[] {
   if (equipe.includes(objetId)) return equipe.filter((id) => id !== objetId);
   const habit = objetParId(objetId)?.habit;
@@ -611,11 +635,18 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
       if (!objet || etat.inventaire.includes(objet.id) || etat.pieces < objet.prix) return etat;
       // Collections d'événement et objets Premium : achat réservé à Premium (ce qui est déjà acquis reste acquis)
       if (estPremium(objet) && !aPremium(etat)) return etat;
-      const achete = {
-        ...etat,
-        inventaire: [...etat.inventaire, objet.id],
-        equipe: porter(etat.equipe, objet.id),
-      };
+      const achete = objet.emplacement
+        ? // Objet de la chambre : il se pose tout seul sur une place libre qui lui convient
+          {
+            ...etat,
+            inventaire: [...etat.inventaire, objet.id],
+            chambre: placerAuto({ ...etat, inventaire: [...etat.inventaire, objet.id] }, objet.id, objet.emplacement),
+          }
+        : {
+            ...etat,
+            inventaire: [...etat.inventaire, objet.id],
+            equipe: porter(etat.equipe, objet.id),
+          };
       return crediter(achete, -objet.prix, `Achat : ${objet.nom}`);
     }
     case 'EQUIPER':
@@ -799,6 +830,8 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
       return etat.offreBienvenue ? { ...etat, offreBienvenue: { ...etat.offreBienvenue, vueLe: action.jour } } : etat;
     case 'FETER_JOURNEE':
       return { ...etat, journeeFeteeLe: action.jour };
+    case 'PLACER_MEUBLE':
+      return { ...etat, chambre: placerMeuble(etat, action.emplacement, action.objetId) };
     case 'VOIR_RAPPEL_ESSAI':
       return {
         ...etat,
