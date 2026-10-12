@@ -55,6 +55,7 @@ function Navigation() {
       <Stack.Screen name="compte/confidentialite" options={avecEntete('Mes données')} />
       <Stack.Screen name="compte/portefeuille" options={avecEntete('Portefeuille')} />
       <Stack.Screen name="compagnon" options={avecEntete('Mon compagnon')} />
+      <Stack.Screen name="chambre" options={avecEntete('Sa chambre')} />
       <Stack.Screen name="premium" options={{ presentation: 'modal' }} />
       <Stack.Screen name="essai-jour" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
       {/* Écrans de fête et offre de bienvenue */}

@@ -260,6 +260,8 @@ export type EtatApp = {
    * l'inscription. `debut` = jour d'inscription, `vueLe` = dernier jour où l'écran a été montré.
    */
   offreBienvenue?: { debut: string; vueLe?: string };
+  /** La chambre du compagnon : quel objet est posé sur quel emplacement (voir config/chambre.ts). */
+  chambre: Record<string, string>;
   /** Dernier jour fêté par l'écran « Journée terminée 🎉 » (une fois par jour au plus). */
   journeeFeteeLe?: string;
   parametres: Parametres;

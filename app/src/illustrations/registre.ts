@@ -111,18 +111,21 @@ const OEUFS: Record<EspeceId, Oeuf> = {
 
 /**
  * Illustrations des villes :
- * « portrait » pour l'accueil, « paysage » pour les cartes, « centre » pour l'onglet de la ville.
+ * « portrait » pour l'accueil, « paysage » pour les cartes, « centre » pour l'onglet de la ville,
+ * « chambre » pour la chambre du compagnon (vide : il la remplit avec les objets du Shop).
  */
-type FormatVille = 'portrait' | 'paysage' | 'centre';
+type FormatVille = 'portrait' | 'paysage' | 'centre' | 'chambre';
 const VILLES: Record<VilleId, Images<FormatVille>> = {
   clairebourg: {
     portrait: require('../../assets/villes/clairebourg/portrait.jpg'),
     paysage: require('../../assets/villes/clairebourg/paysage.jpg'),
     centre: require('../../assets/villes/clairebourg/centre.jpg'),
+    chambre: require('../../assets/villes/clairebourg/chambre.jpg'),
   },
   sunnyville: {
     portrait: require('../../assets/villes/sunnyville/portrait.jpg'),
     paysage: require('../../assets/villes/sunnyville/paysage.jpg'),
+    chambre: require('../../assets/villes/sunnyville/chambre.jpg'),
   },
 };
 
