@@ -122,7 +122,7 @@ export default function Ville() {
 
 const styles = StyleSheet.create({
   contenu: { padding: espace.l, gap: espace.m, paddingBottom: espace.xxl },
-  titre: { fontFamily: polices.titre, fontSize: 32, fontWeight: '900', color: couleurs.brun, letterSpacing: -0.4 },
+  titre: { fontFamily: polices.titre, fontSize: 26, fontWeight: '800', color: couleurs.brun },
   carte: { height: 330, borderRadius: arrondis.l, overflow: 'hidden', justifyContent: 'flex-end' },
   compagnon: { alignItems: 'center', paddingBottom: 6 },
   absent: { margin: espace.m, backgroundColor: couleurs.carte, borderRadius: arrondis.m, padding: espace.m },
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   souvenir: { backgroundColor: couleurs.carte, borderRadius: arrondis.m, ...relief, padding: espace.l, gap: 4 },
   souvenirTitre: { fontSize: 12, fontWeight: '800', color: couleurs.renardFonce, textTransform: 'uppercase', letterSpacing: 0.4 },
   souvenirTexte: { fontSize: 14.5, fontWeight: '600', color: couleurs.brun, lineHeight: 20 },
-  sousTitre: { fontFamily: polices.titre, fontSize: 22, fontWeight: '900', color: couleurs.brun, marginTop: espace.s },
+  sousTitre: { fontFamily: polices.titre, fontSize: 18, fontWeight: '800', color: couleurs.brun, marginTop: espace.s },
   bloc: { backgroundColor: couleurs.carte, borderRadius: arrondis.m, ...relief },
   lieu: { flexDirection: 'row', alignItems: 'center', gap: espace.m, padding: espace.l },
   separateur: { borderTopWidth: 1, borderTopColor: couleurs.ligne },

@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 4,
     borderBottomColor: '#3D5A31',
   },
-  titre: { color: couleurs.blanc, fontWeight: '900', fontSize: 18 },
+  titre: { color: couleurs.blanc, fontWeight: '800', fontSize: 16 },
   sous: { color: couleurs.blanc, opacity: 0.9, fontWeight: '600', fontSize: 13, marginTop: 2 },
   faite: {
     flexDirection: 'row',
@@ -79,6 +79,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 4,
     borderBottomColor: '#D3E2C1',
   },
-  titreFaite: { color: couleurs.saugeFonce, fontWeight: '900', fontSize: 18 },
+  titreFaite: { color: couleurs.saugeFonce, fontWeight: '800', fontSize: 16 },
   sousFaite: { color: couleurs.brunDoux, fontWeight: '600', fontSize: 13, marginTop: 2 },
 });

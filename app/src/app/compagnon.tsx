@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   modifier: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   section: { gap: espace.s },
   sectionEntete: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
-  sectionTitre: { fontFamily: polices.titre, fontSize: 22, fontWeight: '900', color: couleurs.brun },
+  sectionTitre: { fontFamily: polices.titre, fontSize: 18, fontWeight: '800', color: couleurs.brun },
   compte: { fontSize: 13, fontWeight: '700', color: couleurs.brunDoux },
   sousSection: { fontSize: 12.5, fontWeight: '800', color: couleurs.renardFonce, textTransform: 'uppercase', letterSpacing: 0.4 },
   grille: { flexDirection: 'row', flexWrap: 'wrap', gap: espace.s },

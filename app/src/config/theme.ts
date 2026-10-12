@@ -55,9 +55,9 @@ export const polices = {
 export const tailles = {
   petit: 13,
   texte: 16,
-  moyen: 19,
-  titre: 30,
-  grandTitre: 36,
+  moyen: 18,
+  titre: 26,
+  grandTitre: 32,
 } as const;
 
 /**
@@ -78,7 +78,7 @@ export const pastels = {
 } as const;
 
 /** Barre d'onglets flottante : elle laisse cette place en bas des écrans à onglets. */
-export const barreOnglets = { hauteur: 66, marge: 14 } as const;
+export const barreOnglets = { hauteur: 68, marge: 10 } as const;
 
 export const espace = {
   xs: 4,

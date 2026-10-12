@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   ligneSolde: { flexDirection: 'row', alignItems: 'center', gap: espace.s },
   soldeValeur: { fontFamily: polices.titre, fontSize: 44, fontWeight: '800', color: couleurs.brun, fontVariant: ['tabular-nums'] },
   soldeDetail: { fontWeight: '600', color: couleurs.brunDoux },
-  titre: { fontFamily: polices.titre, fontSize: 22, fontWeight: '900', color: couleurs.brun },
+  titre: { fontFamily: polices.titre, fontSize: 18, fontWeight: '800', color: couleurs.brun },
   vide: { color: couleurs.brunDoux, fontWeight: '600', textAlign: 'center' },
   liste: { backgroundColor: couleurs.carte, borderRadius: arrondis.m, ...relief },
   mouvement: { flexDirection: 'row', alignItems: 'center', gap: espace.m, padding: espace.l },

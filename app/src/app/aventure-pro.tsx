@@ -144,7 +144,7 @@ export default function AventurePro() {
             <Text style={[styles.objectifTexte, o.atteint && { color: couleurs.saugeFonce }]}>{o.titre}</Text>
             <View style={styles.gain}>
               <Text style={styles.gainTexte}>+{PIECES_OBJECTIF}</Text>
-              <IconePiece taille={13} />
+              <IconePiece taille={17} />
             </View>
           </Pressable>
         ))}
