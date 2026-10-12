@@ -9,8 +9,8 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Bouton, CarteChoix, Ecran, Texte, Titre } from '@/components/base';
-import { Compagnon } from '@/components/Compagnon';
+import { Bouton, CarteChoix, Texte, Titre } from '@/components/base';
+import { EcranFeuille } from '@/components/EcranFeuille';
 import { EnteteEtape } from '@/components/EnteteEtape';
 import { OBJECTIFS_SERIE } from '@/config/serie';
 import { arrondis, couleurs, espace, polices } from '@/config/theme';
@@ -28,10 +28,15 @@ export default function Serie() {
   }
 
   return (
-    <Ecran defilant bas={<Bouton titre="C’est parti !" onPress={terminer} />}>
-      <EnteteEtape etape={8} />
+    <EcranFeuille
+      espece={etat.compagnon?.espece}
+      ville={etat.villeId ?? 'clairebourg'}
+      pose="content"
+      hauteurDecor={170}
+      tailleMascotte={115}
+      entete={<EnteteEtape etape={8} />}
+      bas={<Bouton titre="C’est parti !" onPress={terminer} />}>
       <View style={styles.haut}>
-        {etat.compagnon && <Compagnon espece={etat.compagnon.espece} pose="content" taille={110} />}
         <Titre style={{ textAlign: 'center' }}>Ton petit objectif de série</Titre>
         <Texte style={{ textAlign: 'center' }}>
           Combien de jours d’affilée aimerais-tu passer voir {nom} ? Chaque petite série compte.
@@ -64,7 +69,7 @@ export default function Serie() {
           Pas de pression : si tu fais une pause, ta série recommence simplement. Tu ne perds rien, et {nom} sera toujours content de te revoir.
         </Text>
       </View>
-    </Ecran>
+    </EcranFeuille>
   );
 }
 

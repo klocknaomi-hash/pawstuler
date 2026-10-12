@@ -62,7 +62,7 @@ Présentation → Connexion → Onboarding (prénom → objectif → choix de l'
 Un seul écran court avant tout : l'animal, une phrase d'accroche, 4 points (tâches du jour, candidatures, pièces et personnalisation, compagnon qui vit et cherche avec toi).
 
 ### 5.3 Connexion
-Apple, Google, e-mail/mot de passe (création de compte, connexion, mot de passe oublié). Les comptes sont gérés par **Supabase** (`app/src/services/auth`) :
+Apple, Google, e-mail/mot de passe (création de compte, connexion, mot de passe oublié). **Présentation** et **connexion** : décor de Clairebourg avec la mascotte en haut, feuille blanche arrondie en bas (`components/EcranFeuille.tsx`). Inscription par e-mail : œil pour afficher le mot de passe, barre de solidité (4 segments), case obligatoire « J'accepte les conditions d'utilisation et la politique de confidentialité » (liens vers les textes) ; sous Apple / Google, la mention « En continuant, tu acceptes… » (`components/Formulaire.tsx`). Les comptes sont gérés par **Supabase** (`app/src/services/auth`) :
 - **Mode réel** dès que les clés sont dans `app/.env` : Apple via la fenêtre native d'Apple, Google via la page de connexion Google sécurisée, e-mail via Supabase. Messages d'erreur simples en français.
 - **Mode démo** tant que les clés sont absentes : chaque méthode crée un compte local sur le téléphone (comme avant), avec la mention « Version de test ».
 - Déconnexion : ferme la session en ligne, les données restent sur le téléphone. Suppression du compte : en ligne (fonction serveur `supprimer-compte`) puis sur le téléphone.
@@ -77,6 +77,7 @@ Apple, Google, e-mail/mot de passe (création de compte, connexion, mot de passe
 5 bis. **La rencontre** : le compagnon se présente en 6 bulles (d'après le script de la section 9, adapté à chaque animal), puis « Promis ! 🐾 ». Bouton « Passer ». Répliques dans `app/src/config/dialogues.ts`. Sur l'accueil, tant qu'aucune candidature n'existe, il propose le premier pas (réplique 9).
 5 ter. **Le rythme du compagnon** 🌞 🌙 : « Bon… maintenant que tu me connais un peu, il faut qu'on règle mon petit rythme de vie ! », puis « Et Milo, il se réveille à quelle heure ? 🌞 » (6 h à 10 h) et « Et à quelle heure est-ce qu'il va dormir ? 🌙 » (21 h à minuit) ; Milo réagit (« Parfait ! Je vais essayer de tenir ce rythme… »). Ces horaires sont vraiment utilisés : avant son réveil et après son coucher, il dort dans sa maison et ne part pas à l'aventure (`(demarrage)/rythme.tsx`, modifiable dans Compte › Paramètres).
 6. **Ville** : « Où veux-tu commencer ton aventure ? », une carte par ville (voir 5.8).
+Toutes les étapes ont une **barre de progression « 1/8 »** ; prénom, objectif et série utilisent aussi le décor en haut et la feuille blanche.
 7. **Objectif de série** 🐾 : « Ton petit objectif de série », au choix 2, 5 (par défaut), 7 ou 14 jours d'affilée. Ton bienveillant : « Chaque petite série compte », « Pas de pression : si tu fais une pause, ta série recommence simplement. Tu ne perds rien. » Puis l'accueil.
 
 ### 5.4 bis Série de jours 🐾 (streak)
@@ -240,7 +241,7 @@ Chaque tâche rapporte des **pièces** (valeurs ci-dessous, réglables dans `app
 - Style **kawaii mais pas enfantin**, formes rondes, ambiance cosy, typographie arrondie (SF Pro Rounded).
 - **Palette tirée de Ziggy et de Clairebourg** : crème (fond), saumon du pelage (couleur de marque), brun du contour (texte), sauge, bleu du lac, or pour les pièces. **Corail vif réservé aux grandes victoires** (entretien, poste décroché).
 - Toutes les couleurs, polices et espacements sont dans `app/src/config/theme.ts`.
-- **Style « relief » (étape 1 du plan design, faite le 12/10)** : titres plus gras (900), cartes et boutons avec un contour et un bord du bas plus épais et plus foncé (`relief` dans `theme.ts`), boutons qui s'enfoncent quand on appuie, une **couleur pastel et un emoji par catégorie de tâche** (`pastels`), textes plus courts. **Barre d'onglets flottante** (pilule arrondie détachée du bas, `barreOnglets` dans `theme.ts`) ; les écrans d'onglets réservent la place en bas avec `useEspaceBarre()`.
+- **Style « relief » (étape 1 du plan design, faite le 12/10)** : cartes et boutons avec un contour et un bord du bas plus épais et plus foncé (`relief` dans `theme.ts`), boutons qui s'enfoncent quand on appuie, une **couleur pastel et un emoji par catégorie de tâche** (`pastels`). **Tailles de texte : pas de titres ni de textes plus gros ou plus gras** (demande du 12/10) ; une taille adaptée pour que les mots se lisent en entier (« Candidatures », « Clairebourg » dans la barre d'onglets) et des boutons pas trop gros. **La pièce** est dessinée comme une vraie pièce d'or (tranche, bord, reflet ; `Pieces.tsx`) et affichée en assez grand. **Barre d'onglets flottante** (pilule arrondie détachée du bas, `barreOnglets` dans `theme.ts`) ; les écrans d'onglets réservent la place en bas avec `useEspaceBarre()`.
 - **Icône de l'app** : Ziggy qui fait coucou, sur fond crème (`app/assets/images/`, écran de lancement compris).
 - **Illustrations** : créées avec Dimini (et ChatGPT/Gemini pour les premières). Ce sont la source principale : ne jamais les remplacer par des illustrations génériques quand les fichiers existent. Fond transparent, sans contour blanc.
 
@@ -297,7 +298,7 @@ Ces valeurs ne viennent pas de mes consignes : Claude les a choisies pour que l'
 Aucune question bloquante. À ajuster après tes premiers tests sur iPhone : les valeurs de la section 11.
 - **Plan design validé (d'après les références Dribbble), une étape à la fois, avec mon feu vert avant chacune** :
   1. Nouveau style général + barre d'onglets flottante : **fait**.
-  2. Connexion / inscription / onboarding : mascotte et décor en haut, feuille blanche en bas ; inscription e-mail avec œil (voir le mot de passe), barre de solidité, case « J'accepte les conditions d'utilisation et la politique de confidentialité » ; barre de progression « 1/8 » dans l'onboarding (Supabase seul, pas de Clerk).
+  2. Connexion / inscription / onboarding (**fait le 12/10**) : mascotte et décor en haut, feuille blanche en bas ; inscription e-mail avec œil (voir le mot de passe), barre de solidité, case « J'accepte les conditions d'utilisation et la politique de confidentialité » ; barre de progression « 1/8 » dans l'onboarding (Supabase seul, pas de Clerk).
   3. Écran d'abonnement : mascotte en haut, annuel mis en avant « −44 % par rapport au mensuel », « Voir les autres formules », gros bouton d'essai.
   4. Accueil : grande scène, pastille « Bonjour Naomi » + date, cloche de notifications, semaine 🐾, aventure avec énergie en segments ⚡ et compteur « 1/1 » ou « 2/3 », cartes de tâches vives « Encore X tâches aujourd'hui ».
   5. Écrans de fête : « Journée terminée 🎉 » (une fois par jour, toutes les tâches faites, sans niveau) ; écran quotidien pour les non-abonnés comptant les jours restants d'une offre promo sur l'annuel seulement (remise et durée à me demander).

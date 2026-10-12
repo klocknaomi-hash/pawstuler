@@ -1,8 +1,9 @@
-/** ONBOARDING 1/6 — Le prénom de l'utilisateur. */
+/** ONBOARDING 1/8 — Le prénom de l'utilisateur. */
 import { router } from 'expo-router';
 import { useState } from 'react';
 
-import { Bouton, Champ, Ecran, Texte, Titre } from '@/components/base';
+import { Bouton, Champ, Texte, Titre } from '@/components/base';
+import { EcranFeuille } from '@/components/EcranFeuille';
 import { EnteteEtape } from '@/components/EnteteEtape';
 import { useApp } from '@/store/etat';
 
@@ -17,8 +18,12 @@ export default function Prenom() {
   }
 
   return (
-    <Ecran bas={<Bouton titre="Continuer" desactive={!pret} onPress={continuer} />}>
-      <EnteteEtape etape={1} retour={false} />
+    <EcranFeuille
+      pose="salut"
+      hauteurDecor={200}
+      tailleMascotte={130}
+      entete={<EnteteEtape etape={1} retour={false} />}
+      bas={<Bouton titre="Continuer" desactive={!pret} onPress={continuer} />}>
       <Titre>Comment tu t’appelles ?</Titre>
       <Texte>Ton compagnon aimerait savoir comment t’appeler.</Texte>
       <Champ
@@ -34,6 +39,6 @@ export default function Prenom() {
         onSubmitEditing={() => pret && continuer()}
         accessibilityLabel="Ton prénom"
       />
-    </Ecran>
+    </EcranFeuille>
   );
 }

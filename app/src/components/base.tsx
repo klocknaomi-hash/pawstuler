@@ -1,6 +1,6 @@
 /**
  * COMPOSANTS DE BASE
- * Écran, textes, bouton, champ de saisie, carte à choisir, points de progression.
+ * Écran, textes, bouton, champ de saisie, carte à choisir, barre de progression.
  * Tous prennent leurs couleurs et tailles dans src/config/theme.ts.
  */
 import type { ReactNode } from 'react';
@@ -193,15 +193,16 @@ export function Pastille({ libelle, choisi, onPress }: { libelle: string; choisi
 
 /* ---------- Progression de l'onboarding ---------- */
 
+/** Barre de progression de l'onboarding, avec « 1/8 » à droite. */
 export function Progression({ etape, total }: { etape: number; total: number }) {
   return (
     <View style={styles.progression} accessibilityLabel={`Étape ${etape} sur ${total}`}>
-      {Array.from({ length: total }, (_, i) => (
-        <View
-          key={i}
-          style={[styles.point, i < etape && { backgroundColor: couleurs.saumon }, i === etape - 1 && { width: 22 }]}
-        />
-      ))}
+      <View style={styles.piste}>
+        <View style={[styles.rempli, { width: `${(etape / total) * 100}%` }]} />
+      </View>
+      <Text style={styles.compteEtapes}>
+        {etape}/{total}
+      </Text>
     </View>
   );
 }
@@ -241,9 +242,9 @@ const styles = StyleSheet.create({
     borderColor: couleurs.ligne,
     borderRadius: arrondis.m,
     paddingHorizontal: espace.l,
-    paddingVertical: 15,
+    paddingVertical: 14,
     fontFamily: polices.texte,
-    fontSize: tailles.moyen,
+    fontSize: tailles.texte,
     fontWeight: '600',
     color: couleurs.brun,
   },
@@ -265,6 +266,8 @@ const styles = StyleSheet.create({
   },
   pastilleChoisie: { backgroundColor: couleurs.brun, borderColor: couleurs.brun, borderBottomColor: '#3E2419' },
   pastilleTexte: { fontFamily: polices.texte, fontSize: 14, fontWeight: '700', color: couleurs.brun },
-  progression: { flexDirection: 'row', gap: 6, alignItems: 'center' },
-  point: { width: 8, height: 8, borderRadius: 4, backgroundColor: couleurs.ligne },
+  progression: { flex: 1, flexDirection: 'row', gap: espace.m, alignItems: 'center' },
+  piste: { flex: 1, height: 8, borderRadius: 4, backgroundColor: couleurs.ligne, overflow: 'hidden' },
+  rempli: { height: 8, borderRadius: 4, backgroundColor: couleurs.renardFonce },
+  compteEtapes: { fontFamily: polices.texte, fontSize: 13, fontWeight: '800', color: couleurs.brunDoux, fontVariant: ['tabular-nums'] },
 });

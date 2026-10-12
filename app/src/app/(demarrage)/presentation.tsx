@@ -1,14 +1,15 @@
 /**
  * PRÉSENTATION (avant l'onboarding)
  * En quelques secondes : ce qu'est l'app, et pourquoi elle va aider.
+ * Décor de Clairebourg et mascotte en haut, feuille blanche en bas.
  */
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Bouton, Ecran, Texte, Titre } from '@/components/base';
-import { Compagnon } from '@/components/Compagnon';
-import { arrondis, couleurs, espace, polices, relief } from '@/config/theme';
+import { Bouton, Texte, Titre } from '@/components/base';
+import { EcranFeuille } from '@/components/EcranFeuille';
+import { couleurs, espace, polices } from '@/config/theme';
 
 const POINTS: { icone: keyof typeof Ionicons.glyphMap; texte: string }[] = [
   { icone: 'checkbox-outline', texte: 'Des petites tâches chaque jour, adaptées à ta recherche' },
@@ -19,8 +20,9 @@ const POINTS: { icone: keyof typeof Ionicons.glyphMap; texte: string }[] = [
 
 export default function Presentation() {
   return (
-    <Ecran
-      defilant
+    <EcranFeuille
+      hauteurDecor={250}
+      tailleMascotte={160}
       bas={
         <>
           <Bouton titre="Commencer" onPress={() => router.push('/connexion')} />
@@ -31,14 +33,10 @@ export default function Presentation() {
           />
         </>
       }>
-      <View style={styles.haut}>
+      <View style={{ gap: espace.xs }}>
         <Text style={styles.marque}>Pawstuler</Text>
-        <Compagnon espece="renard" pose="salut" taille={190} />
-      </View>
-
-      <View style={{ gap: espace.s }}>
         <Titre style={{ textAlign: 'center' }}>Ta recherche d’emploi, à deux.</Titre>
-        <Texte style={{ textAlign: 'center' }}>Tu n’es pas seul dans ta recherche d’emploi. Ton compagnon avance avec toi.</Texte>
+        <Texte style={{ textAlign: 'center' }}>Ton compagnon avance avec toi, une petite étape à la fois.</Texte>
       </View>
 
       <View style={styles.points}>
@@ -51,26 +49,20 @@ export default function Presentation() {
           </View>
         ))}
       </View>
-    </Ecran>
+    </EcranFeuille>
   );
 }
 
 const styles = StyleSheet.create({
-  haut: { alignItems: 'center', gap: espace.s, paddingTop: espace.s },
   marque: {
+    textAlign: 'center',
     fontFamily: polices.titre,
-    fontSize: 20,
+    fontSize: 15,
     fontWeight: '800',
     color: couleurs.renardFonce,
     letterSpacing: 0.5,
   },
-  points: {
-    backgroundColor: couleurs.carte,
-    borderRadius: arrondis.l,
-    padding: espace.l,
-    gap: espace.m,
-    ...relief,
-  },
+  points: { gap: espace.m, paddingTop: espace.xs },
   point: { flexDirection: 'row', alignItems: 'center', gap: espace.m },
   pastilleIcone: {
     width: 36,
@@ -80,5 +72,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pointTexte: { flex: 1, fontFamily: polices.texte, fontSize: 15, fontWeight: '600', color: couleurs.brun, lineHeight: 20 },
+  pointTexte: { flex: 1, fontFamily: polices.texte, fontSize: 14.5, fontWeight: '600', color: couleurs.brun, lineHeight: 19 },
 });
