@@ -7,6 +7,8 @@
  *  - entretien : il marche jusqu'à l'entreprise (dans sa tenue d'entretien s'il en a une), entre,
  *    on le voit à l'intérieur face au recruteur, puis il ressort ;
  *  - repos / baignade : il rentre à la maison ou va au lac.
+ * Sur le trajet (aller et retour), quand la ville est connue, il marche au centre et le décor défile
+ * derrière lui : sa chambre, la ville, puis le chemin en boucle (voir CheminDefilant).
  * Le temps est réel : aller (20 %), sur place (60 %), retour (20 %). App fermée puis rouverte :
  * il reprend exactement où il en est. Les animations définitives (Dimini) remplaceront ce composant.
  */
@@ -15,10 +17,12 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 
+import { CheminDefilant } from '@/components/CheminDefilant';
 import { Compagnon } from '@/components/Compagnon';
-import type { EspeceId, Pose } from '@/config/compagnons';
+import { REGARDE_A_GAUCHE, type EspeceId, type Pose } from '@/config/compagnons';
 import { ANIMATION_SUR_PLACE, OBJET_EMPORTE } from '@/config/missions';
 import { arrondis, couleurs, ombre } from '@/config/theme';
+import type { VilleId } from '@/config/villes';
 import { iconeMission } from '@/logique/missions';
 import type { Mission } from '@/store/types';
 
@@ -46,12 +50,15 @@ export function SceneAventure({
   espece,
   equipe,
   decor,
+  ville,
   hauteur = 220,
   taille = 80,
 }: {
   mission: Mission;
   espece: EspeceId;
   equipe?: string[];
+  /** Ville du compagnon : sur le trajet, le décor de sa ville défile derrière lui. */
+  ville?: VilleId;
   /** Décor illustré (rue, lac…) ; sans décor, la scène se pose sur l'image déjà affichée derrière. */
   decor?: ImageProps['source'];
   hauteur?: number;
@@ -90,6 +97,8 @@ export function SceneAventure({
           fin={fin}
           taille={taille}
           largeur={largeur}
+          hauteur={hauteur}
+          ville={ville}
         />
       )}
     </View>
@@ -107,6 +116,8 @@ function Marche({
   fin,
   taille,
   largeur,
+  hauteur,
+  ville,
 }: {
   mission: Mission;
   espece: EspeceId;
@@ -116,6 +127,8 @@ function Marche({
   fin: number;
   taille: number;
   largeur: number;
+  hauteur: number;
+  ville?: VilleId;
 }) {
   // Position sur le chemin : 0 = maison, 1 = lieu de l'aventure
   const position = useSharedValue(phase === 'aller' || phase === 'rentre' ? 0 : 1);
@@ -151,14 +164,20 @@ function Marche({
   }, [pas]);
 
   const enChemin = phase === 'aller' || phase === 'retour';
+  // Sur le trajet, avec le décor de sa ville : il marche au centre et c'est le décor qui défile
+  const defile = enChemin && !!ville;
   const course = Math.max(0, largeur - taille - 24);
+  const centre = (largeur - taille) / 2;
+  // Il regarde là où il va : à droite à l'aller, à gauche au retour (selon le sens de son dessin)
+  const versLaGauche = phase === 'retour';
+  const retourner = versLaGauche !== REGARDE_A_GAUCHE.includes(espece);
   const styleCompagnon = useAnimatedStyle(() => ({
     opacity: visible.get(),
     transform: [
-      { translateX: 12 + position.get() * course },
+      { translateX: defile ? centre : 12 + position.get() * course },
       { translateY: enChemin ? -pas.get() * 5 : 0 },
       // Au retour, il regarde vers la maison
-      { scaleX: phase === 'retour' ? -1 : 1 },
+      { scaleX: retourner ? -1 : 1 },
     ],
   }));
 
@@ -168,12 +187,18 @@ function Marche({
 
   return (
     <>
-      <View style={styles.chemin} />
-      <Text style={[styles.borne, styles.gauche]}>{depuis}</Text>
-      <View style={[styles.droite, styles.destination]}>
-        {phase === 'sur-place' && !interieur && ANIMATION_SUR_PLACE[mission.type].map((e, i) => <EffetSurPlace key={e} emoji={e} delai={i * 900} />)}
-        <Text style={styles.borneGrande}>{arrivee}</Text>
-      </View>
+      {defile && ville ? (
+        <CheminDefilant ville={ville} sens={phase === 'aller' ? 'aller' : 'retour'} debut={debut} fin={fin} largeur={largeur} hauteur={hauteur} />
+      ) : (
+        <>
+          <View style={styles.chemin} />
+          <Text style={[styles.borne, styles.gauche]}>{depuis}</Text>
+          <View style={[styles.droite, styles.destination]}>
+            {phase === 'sur-place' && !interieur && ANIMATION_SUR_PLACE[mission.type].map((e, i) => <EffetSurPlace key={e} emoji={e} delai={i * 900} />)}
+            <Text style={styles.borneGrande}>{arrivee}</Text>
+          </View>
+        </>
+      )}
       <Animated.View style={[styles.compagnon, { width: taille }, styleCompagnon]}>
         {enChemin && <Text style={styles.objet}>{OBJET_EMPORTE[mission.type]}</Text>}
         <Compagnon espece={espece} pose="aventure" taille={taille} equipe={equipe} />

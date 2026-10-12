@@ -253,6 +253,33 @@ export function imageCompagnon(espece: EspeceId, pose: Pose): ImageSourcePropTyp
 export const imagesOeuf = (espece: EspeceId) => (OEUFS[espece].etats.length ? OEUFS[espece] : OEUFS.renard).etats;
 export const imageEclosion = (espece: EspeceId) => OEUFS[espece].eclosion;
 export const imageNaissance = (espece: EspeceId) => OEUFS[espece].ne ?? imageCompagnon(espece, 'salut');
+/**
+ * Le chemin des aventures, par ville : les paysages qui défilent derrière le compagnon quand il marche.
+ * Il sort de sa chambre, traverse la ville, puis le chemin défile en boucle jusqu'à son arrivée.
+ */
+const CHEMINS: Record<VilleId, ImageSourcePropType[]> = {
+  clairebourg: [
+    require('../../assets/villes/clairebourg/chemin-1.jpg'),
+    require('../../assets/villes/clairebourg/chemin-2.jpg'),
+    require('../../assets/villes/clairebourg/chemin-3.jpg'),
+    require('../../assets/villes/clairebourg/chemin-4.jpg'),
+  ],
+  sunnyville: [require('../../assets/villes/sunnyville/chemin-1.jpg')],
+};
+
+/**
+ * Les panneaux du trajet, dans l'ordre : la chambre, la ville, puis le chemin.
+ * `boucle` = à partir de quel panneau le décor recommence (le chemin tourne en boucle).
+ */
+export function trajetVille(ville: VilleId): { panneaux: ImageSourcePropType[]; boucle: number } {
+  const debut = [VILLES[ville].chambre, VILLES[ville].paysage ?? VILLES[ville].portrait].filter(Boolean) as ImageSourcePropType[];
+  const chemin = CHEMINS[ville];
+  // Clairebourg : le premier paysage (le bout du village) n'est vu qu'une fois, puis la campagne tourne en boucle
+  const intro = chemin.length > 1 ? [...debut, chemin[0]] : debut;
+  const boucle = chemin.length > 1 ? chemin.slice(1) : chemin;
+  return { panneaux: [...intro, ...boucle], boucle: intro.length };
+}
+
 /** Image d'une ville ; si le format demandé manque, on prend le plus proche. */
 export const imageVille = (ville: VilleId, format: FormatVille) =>
   VILLES[ville][format] ?? VILLES[ville].portrait ?? VILLES[ville].paysage;

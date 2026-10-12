@@ -164,7 +164,15 @@ export default function Aventure() {
         <Fermer onPress={fermer} flottant />
         {absent ? (
           <>
-            <SceneAventure mission={enCours} espece={compagnon.espece} equipe={etat.equipe} decor={decorDe(etat, enCours)} hauteur={300} taille={96} />
+            <SceneAventure
+              mission={enCours}
+              espece={compagnon.espece}
+              equipe={etat.equipe}
+              decor={decorDe(etat, enCours)}
+              ville={etat.villeId}
+              hauteur={300}
+              taille={96}
+            />
             <Titre style={styles.texteCentre}>{ouEst(etat, enCours)}</Titre>
             <View style={styles.pastille}>
               <Ionicons name="time-outline" size={18} color={couleurs.brun} />
