@@ -1,7 +1,12 @@
 /**
  * ACCUEIL
- * Le cœur de l'app : le compagnon dans sa ville, son énergie, l'aventure du jour (ses missions),
- * puis « Tes tâches du jour ».
+ * Le cœur de l'app, de haut en bas :
+ *  - la pastille « Bonjour Naomi » avec la date, les pièces et la cloche (réglages des rappels) ;
+ *  - la semaine 🐾 (les jours de la série en cours) ;
+ *  - le compagnon dans sa ville (grande scène) ;
+ *  - la carte verte « Aventure du jour » : compteur d'aventures (« 1/1 », « 2/3 ») et énergie en segments ⚡ ;
+ *  - Câlin / Jouer, Se reposer / Se baigner ;
+ *  - « Tes tâches du jour » : « Encore X tâches aujourd'hui » et des cartes de couleur.
  * Boucle : je coche une tâche → animation → pièces 🪙 (+ un peu d'énergie ⚡ pour mon compagnon).
  */
 import { Ionicons } from '@expo/vector-icons';
@@ -16,11 +21,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Compagnon, type Geste } from '@/components/Compagnon';
 import { AventureDuJour } from '@/components/AventureDuJour';
 import { BallonJeu, CoeursCalin, Zzz } from '@/components/Effets';
-import { JaugeEnergie } from '@/components/Energie';
 import { LigneTache } from '@/components/LigneTache';
 import { SceneAventure } from '@/components/SceneAventure';
 import { CompteurPieces, IconePiece } from '@/components/Pieces';
-import { BadgeSerie } from '@/components/Serie';
+import { SemaineSerie } from '@/components/SemaineSerie';
 import type { Pose } from '@/config/compagnons';
 import { PREMIER_PAS } from '@/config/dialogues';
 import { COUT, ENERGIE_PAR_TACHE } from '@/config/energie';
@@ -32,7 +36,7 @@ import { useEspaceBarre } from '@/hooks/useEspaceBarre';
 import { useMaintenant } from '@/hooks/useMaintenant';
 import { imageVille } from '@/illustrations/registre';
 import { jourDe } from '@/logique/dates';
-import { dureeLisible, energieDisponible, energieMax, tempsAvantRecharge } from '@/logique/energie';
+import { dureeLisible, energieDisponible, tempsAvantRecharge } from '@/logique/energie';
 import { annonceEntretien, compagnonAbsent, heureLisible as heureMission, ouEst, resultatADecouvrir } from '@/logique/missions';
 import { estEndormi, heureLisible } from '@/logique/rythme';
 import { emploiActuel } from '@/logique/tachesDuJour';
@@ -192,8 +196,11 @@ export default function Accueil() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: couleurs.creme }} edges={['top']}>
       <View style={styles.entete}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.bonjour}>Bonjour {etat.utilisateur?.prenom}</Text>
+        {/* Pastille « Bonjour » + date */}
+        <View style={styles.pastilleBonjour}>
+          <Text style={styles.bonjour} numberOfLines={1}>
+            Bonjour {etat.utilisateur?.prenom} 👋
+          </Text>
           <Text style={styles.date}>
             {new Date().toLocaleDateString('fr-FR', {
               weekday: 'long',
@@ -202,18 +209,23 @@ export default function Accueil() {
             })}
           </Text>
         </View>
-        <Pressable
-          onPress={() => router.push('/compagnon')}
-          accessibilityRole="button"
-          accessibilityLabel={`Série de ${etat.serie.actuelle} jour${etat.serie.actuelle > 1 ? 's' : ''}. Voir le profil de ${compagnon.nom}`}>
-          <BadgeSerie serie={etat.serie} />
-        </Pressable>
         <Pressable onPress={() => router.push('/compte/portefeuille')} accessibilityRole="button" accessibilityLabel="Mon portefeuille">
           <CompteurPieces pieces={etat.pieces} />
+        </Pressable>
+        {/* Cloche : réglages des rappels sur le téléphone */}
+        <Pressable
+          onPress={() => router.push('/compte/parametres')}
+          style={styles.cloche}
+          accessibilityRole="button"
+          accessibilityLabel="Mes rappels">
+          <Ionicons name="notifications-outline" size={21} color={couleurs.brun} />
         </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: espaceBarre }} keyboardShouldPersistTaps="handled">
+        {/* La semaine 🐾 */}
+        <SemaineSerie serie={etat.serie} nomCompagnon={compagnon.nom} />
+
         {/* Le compagnon dans sa ville */}
         <View style={styles.scene}>
           {decor ? (
@@ -263,9 +275,6 @@ export default function Accueil() {
                   <Text style={styles.gainEnergie}>+{ENERGIE_PAR_TACHE} ⚡</Text>
                 </Animated.View>
               ))}
-          </View>
-          <View style={styles.energie}>
-            <JaugeEnergie energie={energie} max={energieMax(etat)} recharge={recharge} compacte />
           </View>
         </View>
 
@@ -344,10 +353,20 @@ export default function Accueil() {
         {/* Tes tâches du jour */}
         <View style={styles.taches}>
           <View style={styles.titreLigne}>
-            <Text style={styles.titre}>Tes tâches du jour</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.titre}>Tes tâches du jour</Text>
+              <Text style={styles.encore}>
+                {toutFait
+                  ? 'Tout est fait pour aujourd’hui 🎉'
+                  : `Encore ${etat.taches.length - faites} tâche${etat.taches.length - faites > 1 ? 's' : ''} aujourd’hui`}
+              </Text>
+            </View>
             <Text style={styles.compte}>
               {faites}/{etat.taches.length}
             </Text>
+          </View>
+          <View style={styles.avancee}>
+            <View style={[styles.avanceeRemplie, { width: `${etat.taches.length ? (faites / etat.taches.length) * 100 : 0}%` }]} />
           </View>
           <View style={styles.plafond} accessibilityLabel={`${etat.piecesDuJour} pièces gagnées aujourd’hui sur ${PLAFOND_PIECES_JOUR}`}>
             <IconePiece taille={18} />
@@ -424,22 +443,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: espace.s,
     paddingHorizontal: espace.l,
-    paddingBottom: espace.s,
+    paddingTop: espace.xs,
+    paddingBottom: espace.m,
+  },
+  pastilleBonjour: {
+    flex: 1,
+    backgroundColor: couleurs.carte,
+    borderRadius: arrondis.l,
+    paddingHorizontal: espace.m,
+    paddingVertical: 7,
+    ...relief,
   },
   bonjour: {
     fontFamily: polices.titre,
-    fontSize: 22,
+    fontSize: 17,
     fontWeight: '800',
     color: couleurs.brun,
   },
+  cloche: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: couleurs.carte,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...relief,
+  },
   date: {
-    fontSize: 13,
+    fontSize: 12.5,
     color: couleurs.brunDoux,
     fontWeight: '600',
     textTransform: 'capitalize',
   },
   scene: {
-    height: 330,
+    height: 360,
     marginHorizontal: espace.l,
     borderRadius: arrondis.l,
     overflow: 'hidden',
@@ -467,16 +504,10 @@ const styles = StyleSheet.create({
   },
   sol: {
     position: 'absolute',
-    bottom: 44,
+    bottom: 22,
     left: 0,
     right: 0,
     alignItems: 'center',
-  },
-  energie: {
-    position: 'absolute',
-    left: espace.m,
-    right: espace.m,
-    bottom: espace.m,
   },
   gainVolant: {
     position: 'absolute',
@@ -544,9 +575,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   taches: { paddingHorizontal: espace.l, paddingTop: espace.xl, gap: espace.s },
+  encore: { fontSize: 13, fontWeight: '700', color: couleurs.brunDoux, marginTop: 1 },
+  avancee: { height: 8, borderRadius: 4, backgroundColor: couleurs.ligne, overflow: 'hidden', marginBottom: 4 },
+  avanceeRemplie: { height: 8, borderRadius: 4, backgroundColor: couleurs.saugeFonce },
   titreLigne: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'flex-end',
     justifyContent: 'space-between',
     marginBottom: 4,
   },

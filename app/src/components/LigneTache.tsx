@@ -2,8 +2,8 @@
  * Une tâche du jour : cocher / décocher d'un toucher, supprimer d'un appui long.
  * Tâche mesurable (candidatures, relances) : pas de case à cocher à la main, sa progression
  * (3/5) suit tes vraies données et elle se coche toute seule.
- * Style « carte vive » : une pastille de couleur avec un emoji selon la catégorie, les pièces,
- * puis une grosse coche à droite.
+ * Style « carte vive » : toute la carte prend la couleur pastel de sa catégorie, avec un emoji
+ * dans une pastille blanche, les pièces, puis la coche à droite. Faite : elle passe au vert sauge.
  */
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -35,8 +35,8 @@ export function LigneTache({
       accessibilityState={{ checked: tache.faite }}
       accessibilityLabel={`${tache.titre}, ${tache.pieces} pièces${mesure ? `, ${progres} sur ${mesure.objectif}` : ''}`}
       accessibilityHint="Appui long pour supprimer"
-      style={({ pressed }) => [styles.ligne, tache.faite && styles.faite, pressed && { opacity: 0.85 }]}>
-      <View style={[styles.icone, { backgroundColor: pastel.fond }]}>
+      style={({ pressed }) => [styles.ligne, { backgroundColor: pastel.fond }, tache.faite && styles.faite, pressed && { opacity: 0.85 }]}>
+      <View style={styles.icone}>
         <Text style={styles.emoji}>{pastel.emoji}</Text>
       </View>
       <View style={{ flex: 1 }}>
@@ -52,7 +52,7 @@ export function LigneTache({
             </Text>
           </View>
         )}
-        {mesure && !tache.faite && <Text style={styles.sous}>Avance toute seule quand tu enregistres tes {mesure.quoi === 'candidatures' ? 'candidatures' : 'relances'}</Text>}
+        {mesure && !tache.faite && <Text style={styles.sous}>Se coche toute seule avec tes {mesure.quoi === 'candidatures' ? 'candidatures' : 'relances'}</Text>}
       </View>
       <View style={{ alignItems: 'center', gap: 6 }}>
         <View style={[styles.gain, tache.faite && { opacity: 0.6 }]}>
@@ -81,9 +81,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: espace.m,
     paddingVertical: 12,
     ...relief,
+    // Contour discret, teinté, qui va avec toutes les couleurs pastel
+    borderColor: 'rgba(94,58,44,0.08)',
+    borderBottomColor: 'rgba(94,58,44,0.16)',
   },
   faite: { backgroundColor: couleurs.saugeClair, borderColor: '#CFE0BC', borderBottomColor: '#B9D0A2' },
-  icone: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  icone: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.8)' },
   emoji: { fontSize: 18 },
   coche: {
     width: 28,
@@ -91,6 +94,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 2,
     borderColor: couleurs.relief,
+    backgroundColor: couleurs.blanc,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -107,7 +111,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: couleurs.orClair,
+    backgroundColor: 'rgba(255,255,255,0.8)',
     borderRadius: 999,
     paddingHorizontal: 9,
     paddingVertical: 4,

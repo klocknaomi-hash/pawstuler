@@ -83,11 +83,18 @@ Toutes les étapes ont une **barre de progression « 1/8 »** ; prénom, objecti
 ### 5.4 bis Série de jours 🐾 (streak)
 - Un jour compte dès que l'utilisateur **ouvre l'app** (une fois par jour). Lendemain : +1 ; même jour : rien ne change ; après une pause : la série recommence à 1.
 - **Jamais de culpabilisation** : une pause ne fait rien perdre (pièces, objets, compagnon, meilleure série gardés). Au retour, le compagnon dit « Content de te revoir ! On repart ensemble, à ton rythme 🐾 ». Objectif atteint : « X jours d'affilée, objectif atteint ! Merci d'être là 🐾 ».
-- **Badge permanent** en haut de l'accueil, à gauche du compteur de pièces (🐾 + nombre de jours). Le toucher ouvre le profil du compagnon, où l'on peut changer d'objectif.
+- **La semaine 🐾** en haut de l'accueil (les jours de la série en cours, et « jours / objectif »). La toucher ouvre le profil du compagnon, où l'on peut changer d'objectif.
 - Réglages : `app/src/config/serie.ts`.
 
 ### 5.5 Accueil et tâches du jour
-L'accueil est simple : en haut, le badge de série 🐾 et le compteur de pièces ; puis le compagnon dans sa ville (avec sa barre d'énergie), puis **une seule carte verte « Aventure du jour »**, puis Câlin / Jouer, puis Se reposer / Se baigner, puis **« Tes tâches du jour »**, sans accumulation de widgets ni journal.
+L'accueil est simple (refait à l'étape 4 du plan design, le 12/10), de haut en bas :
+- une **pastille « Bonjour Naomi 👋 »** avec la date, le compteur de pièces et une **cloche** (elle ouvre les réglages des rappels, Compte › Paramètres) ;
+- **la semaine 🐾** : L M M J V S D, une patte pleine pour chaque jour de la série en cours, aujourd'hui entouré, et « 2/5 j » à droite ; la toucher ouvre le profil du compagnon (elle remplace l'ancien badge de série) ;
+- le compagnon dans sa ville (grande scène, sans jauge : l'énergie est passée dans la carte verte) ;
+- **une seule carte verte « Aventure du jour »** : la phrase qui change, le **compteur d'aventures encore possibles aujourd'hui** (« 1/1 » en gratuit, « 2/3 » en Premium) et l'**énergie en 10 segments ⚡** (« 25/30 · Recharge dans 4 h ») ;
+- Câlin / Jouer, puis Se reposer / Se baigner ;
+- **« Tes tâches du jour »** avec « Encore X tâches aujourd'hui » et une barre d'avancement ; chaque tâche est une **carte de la couleur pastel de sa catégorie** (verte sauge une fois faite).
+Sans accumulation de widgets ni journal.
 - Chaque matin, l'app propose ~5 tâches **selon ta situation réelle** : relances prévues (le jour choisi, ou 7 jours après l'envoi), « Préparer ton entretien chez X » dans les 3 jours avant un entretien, « Envoyer un mail de remerciement à X » le lendemain, tâches de démarrage jamais faites (CV, critères, LinkedIn), une tâche liée au contrat, un **objectif de candidatures** (1, puis 3 si tu as postulé la veille, 5 si tu en as envoyé 5 ou plus), puis des tâches variées. Plus tard, elles pourront être générées par l'IA (à brancher avec Supabase, pour protéger la clé).
 - **Tâches mesurables** (candidatures, relances) : barre de progression « 3/5 », elles se cochent toutes seules quand tu enregistres tes candidatures ou tes relances ; pas de case à cocher à la main. Les autres restent à cocher.
 - L'utilisateur peut créer ses propres tâches (elles restent d'un jour à l'autre tant qu'elles ne sont pas faites).
@@ -96,7 +103,7 @@ L'accueil est simple : en haut, le badge de série 🐾 et le compteur de pièce
 ### 5.5 bis Énergie ⚡ et Aventure du jour
 - **L'énergie n'est pas une monnaie** : c'est la capacité du compagnon à vivre des moments. Elle ne baisse **que** quand on lui demande une action (câlin, jeu, aventure, moment pour souffler) ; consulter une page ou recevoir une notification ne coûte rien.
 - **Gratuit : 30 maximum, recharge complète 5 h** après la première dépense. **Premium et essai : 100 maximum, recharge complète 3 h.** Le compte à rebours démarre quand l'énergie passe sous le maximum ; au bout du délai, elle revient entièrement, même si l'app est fermée (heure réelle). Plus de recharge chaque matin.
-- Affichage sous la jauge : « 15/30 · Recharge dans 4 h 12 ». Action impossible faute d'énergie : explication simple (« Milo n'a plus assez d'énergie pour faire ça. Recharge complète dans 2 h 10. »).
+- Affichage dans la carte verte « Aventure du jour », en 10 segments : « 15/30 · Recharge dans 4 h 12 ». Action impossible faute d'énergie : explication simple (« Milo n'a plus assez d'énergie pour faire ça. Recharge complète dans 2 h 10. »).
 - Coûts actuels : câlin 5, jeu 10, aventures (voir 5.5 ter). Chaque tâche terminée redonne 3 (reprises si on décoche). En passant Premium, l'énergie monte tout de suite à 100. Réglages : `app/src/config/energie.ts`, calculs : `app/src/logique/energie.ts`.
 - **Aventure du jour** : une seule carte verte sous la scène, comme à l'origine : le titre « Aventure du jour » est **dans** la carte (pas de titre au-dessus), et en dessous **une phrase qui change** : « 10 ⚡ · Milo explore Clairebourg », « Milo dort encore », « Milo est allé déposer son CV chez Boulangerie du Lac » (sans heure : elle est déjà dans la bulle de la scène), « Milo est rentré ! Découvre son aventure », « Milo a un entretien à 11 h 30 », « 10 ⚡ · Milo a un appel à passer », « Nouvelle aventure demain » ou en Premium « Prochaine aventure à 14 h 43 ». Au retour : **d'abord le récit** (2-3 phrases et la récompense), puis, plus discret, « Une nouvelle aventure sera possible demain ». Pas de journal.
 - **Quota** (indépendant de l'énergie) : une aventure dure 5 à 10 minutes, puis Milo revient. **Gratuit : 1 aventure par jour**, la suivante « demain ». **Premium : 3 par jour au plus, avec 3 h d'attente qui commencent à son retour** (retour à 8 h 53 → suivante possible à 11 h 53). Les aventures non utilisées ne se cumulent pas. Heure réelle du téléphone.
@@ -300,7 +307,7 @@ Aucune question bloquante. À ajuster après tes premiers tests sur iPhone : les
   1. Nouveau style général + barre d'onglets flottante : **fait**.
   2. Connexion / inscription / onboarding (**fait le 12/10**) : mascotte et décor en haut, feuille blanche en bas ; inscription e-mail avec œil (voir le mot de passe), barre de solidité, case « J'accepte les conditions d'utilisation et la politique de confidentialité » ; barre de progression « 1/8 » dans l'onboarding (Supabase seul, pas de Clerk).
   3. Écran d'abonnement (**fait le 12/10**) : mascotte en haut, annuel mis en avant « −44 % par rapport au mensuel », « Voir les autres formules », gros bouton d'essai.
-  4. Accueil : grande scène, pastille « Bonjour Naomi » + date, cloche de notifications, semaine 🐾, aventure avec énergie en segments ⚡ et compteur « 1/1 » ou « 2/3 », cartes de tâches vives « Encore X tâches aujourd'hui ».
+  4. Accueil (**fait le 12/10**) : grande scène, pastille « Bonjour Naomi » + date, cloche de notifications, semaine 🐾, aventure avec énergie en segments ⚡ et compteur « 1/1 » ou « 2/3 », cartes de tâches vives « Encore X tâches aujourd'hui ».
   5. Écrans de fête : « Journée terminée 🎉 » (une fois par jour, toutes les tâches faites, sans niveau) ; écran quotidien pour les non-abonnés comptant les jours restants d'une offre promo sur l'annuel seulement (remise et durée à me demander).
   6. Plus tard (illustrations nécessaires) : la chambre de Milo, une par ville, vide avec une porte et une fenêtre, à remplir d'objets ; onglet « Chambre » dans le Shop.
 - **Vêtements superposés** (haut + bas + chaussures + accessoire en même temps) : demandé, **à faire plus tard** ; il faudra une image par vêtement seul, calée sur la silhouette de chaque animal.
