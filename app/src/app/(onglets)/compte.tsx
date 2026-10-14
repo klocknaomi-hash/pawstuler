@@ -40,7 +40,7 @@ export default function Compte() {
     confirmer('Se déconnecter ?', 'Tes données restent sur ce téléphone : tu les retrouveras en te reconnectant.', 'Se déconnecter', async () => {
       await deconnecter();
       dispatch({ type: 'DECONNECTER' });
-      router.replace('/presentation');
+      router.replace({ pathname: '/connexion', params: { mode: 'retour' } });
     });
   }
 
@@ -57,7 +57,7 @@ export default function Compte() {
           return Platform.OS === 'web' ? undefined : Alert.alert('Suppression impossible', message);
         }
         dispatch({ type: 'SUPPRIMER_COMPTE' });
-        router.replace('/presentation');
+        router.replace('/connexion');
       },
       true,
     );

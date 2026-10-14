@@ -2,7 +2,7 @@ import { Stack } from 'expo-router';
 
 import { couleurs } from '@/config/theme';
 
-/** Parcours de démarrage : présentation → connexion → onboarding (8 étapes). */
+/** Parcours de démarrage : connexion / inscription (premier écran) → onboarding (8 étapes). */
 export default function LayoutDemarrage() {
   return (
     <Stack
@@ -11,7 +11,6 @@ export default function LayoutDemarrage() {
         animation: 'slide_from_right',
         contentStyle: { backgroundColor: couleurs.creme },
       }}>
-      <Stack.Screen name="presentation" />
       <Stack.Screen name="connexion" />
       <Stack.Screen name="prenom" options={{ gestureEnabled: false }} />
       <Stack.Screen name="objectif" />

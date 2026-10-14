@@ -1,5 +1,5 @@
 /**
- * ÉCRAN « FEUILLE » (présentation, connexion, inscription)
+ * ÉCRAN « FEUILLE » (onboarding, abonnement)
  * En haut : le décor de Clairebourg avec la mascotte ; en bas : une feuille blanche arrondie
  * qui contient le texte et les boutons. Le contenu de la feuille défile si besoin (clavier ouvert).
  */
