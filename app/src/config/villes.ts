@@ -20,6 +20,12 @@ export type Lieu = {
   souvenir: { nom: string; emoji: string };
   /** Type de lieu : son nom change d'un jour à l'autre (voir src/config/missions.ts). */
   secteur?: SecteurId;
+  /**
+   * L'illustration de la ville qui sert de décor à ce lieu (onglet ville, aventure sur place),
+   * en attendant une illustration propre à chaque lieu : « centre », « portrait » (le lac),
+   * « paysage », ou un paysage du chemin (« chemin-1 »…).
+   */
+  decor?: string;
 };
 
 export type Ville = {
@@ -45,12 +51,12 @@ export const VILLES: Ville[] = [
     accroche: 'Une petite ville française, son lac, ses chemins fleuris et ses commerces.',
     couleur: '#A9C68E',
     lieux: [
-      { id: 'boulangerie', secteur: 'boulangerie', nom: 'Boulangerie Mercier', metier: 'Apprenti boulanger', souvenir: { nom: 'Croissant doré', emoji: '🥐' } },
-      { id: 'librairie', secteur: 'librairie', nom: 'Librairie des Tilleuls', metier: 'Libraire junior', souvenir: { nom: 'Marque-page', emoji: '📖' } },
-      { id: 'studio', secteur: 'studio', nom: 'Studio Hibou', metier: 'Aide photographe', souvenir: { nom: 'Photo souvenir', emoji: '📷' } },
-      { id: 'agence', secteur: 'agence', nom: 'Agence Tamaris', metier: 'Assistant de voyage', souvenir: { nom: 'Carte postale', emoji: '🗺️' } },
-      { id: 'cafe', secteur: 'cafe', nom: 'Café du Lac', metier: 'Barista', souvenir: { nom: 'Tasse du Lac', emoji: '☕' } },
-      { id: 'parc', nom: 'Le parc et son ponton', souvenir: { nom: 'Plume de canard', emoji: '🪶' } },
+      { id: 'boulangerie', decor: 'centre', secteur: 'boulangerie', nom: 'Boulangerie Mercier', metier: 'Apprenti boulanger', souvenir: { nom: 'Croissant doré', emoji: '🥐' } },
+      { id: 'librairie', decor: 'chemin-1', secteur: 'librairie', nom: 'Librairie des Tilleuls', metier: 'Libraire junior', souvenir: { nom: 'Marque-page', emoji: '📖' } },
+      { id: 'studio', decor: 'paysage', secteur: 'studio', nom: 'Studio Hibou', metier: 'Aide photographe', souvenir: { nom: 'Photo souvenir', emoji: '📷' } },
+      { id: 'agence', decor: 'chemin-2', secteur: 'agence', nom: 'Agence Tamaris', metier: 'Assistant de voyage', souvenir: { nom: 'Carte postale', emoji: '🗺️' } },
+      { id: 'cafe', decor: 'portrait', secteur: 'cafe', nom: 'Café du Lac', metier: 'Barista', souvenir: { nom: 'Tasse du Lac', emoji: '☕' } },
+      { id: 'parc', decor: 'chemin-4', nom: 'Le parc et son ponton', souvenir: { nom: 'Plume de canard', emoji: '🪶' } },
     ],
   },
   {
@@ -63,11 +69,11 @@ export const VILLES: Ville[] = [
     couleur: '#8EC5D6',
     // Lieux provisoires, à affiner avec les illustrations de la ville
     lieux: [
-      { id: 'bureaux', secteur: 'entreprise', nom: 'Les bureaux du centre', metier: 'Assistant de projet', souvenir: { nom: 'Badge visiteur', emoji: '🪪' } },
-      { id: 'startup', secteur: 'studio', nom: 'Start-up Pixel', metier: 'Designer junior', souvenir: { nom: 'Autocollant Pixel', emoji: '💡' } },
-      { id: 'agence-com', secteur: 'agence', nom: 'Agence de communication', metier: 'Chargé de communication', souvenir: { nom: 'Mini mégaphone', emoji: '📣' } },
-      { id: 'cafe-metro', secteur: 'cafe', nom: 'Le café du métro', metier: 'Barista', souvenir: { nom: 'Ticket de métro', emoji: '🎟️' } },
-      { id: 'parc-urbain', nom: 'Le parc urbain', souvenir: { nom: 'Tournesol', emoji: '🌻' } },
+      { id: 'bureaux', decor: 'chemin-1', secteur: 'entreprise', nom: 'Les bureaux du centre', metier: 'Assistant de projet', souvenir: { nom: 'Badge visiteur', emoji: '🪪' } },
+      { id: 'startup', decor: 'portrait', secteur: 'studio', nom: 'Start-up Pixel', metier: 'Designer junior', souvenir: { nom: 'Autocollant Pixel', emoji: '💡' } },
+      { id: 'agence-com', decor: 'paysage', secteur: 'agence', nom: 'Agence de communication', metier: 'Chargé de communication', souvenir: { nom: 'Mini mégaphone', emoji: '📣' } },
+      { id: 'cafe-metro', decor: 'portrait', secteur: 'cafe', nom: 'Le café du métro', metier: 'Barista', souvenir: { nom: 'Ticket de métro', emoji: '🎟️' } },
+      { id: 'parc-urbain', decor: 'chemin-1', nom: 'Le parc urbain', souvenir: { nom: 'Tournesol', emoji: '🌻' } },
     ],
   },
 ];
