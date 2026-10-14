@@ -3,7 +3,9 @@
  * Le cœur de l'app, de haut en bas :
  *  - la pastille « Bonjour Naomi » avec la date, les pièces et la cloche (réglages des rappels) ;
  *  - la semaine 🐾 (les jours de la série en cours) ;
- *  - le compagnon dans sa ville (grande scène) ;
+ *  - le compagnon dans SA CHAMBRE (grande scène, avec les objets qu'on y a posés) : il y vit, y dort la nuit,
+ *    réagit aux câlins ; quand il part en aventure, on le voit traverser sa chambre et sortir ;
+ *    pendant son absence, la chambre est vide, avec une carte « parti explorer » qui ouvre sa ville ;
  *  - la carte verte « Aventure du jour » : compteur d'aventures (« 1/1 », « 2/3 ») et énergie en segments ⚡ ;
  *  - Câlin / Jouer, Se reposer / Se baigner ;
  *  - « Tes tâches du jour » : « Encore X tâches aujourd'hui » et des cartes de couleur.
@@ -11,10 +13,9 @@
  */
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { router, useIsFocused } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeOutUp, SlideInDown, SlideInLeft, SlideOutRight } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -22,19 +23,19 @@ import { Compagnon, type Geste } from '@/components/Compagnon';
 import { AventureDuJour } from '@/components/AventureDuJour';
 import { BallonJeu, CoeursCalin, Zzz } from '@/components/Effets';
 import { LigneTache } from '@/components/LigneTache';
-import { SceneAventure } from '@/components/SceneAventure';
+import { SortieDeChambre } from '@/components/SortieDeChambre';
+import { VueChambre } from '@/components/VueChambre';
 import { CompteurPieces, IconePiece } from '@/components/Pieces';
 import { SemaineSerie } from '@/components/SemaineSerie';
 import type { Pose } from '@/config/compagnons';
 import { PREMIER_PAS } from '@/config/dialogues';
 import { COUT, ENERGIE_PAR_TACHE } from '@/config/energie';
-import { COUTS_MISSION } from '@/config/missions';
+import { COUTS_MISSION, OBJET_EMPORTE } from '@/config/missions';
 import { PLAFOND_PIECES_JOUR } from '@/config/taches';
 import { arrondis, couleurs, espace, ombre, polices, relief } from '@/config/theme';
 import { villeParId } from '@/config/villes';
 import { useEspaceBarre } from '@/hooks/useEspaceBarre';
 import { useMaintenant } from '@/hooks/useMaintenant';
-import { imageVille } from '@/illustrations/registre';
 import { jourDe } from '@/logique/dates';
 import { dureeLisible, energieDisponible, tempsAvantRecharge } from '@/logique/energie';
 import { annonceEntretien, compagnonAbsent, heureLisible as heureMission, ouEst, resultatADecouvrir } from '@/logique/missions';
@@ -53,6 +54,10 @@ const vibrer = () => {
 
 export default function Accueil() {
   const espaceBarre = useEspaceBarre();
+  const { width: largeurEcran } = useWindowDimensions();
+  // L'accueil reste chargé derrière l'écran d'aventure : le départ ne se joue que quand on le voit
+  const visible = useIsFocused();
+  const [sortieJouee, setSortieJouee] = useState<string | null>(null);
   const { etat, dispatch } = useApp();
   const [reaction, setReaction] = useState(0);
   const [moment, setMoment] = useState<{ pose: Pose; texte: string } | null>(null);
@@ -97,7 +102,6 @@ export default function Accueil() {
   const compagnon = etat.compagnon;
   if (!compagnon || !etat.villeId) return null;
   const ville = villeParId(etat.villeId);
-  const decor = imageVille(ville.id, 'portrait');
   const emploi = emploiActuel(etat);
 
   const faites = etat.taches.filter((t) => t.faite).length;
@@ -112,6 +116,8 @@ export default function Accueil() {
   const absent = compagnonAbsent(etat, maintenant);
   const revenu = resultatADecouvrir(etat, maintenant);
   const annonce = annonceEntretien(etat);
+  // Il vient de partir et on regarde l'accueil : il traverse sa chambre (une seule fois par aventure)
+  const sortieEnCours = !!absent?.depart && visible && maintenant - absent.depart < 60_000 && sortieJouee !== absent.id;
 
   /** Fait réagir le compagnon quelques secondes (pose + bulle). */
   function reagir(p: Pose, texte: string) {
@@ -242,29 +248,51 @@ export default function Accueil() {
         {/* La semaine 🐾 */}
         <SemaineSerie serie={etat.serie} nomCompagnon={compagnon.nom} />
 
-        {/* Le compagnon dans sa ville */}
+        {/* Le compagnon dans sa chambre */}
         <View style={styles.scene}>
-          {decor ? (
-            <Image source={decor} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="center" />
-          ) : (
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: ville.couleur }]} />
-          )}
+          {/* Sa chambre, avec les objets qu'on y a posés (la nuit, la lumière baisse) */}
+          <VueChambre ville={ville.id} chambre={etat.chambre ?? {}} hauteurFixe={HAUTEUR_SCENE} style={styles.chambre} />
           {dort && <View style={[StyleSheet.absoluteFill, styles.nuit]} />}
-          {absent?.retour ? (
-            // Parti à l'aventure : toute la scène raconte ce qu'il fait, en temps réel
-            // (sur le trajet, le décor de sa ville défile derrière lui)
-            <Pressable
-              style={StyleSheet.absoluteFill}
-              onPress={() => router.push('/aventure')}
-              accessibilityRole="button"
-              accessibilityLabel={`${ouEst(etat, absent)}. Retour à ${heureMission(absent.retour)}`}>
-              <SceneAventure mission={absent} espece={compagnon.espece} equipe={etat.equipe} ville={etat.villeId} hauteur={HAUTEUR_SCENE} taille={100} />
+          {!absent && (
+            <Pressable style={styles.bulle} onPress={() => router.push('/boutique')} disabled={!bulleVersShop} accessibilityRole={bulleVersShop ? 'button' : 'text'}>
+              <Text style={styles.bulleTexte}>{bulle}</Text>
+              {bulleVersShop && <Text style={styles.bulleLien}>Voir les tenues au Shop ›</Text>}
             </Pressable>
+          )}
+          {absent?.retour ? (
+            <>
+              {/* Il vient de partir : on le voit traverser sa chambre et sortir */}
+              {sortieEnCours && (
+                <SortieDeChambre
+                  key={absent.id}
+                  espece={compagnon.espece}
+                  equipe={etat.equipe}
+                  objet={OBJET_EMPORTE[absent.type]}
+                  largeur={largeurEcran}
+                  taille={130}
+                  onFin={() => setSortieJouee(absent.id)}
+                />
+              )}
+              {/* Chambre vide pendant son absence (une fois sorti) : on suit son aventure dans sa ville */}
+              {!sortieEnCours && (
+              <Pressable
+                style={styles.parti}
+                onPress={() => router.push('/ville')}
+                accessibilityRole="button"
+                accessibilityLabel={`${ouEst(etat, absent)}. Retour à ${heureMission(absent.retour)}. Suivre son aventure`}>
+                <Text style={styles.partiEmoji}>🎒</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.partiTitre} numberOfLines={2}>
+                    {ouEst(etat, absent)}
+                  </Text>
+                  <Text style={styles.partiSous}>
+                    Retour à {heureMission(absent.retour)} · Suivre son aventure ›
+                  </Text>
+                </View>
+              </Pressable>
+              )}
+            </>
           ) : null}
-          <Pressable style={styles.bulle} onPress={() => router.push('/boutique')} disabled={!bulleVersShop} accessibilityRole={bulleVersShop ? 'button' : 'text'}>
-            <Text style={styles.bulleTexte}>{bulle}</Text>
-            {bulleVersShop && <Text style={styles.bulleLien}>Voir les tenues au Shop ›</Text>}
-          </Pressable>
           <View style={styles.sol}>
             {effet?.type === 'calin' && <CoeursCalin key={effet.cle} />}
             {effet?.type === 'jeu' && <BallonJeu key={effet.cle} />}
@@ -505,6 +533,24 @@ const styles = StyleSheet.create({
     backgroundColor: couleurs.ciel,
   },
   nuit: { backgroundColor: 'rgba(40, 45, 90, 0.35)' },
+  chambre: { borderRadius: 0 },
+  parti: {
+    position: 'absolute',
+    left: espace.m,
+    right: espace.m,
+    bottom: espace.m,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espace.m,
+    backgroundColor: 'rgba(255,255,255,0.94)',
+    borderRadius: 18,
+    paddingHorizontal: espace.m,
+    paddingVertical: 12,
+    ...ombre,
+  },
+  partiEmoji: { fontSize: 28 },
+  partiTitre: { fontFamily: polices.texte, fontWeight: '800', fontSize: 14.5, color: couleurs.brun, lineHeight: 19 },
+  partiSous: { fontWeight: '700', fontSize: 12.5, color: couleurs.renardFonce, marginTop: 2 },
   bulle: {
     position: 'absolute',
     top: espace.m,

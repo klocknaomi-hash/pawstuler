@@ -3,11 +3,13 @@
  * L'illustration de la chambre (selon la ville), les objets posés sur leurs emplacements
  * et, s'il est à la maison, le compagnon. En mode « édition », chaque place vide montre un « + ».
  * Les objets sont des emojis en attendant leurs illustrations ; un tapis est dessiné en ovale de couleur.
+ * Avec `hauteurFixe` (accueil), la chambre remplit tout le cadre comme une photo recadrée :
+ * l'illustration est agrandie pour couvrir le cadre, calée en bas pour toujours voir le sol.
  */
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 
 import { objetParId } from '@/config/boutique';
 import { CHAMBRES, TAILLE_OBJET, type Emplacement } from '@/config/chambre';
@@ -24,6 +26,8 @@ export function VueChambre({
   compagnon,
   edition = false,
   onToucher,
+  hauteurFixe,
+  style,
 }: {
   ville: VilleId;
   /** Emplacement → objet posé. */
@@ -33,19 +37,26 @@ export function VueChambre({
   /** Montre les places vides (« + ») et rend les emplacements touchables. */
   edition?: boolean;
   onToucher?: (e: Emplacement) => void;
+  /** Cadre de hauteur fixe (ex. accueil) : la chambre le remplit entièrement, recadrée. */
+  hauteurFixe?: number;
+  style?: StyleProp<ViewStyle>;
 }) {
   const plan = CHAMBRES[ville];
-  const [largeur, setLargeur] = useState(0);
+  const [cadre, setCadre] = useState({ l: 0, h: 0 });
+  const surLayout = (e: LayoutChangeEvent) => setCadre({ l: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height });
+  // Taille de l'illustration affichée : la largeur du cadre, ou plus large pour couvrir une hauteur fixe
+  const largeur = hauteurFixe ? Math.max(cadre.l, hauteurFixe * plan.ratio) : cadre.l;
   const hauteur = largeur / plan.ratio;
-  const surLayout = (e: LayoutChangeEvent) => setLargeur(e.nativeEvent.layout.width);
+  // Recadrage : centrée en largeur, calée en bas (on voit toujours le sol et les objets posés)
+  const decalage = hauteurFixe ? { left: (cadre.l - largeur) / 2, top: hauteurFixe - hauteur } : { left: 0, top: 0 };
   const tapis = plan.emplacements.filter((p) => p.type === 'tapis');
   const autres = plan.emplacements.filter((p) => p.type !== 'tapis');
 
   return (
-    <View style={[styles.cadre, { aspectRatio: plan.ratio }]} onLayout={surLayout}>
-      <Image source={imageVille(ville, 'chambre')} style={StyleSheet.absoluteFill} contentFit="cover" />
+    <View style={[styles.cadre, hauteurFixe ? { height: hauteurFixe } : { aspectRatio: plan.ratio }, style]} onLayout={surLayout}>
       {largeur > 0 && (
-        <>
+        <View style={{ position: 'absolute', width: largeur, height: hauteur, ...decalage }}>
+          <Image source={imageVille(ville, 'chambre')} style={StyleSheet.absoluteFill} contentFit="cover" />
           {/* Le tapis d'abord (sous le compagnon), puis le compagnon, puis les autres objets */}
           {tapis.map((p) => (
             <Place key={p.id} place={p} objetId={chambre[p.id]} largeur={largeur} hauteur={hauteur} edition={edition} onToucher={onToucher} />
@@ -63,7 +74,7 @@ export function VueChambre({
           {autres.map((p) => (
             <Place key={p.id} place={p} objetId={chambre[p.id]} largeur={largeur} hauteur={hauteur} edition={edition} onToucher={onToucher} />
           ))}
-        </>
+        </View>
       )}
     </View>
   );
