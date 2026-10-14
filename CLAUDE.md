@@ -118,6 +118,7 @@ Sans accumulation de widgets ni journal.
   - **Refus** : il reçoit sa réponse le lendemain du tien (après son propre entretien s'il en avait un). La raison : sa tenue s'il est allé à son entretien **sans tenue** ; sinon ce que **tu as noté** (« Pourquoi, selon toi ? ») ; sinon un message simple. Il est déçu quelques secondes, puis repart.
   - **Relance** : le lendemain de ta relance (faite, ou prévue et arrivée à sa date), il **appelle**.
   - Sinon : découvrir un lieu, ou déposer son CV dans un lieu de sa ville (un jour sur deux).
+- **Banque d'aventures** (`app/src/config/banqueAventures.ts`, tirage dans `logique/missions.ts` › `tirerExploration`) : sans IA en temps réel, chaque exploration combine **un lieu** de sa ville × **une activité** (visiter, coup de main, rencontre, atelier, coulisses) × **un geste du métier** propre au type de lieu (« décorer des tartelettes aux fraises », « préparer un cappuccino ») × **une issue toujours positive** (une piste, un conseil de recherche d'emploi, un contact, une compétence, de la confiance). Un lieu encore inconnu se visite d'abord ; ensuite les activités tournent. Le tirage est fixé pour la journée, puis ne change plus une fois parti. Chaque aventure a un titre, un **objectif** et une **action** (`ficheMission`, prêts pour l'écran de départ présenté comme une offre). Ajouter du contenu = ajouter des lignes dans ce fichier.
 - **L'onglet ville est l'endroit où l'on suit Milo** (étape C du 14/10, `app/src/app/(onglets)/ville.tsx`) ; l'accueil montre sa chambre. De haut en bas :
   - « Clairebourg » et « 1/6 lieux découverts » ;
   - **une grande scène animée** avec une étiquette : avant l'aventure, il se promène près du lac (ou de la fontaine) ; la nuit, il dort dans sa chambre ; pendant l'aventure, la scène de l'aventure en direct (le chemin qui défile à l'aller et au retour, puis le lieu visité sur place) ; à son retour, « Milo est rentré : découvre son aventure ! » (ouvre le récit) ;
@@ -318,6 +319,7 @@ Ces valeurs ne viennent pas de mes consignes : Claude les a choisies pour que l'
 - **Premium** : 3 aventures par jour, 3 h d'attente après chaque retour (validé), contre 1 par jour en gratuit.
 - **Shop** (`boutique.ts`) : la liste des objets et leurs prix (de 20 à 150 pièces ; tenues de 20 à 120), l'écharpe offerte, la couronne et les tenues d'événements réservées à Premium, les noms des tenues.
 - **Récits d'aventure** (`aventures.ts`) et **lieux de Sunnyville** : textes provisoires.
+- **Banque d'aventures** (`banqueAventures.ts`) : les 5 activités, les gestes de chaque type de lieu, les 5 issues et les 10 conseils de recherche d'emploi.
 - **Carnet de voyage** (`missions.ts`) : les phrases du chemin, ce qu'il remarque dans chaque type de lieu, les phrases qui relient ta recherche à la sienne et « Et ensuite ? » ; le souvenir offert aussi au premier dépôt de CV ou entretien dans un lieu.
 - **Personnalité du crocodile** : « Grand cœur sous ses airs sérieux ».
 - **Série** (`serie.ts`) : un jour compte à l'ouverture de l'app ; objectifs proposés 2, 5, 7, 14 jours (5 par défaut) et leurs textes.

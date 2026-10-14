@@ -10,6 +10,7 @@
 import type { FormuleId } from '@/config/abonnement';
 import type { Contexte } from '@/config/aventures';
 import type { EspeceId, Pronoms } from '@/config/compagnons';
+import type { ActiviteId, IssueId } from '@/config/banqueAventures';
 import type { SecteurId, TypeMission } from '@/config/missions';
 import type { VilleId } from '@/config/villes';
 
@@ -179,6 +180,11 @@ export type Mission = {
   lieuId?: string;
   /** Recherche du jour sous la forme « découvrir une entreprise ». */
   decouverte?: boolean;
+  /** Exploration tirée dans la banque d'aventures (config/banqueAventures.ts) : activité, geste du métier, issue. */
+  activite?: ActiviteId;
+  tache?: string;
+  issue?: IssueId;
+  conseil?: string;
   /** Entretien : il portait une tenue d'entretien achetée au Shop (et laquelle). */
   avecTenue?: boolean;
   tenue?: string;

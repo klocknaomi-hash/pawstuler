@@ -10,6 +10,7 @@
  * Calculé au moment où l'on découvre le récit (avant d'enregistrer la découverte du lieu).
  * Rappel : ses candidatures sont les siennes, dans sa ville ; seules tes nouvelles le font avancer.
  */
+import { ISSUES } from '@/config/banqueAventures';
 import {
   CHEMINS_CARNET,
   ENSUITE_CARNET,
@@ -112,6 +113,7 @@ export function carnetDeRetour(etat: EtatApp, m: Mission): Carnet {
   const personne = SECTEURS[m.secteur].personne;
   if (m.type === 'travail') decouvertes.push({ emoji: '🤝', texte: texte('{Il} a passé la journée avec ses collègues') });
   else if (surPlace(m) && personne) decouvertes.push({ emoji: '🤝', texte: texte('{Il} a rencontré {personne}') });
+  if (m.issue) decouvertes.push({ emoji: ISSUES[m.issue].emoji, texte: texte(ISSUES[m.issue].resume) });
 
   /* 4. Le lien avec ta recherche : ta nouvelle, puis la sienne (jamais l'inverse) */
   let lien: string | undefined;

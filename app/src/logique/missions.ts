@@ -14,6 +14,7 @@
  * Ici : que des calculs (aucun écran). Les réglages et les textes sont dans src/config/missions.ts.
  */
 import { RECITS } from '@/config/aventures';
+import { ACTIVITES, CONSEILS, ISSUES, ISSUES_POSSIBLES, ROTATION_ACTIVITES, TACHES_LIEU, type ActiviteId } from '@/config/banqueAventures';
 import { tenuesEntretien } from '@/config/boutique';
 import { accorder } from '@/config/compagnons';
 import {
@@ -71,9 +72,11 @@ const jourDuDepart = (m: Mission) => (m.depart ? jourDe(new Date(m.depart)) : ''
 export function remplir(
   etat: EtatApp,
   texte: string,
-  m?: Pick<Mission, 'lieu' | 'metier' | 'secteur'>,
+  m?: Pick<Mission, 'lieu' | 'metier' | 'secteur'> & Partial<Pick<Mission, 'tache' | 'conseil'>>,
   extra: Record<string, string> = {},
 ): string {
+  if (m?.tache) extra = { tache: m.tache, ...extra };
+  if (m?.conseil) extra = { conseil: m.conseil, ...extra };
   const personne = m ? SECTEURS[m.secteur].personne : '';
   const metier = (m?.metier ?? '').toLowerCase();
   // « de apprenti » → « d’apprenti »
@@ -245,16 +248,37 @@ export function missionDansLaVille(etat: EtatApp): Mission {
   const lieu =
     (pro && etat.compagnon?.metier && ville.lieux.find((l) => l.id === etat.compagnon?.metier?.lieuId)) ||
     avecSecteur[etat.aventuresTotal % avecSecteur.length];
+  const secteur = lieu.secteur ?? 'entreprise';
   return {
     id: nouvelId(),
     type: pro ? 'travail' : 'recherche',
     lieu: nomDuJour(etat, lieu, aujourdhui),
-    secteur: lieu.secteur ?? 'entreprise',
+    secteur,
     metier: pro && etat.compagnon?.metier ? etat.compagnon.metier.intitule : metierDuJour(lieu, aujourdhui),
     lieuId: lieu.id,
     decouverte: !pro,
+    ...(pro ? {} : tirerExploration(etat, lieu, `${aujourdhui}-${etat.aventuresTotal}`)),
     statut: 'en-cours',
     creeLe: aujourdhui,
+  };
+}
+
+/**
+ * L'exploration du jour, tirée dans la banque d'aventures : un lieu encore inconnu se visite d'abord ;
+ * ensuite, les activités tournent (coup de main, rencontre, atelier, coulisses), avec un geste du métier
+ * et une issue toujours positive. Le tirage dépend du jour : la même aventure tant qu'il n'est pas parti.
+ */
+export function tirerExploration(etat: EtatApp, lieu: Lieu, graine: string): Pick<Mission, 'activite' | 'tache' | 'issue' | 'conseil'> {
+  const dejaVu = etat.decouvertes.some((d) => d.villeId === etat.villeId && d.lieuId === lieu.id);
+  const explorations = etat.missions.filter((m) => m.activite && m.depart).length;
+  const autres = ROTATION_ACTIVITES.filter((a) => a !== 'visiter');
+  const activite: ActiviteId = dejaVu ? autres[(explorations + hacher(graine)) % autres.length] : 'visiter';
+  const issue = choisir(ISSUES_POSSIBLES[activite], `${graine}-issue`);
+  return {
+    activite,
+    tache: choisir(TACHES_LIEU[lieu.secteur ?? 'entreprise'], `${graine}-tache`),
+    issue,
+    ...(issue === 'conseil' ? { conseil: choisir(CONSEILS, `${graine}-conseil`) } : {}),
   };
 }
 
@@ -343,6 +367,10 @@ export function prochainDepart(etat: EtatApp, maintenant = Date.now()): null | n
 /* ---------- Résultats (tirés au départ, dévoilés au retour) ---------- */
 
 export function tirerResultat(etat: EtatApp, m: Mission): string {
+  // Exploration tirée dans la banque : ce qu'il a fait, puis ce qu'il en retire
+  if (m.type === 'recherche' && m.activite && m.issue) {
+    return remplir(etat, `${choisir(ACTIVITES[m.activite].recit, m.id)} ${choisir(ISSUES[m.issue].recit, `${m.id}-issue`)}`, m);
+  }
   if (m.type === 'recherche' || m.type === 'travail') {
     return remplir(etat, choisir(RECITS[m.type === 'travail' ? 'pro' : 'recherche'], m.id), m);
   }
@@ -407,8 +435,18 @@ export function iconeMission(m: Mission): string {
   if (m.type === 'baignade') return m.lieu === 'à la fontaine' ? '⛲' : '🏞️';
   return SECTEURS[m.secteur].icone;
 }
-export const titreMission = (etat: EtatApp, m: Mission) => remplir(etat, m.decouverte ? TITRE_DECOUVERTE : TITRES[m.type], m);
-export const presentationMission = (etat: EtatApp, m: Mission) => remplir(etat, PRESENTATIONS[m.type], m);
+export const titreMission = (etat: EtatApp, m: Mission) =>
+  remplir(etat, m.activite ? ACTIVITES[m.activite].titre : m.decouverte ? TITRE_DECOUVERTE : TITRES[m.type], m);
+
+/** La petite fiche de mission (comme une offre) : l'objectif et ce qu'il va faire. */
+export function ficheMission(etat: EtatApp, m: Mission): { objectif?: string; action: string } {
+  if (m.activite) return { objectif: remplir(etat, ACTIVITES[m.activite].objectif, m), action: remplir(etat, ACTIVITES[m.activite].action, m) };
+  return { action: remplir(etat, PRESENTATIONS[m.type], m) };
+}
+export const presentationMission = (etat: EtatApp, m: Mission) => {
+  const { objectif, action } = ficheMission(etat, m);
+  return objectif ? `${objectif}. ${action}` : action;
+};
 /** « Milo est chez Boulangerie du Lac », « Milo est au téléphone », « Milo est à la maison ». */
 export const ouEst = (etat: EtatApp, m: Mission) => remplir(etat, OU_EST[m.type], m);
 
