@@ -54,15 +54,15 @@ Le crocodile remplace le chien pour avoir des silhouettes bien différentes. Le 
 ## 5. Le parcours et les fonctionnalités
 
 ### 5.1 Parcours complet
-Présentation → Connexion → Onboarding (prénom → objectif → choix de l'animal → œuf → naissance → prénom du compagnon → rencontre → rythme du compagnon → ville → objectif de série) → Accueil → Tâches → Récompenses → Pièces → Shop → Personnalisation → Candidatures → Progression → Aventures en ville → 🎉 J'ai décroché → 💼 Mon aventure professionnelle → Objectifs / progression → 🔎 Nouvelle recherche éventuelle.
+Connexion / inscription (premier écran) → Onboarding (prénom → objectif → choix de l'animal → œuf → naissance → prénom du compagnon → rencontre → rythme du compagnon → ville → objectif de série) → Accueil → Tâches → Récompenses → Pièces → Shop → Personnalisation → Candidatures → Progression → Aventures en ville → 🎉 J'ai décroché → 💼 Mon aventure professionnelle → Objectifs / progression → 🔎 Nouvelle recherche éventuelle.
 
 **Navigation : 5 onglets** — Accueil · Candidatures · Shop · Clairebourg (la ville du compagnon) · Compte.
 
 ### 5.2 Présentation
-Un seul écran court avant tout : l'animal, une phrase d'accroche, 4 points (tâches du jour, candidatures, pièces et personnalisation, compagnon qui vit et cherche avec toi).
+**Supprimée le 14/10** : l'app s'ouvre directement sur la connexion / l'inscription. Le concept est présenté par l'App Store et le Play Store (descriptions et captures d'écran).
 
 ### 5.3 Connexion
-Apple, Google, e-mail/mot de passe (création de compte, connexion, mot de passe oublié). **Présentation** et **connexion** : décor de Clairebourg avec la mascotte en haut, feuille blanche arrondie en bas (`components/EcranFeuille.tsx`). Inscription par e-mail : œil pour afficher le mot de passe, barre de solidité (4 segments), case obligatoire « J'accepte les conditions d'utilisation et la politique de confidentialité » (liens vers les textes) ; sous Apple / Google, la mention « En continuant, tu acceptes… » (`components/Formulaire.tsx`). Les comptes sont gérés par **Supabase** (`app/src/services/auth`) :
+Apple, Google, e-mail/mot de passe (création de compte, connexion, mot de passe oublié). **C'est le premier écran de l'app** (`(demarrage)/connexion.tsx`, refait le 14/10 d'après les références Yuppo et Finch) : dégradé pêche très doux, petite pastille « Pawstuler », « Salut, moi c'est Ziggy ! » / « On cherche ton job ensemble, une petite étape à la fois », Ziggy en grand qui fait coucou, puis une carte blanche avec **deux onglets : « Créer un compte » (par défaut) et « Se connecter »** (titre « Content de te revoir ! » et Ziggy content). Dans chaque onglet : Apple, Google, « ou », puis « S'inscrire / Se connecter avec un e-mail ». Après une déconnexion, l'écran s'ouvre sur « Se connecter ». Inscription par e-mail : œil pour afficher le mot de passe, barre de solidité (4 segments), case obligatoire « J'accepte les conditions d'utilisation et la politique de confidentialité » (liens vers les textes) ; sous Apple / Google, la mention « En continuant, tu acceptes… » (`components/Formulaire.tsx`). Les comptes sont gérés par **Supabase** (`app/src/services/auth`) :
 - **Mode réel** dès que les clés sont dans `app/.env` : Apple via la fenêtre native d'Apple, Google via la page de connexion Google sécurisée, e-mail via Supabase. Messages d'erreur simples en français.
 - **Mode démo** tant que les clés sont absentes : chaque méthode crée un compte local sur le téléphone (comme avant), avec la mention « Version de test ».
 - Déconnexion : ferme la session en ligne, les données restent sur le téléphone. Suppression du compte : en ligne (fonction serveur `supprimer-compte`) puis sur le téléphone.
