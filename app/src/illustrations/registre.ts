@@ -280,6 +280,16 @@ export function trajetVille(ville: VilleId): { panneaux: ImageSourcePropType[]; 
   return { panneaux: [...intro, ...boucle], boucle: intro.length };
 }
 
+/**
+ * Le décor d'un lieu de la ville : un format de la ville (« centre », « portrait », « paysage »)
+ * ou un paysage du chemin (« chemin-1 »…). Sans décor précisé : le centre-ville.
+ */
+export function imageDecor(ville: VilleId, decor = 'centre'): ImageSourcePropType | undefined {
+  const chemin = /^chemin-(\d+)$/.exec(decor);
+  if (chemin) return CHEMINS[ville][Number(chemin[1]) - 1] ?? CHEMINS[ville][0];
+  return imageVille(ville, (['portrait', 'paysage', 'centre', 'chambre'].includes(decor) ? decor : 'centre') as FormatVille);
+}
+
 /** Image d'une ville ; si le format demandé manque, on prend le plus proche. */
 export const imageVille = (ville: VilleId, format: FormatVille) =>
   VILLES[ville][format] ?? VILLES[ville].portrait ?? VILLES[ville].paysage;

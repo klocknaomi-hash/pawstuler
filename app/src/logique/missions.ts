@@ -480,3 +480,34 @@ export function lieuEmbauche(etat: EtatApp): Lieu | undefined {
   const id = avecEntretien?.lieuId ?? derniere?.lieuId;
   return lieux.find((l) => l.id === id) ?? lieux.find((l) => l.metier);
 }
+
+/* ---------- Le parcours dans sa ville (onglet ville) ---------- */
+
+/** Le lieu de la ville où se passe une aventure (découverte, dépôt de CV, relance, entretien…). */
+export function lieuDeMission(etat: EtatApp, m: Mission): Lieu | undefined {
+  if (!etat.villeId) return undefined;
+  const id = m.lieuId ?? etat.candidaturesMilo.find((cm) => cm.id === m.candidatureMiloId)?.lieuId;
+  return villeParId(etat.villeId).lieux.find((l) => l.id === id);
+}
+
+/** Chaque lieu de sa ville, comme une étape de son parcours : où il en est, et depuis quand. */
+export function parcoursDeLaVille(etat: EtatApp, absent?: Mission): { lieu: Lieu; etape: EtapeLieu; decouvertLe?: string; ici: boolean }[] {
+  if (!etat.villeId) return [];
+  const villeId = etat.villeId;
+  const ici = absent ? lieuDeMission(etat, absent)?.id : undefined;
+  return villeParId(villeId).lieux.map((lieu) => {
+    const decouverte = etat.decouvertes.find((d) => d.villeId === villeId && d.lieuId === lieu.id);
+    let etape: EtapeLieu = decouverte ? 'visite' : 'a-visiter';
+    if (etat.candidaturesMilo.some((cm) => cm.lieuId === lieu.id)) etape = 'candidature';
+    if (etat.compagnon?.metier?.lieuId === lieu.id) etape = 'embauche';
+    return { lieu, etape, decouvertLe: decouverte?.le, ici: ici === lieu.id };
+  });
+}
+
+/** Où en est le trajet : part du temps écoulé (0 à 1) et ce qu'il fait (en route, sur place, retour). */
+export function avanceeTrajet(m: Mission, maintenant = Date.now()): { part: number; phase: 'aller' | 'sur-place' | 'retour' } {
+  const depart = m.depart ?? maintenant;
+  const retour = m.retour ?? maintenant;
+  const part = retour > depart ? Math.min(1, Math.max(0, (maintenant - depart) / (retour - depart))) : 1;
+  return { part, phase: part < 0.2 ? 'aller' : part < 0.8 ? 'sur-place' : 'retour' };
+}

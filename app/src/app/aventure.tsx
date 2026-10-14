@@ -20,13 +20,13 @@ import { Bouton, Ecran, Texte, Titre } from '@/components/base';
 import { Compagnon } from '@/components/Compagnon';
 import { IconePiece } from '@/components/Pieces';
 import { SceneAventure } from '@/components/SceneAventure';
+import { decorDeMission } from '@/logique/decors';
 import { objetParId } from '@/config/boutique';
 import { accorder, type EspeceId } from '@/config/compagnons';
 import { AVENTURES_PAR_JOUR } from '@/config/energie';
 import { BOUTON_DEPART, COUTS_MISSION, DUREES_MINUTES, HEURES_ENTRE_AVENTURES_PREMIUM, MOMENTS, OBJET_EMPORTE, PIECES_MISSION, type TypeMoment } from '@/config/missions';
 import { arrondis, couleurs, espace, ombre } from '@/config/theme';
 import { useMaintenant } from '@/hooks/useMaintenant';
-import { imageVille } from '@/illustrations/registre';
 import { dureeLisible, energieDisponible, tempsAvantRecharge } from '@/logique/energie';
 import {
   aventureDuJour,
@@ -46,16 +46,9 @@ import {
 import { estEndormi } from '@/logique/rythme';
 import { aPremium } from '@/services/abonnement';
 import { gainPlafonne, useApp } from '@/store/etat';
-import type { EtatApp, Mission } from '@/store/types';
+import type { Mission } from '@/store/types';
 
 /** Le décor de la scène : la rue pour les aventures en ville, le lac pour souffler, un coin calme pour téléphoner. */
-function decorDe(etat: EtatApp, m: Mission) {
-  const ville = etat.villeId ?? 'clairebourg';
-  if (m.type === 'repos' || m.type === 'baignade') return imageVille(ville, 'portrait');
-  if (m.type === 'relance' || m.type === 'refus') return imageVille(ville, 'paysage');
-  return imageVille(ville, 'centre');
-}
-
 export default function Aventure() {
   const { moment } = useLocalSearchParams<{ moment?: string }>();
   const { etat, dispatch } = useApp();
@@ -168,7 +161,7 @@ export default function Aventure() {
               mission={enCours}
               espece={compagnon.espece}
               equipe={etat.equipe}
-              decor={decorDe(etat, enCours)}
+              decor={decorDeMission(etat, enCours)}
               ville={etat.villeId}
               hauteur={300}
               taille={96}
