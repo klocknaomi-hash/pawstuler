@@ -25,6 +25,7 @@ import {
   compagnonAbsent,
   dureeMission,
   estUnMoment,
+  lieuDeMission,
   lieuEmbauche,
   momentDuCompagnon,
   prochainDepart,
@@ -549,21 +550,14 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
       const m = etat.missions.find((x) => x.id === action.id && x.statut === 'en-cours');
       if (!m || !m.retour || Date.now() < m.retour) return etat;
       const aujourdhui = jourDe();
+      const lieu = m.type === 'recherche' || m.type === 'depot' || m.type === 'entretien' ? lieuDeMission(etat, m) : undefined;
       const vue: EtatApp = {
         ...etat,
         missions: etat.missions.map((x) => (x.id === m.id ? { ...x, statut: 'vue' } : x)),
-        // Exploration : premier passage dans un lieu → « Découverte » et souvenir
-        ...(m.type === 'recherche' && m.lieuId && etat.villeId
-          ? {
-              derniereAventure: {
-                le: aujourdhui,
-                texte: m.resultat ?? '',
-                lieuId: m.lieuId,
-              },
-              decouvertes: etat.decouvertes.some((d) => d.villeId === etat.villeId && d.lieuId === m.lieuId)
-                ? etat.decouvertes
-                : [...etat.decouvertes, { villeId: etat.villeId, lieuId: m.lieuId, le: aujourdhui }],
-            }
+        ...(m.type === 'recherche' && m.lieuId ? { derniereAventure: { le: aujourdhui, texte: m.resultat ?? '', lieuId: m.lieuId } } : {}),
+        // Premier passage dans un lieu (découverte, dépôt de CV, entretien) → « Découverte » et souvenir
+        ...(lieu && etat.villeId && !etat.decouvertes.some((d) => d.villeId === etat.villeId && d.lieuId === lieu.id)
+          ? { decouvertes: [...etat.decouvertes, { villeId: etat.villeId, lieuId: lieu.id, le: aujourdhui }] }
           : {}),
       };
       // Les moments pour souffler (repos, baignade) ne rapportent pas de pièces

@@ -356,3 +356,60 @@ export const ANIMATION_SUR_PLACE: Record<TypeMission, string[]> = {
   repos: ['💤', '☕'],
   baignade: ['💦', '🫧'],
 };
+
+/* ---------- Le carnet de voyage (au retour d'une aventure) ---------- */
+
+/** Ce que Milo a remarqué sur place, selon le type de lieu (« Sur place, il a remarqué … »). */
+export const REMARQUES_LIEU: Record<SecteurId, string> = {
+  boulangerie: 'l’odeur du pain chaud dès la porte, et une vitrine pleine de croissants',
+  cafe: 'le tintement des tasses, et un tableau noir couvert de petits mots',
+  librairie: 'des piles de livres jusqu’au plafond, et un vieux fauteuil près de la fenêtre',
+  restaurant: 'une cuisine qui s’activait déjà, et des nappes à carreaux sur chaque table',
+  hotel: 'un grand hall tout calme, et une clé dorée posée sur le comptoir',
+  ecole: 'des dessins accrochés aux murs, et des rires qui venaient de la cour',
+  sport: 'des ballons un peu partout, et une équipe en plein échauffement',
+  boutique: 'des étagères bien rangées, et une petite clochette à la porte',
+  studio: 'des lumières, des appareils photo, et des idées punaisées partout sur les murs',
+  agence: 'une grande carte du monde, et des cartes postales venues de partout',
+  atelier: 'des outils bien alignés, et une bonne odeur de bois',
+  entreprise: 'des bureaux lumineux, et une machine à café très populaire',
+};
+
+/** Première phrase du récit : le chemin (une variante est tirée au hasard, toujours la même pour une aventure). */
+export const CHEMINS_CARNET: Record<TypeMission, string[]> = {
+  recherche: ['{nom} a traversé {ville} d’un bon pas, carnet à la main.', 'En chemin, {nom} a salué les voisins de {ville}, puis a suivi sa curiosité.'],
+  depot: ['{nom} a vérifié trois fois que son CV était bien dans son sac, puis a pris la route.', 'CV sous le bras, {nom} a traversé {ville} sans traîner.'],
+  relance: ['{nom} s’est installé{e} dans un coin calme, a pris une grande inspiration, puis a composé le numéro de {lieu}.'],
+  entretien: ['{nom} a révisé son parcours en marchant, puis a pris une grande inspiration devant la porte.'],
+  refus: ['Pendant sa promenade, le téléphone de {nom} a vibré : un message est arrivé.'],
+  travail: ['{nom} est arrivé{e} chez {lieu} un peu en avance, pour bien commencer la journée.'],
+  repos: ['{nom} est rentré{e} à la maison sans se presser.'],
+  baignade: ['{nom} a filé {lieu}, serviette sur l’épaule.'],
+};
+
+/**
+ * Le lien avec ta recherche : ta nouvelle d'abord, puis ce que Milo a vécu de son côté, en décalé.
+ * {entreprise} = ton entreprise, {jour} = quand (« hier », « lundi »), {nombre} = « 3 candidatures ».
+ */
+export const LIENS_CARNET = {
+  relanceFaite: 'Tu as relancé {entreprise} {jour}. Aujourd’hui, c’était au tour de {nom} de prendre son téléphone.',
+  relancePrevue: 'Ta relance chez {entreprise} était prévue {jour}. Aujourd’hui, {nom} a appelé {lieu} de son côté.',
+  entretien: 'Ton entretien chez {entreprise}, c’était {jour}. Deux jours plus tard, {nom} a passé le sien : vous avez osé tous les deux.',
+  refus: 'Toi aussi, tu as reçu une réponse de {entreprise} {jour}. {nom} est passé{e} par là aussi : un « non » n’efface rien de ce que vous construisez.',
+  avecCandidatures: 'Cette semaine, tu as envoyé {nombre}. Pendant ce temps, {nom} avance dans {ville} : chacun sur son chemin, ensemble.',
+  sansCandidature: 'Pendant que tu avances à ton rythme, {nom} prépare le terrain dans {ville}.',
+  travail: 'Pendant que tu prends tes marques chez {entreprise}, {nom} fait pareil chez {lieu}.',
+};
+
+/** Ce qui l'attend ensuite (la suite de son parcours à lui). {jour}, {heure}, {nombre} sont remplis. */
+export const ENSUITE_CARNET = {
+  entretienPrevu: '📅 Son entretien chez {lieu} est {jour} à {heure}.',
+  depot: '⏳ {Il} attend une réponse de {lieu}.',
+  relance: '⏳ {lieu} a bien noté son appel : {il} attend une réponse.',
+  entretien: '⏳ {Il} attend la réponse de {lieu}, en croisant les pattes.',
+  refusAvecAutres: '🌱 {Il} repart avec {nombre} en cours.',
+  refusSeul: '🌱 La prochaine fois, {il} tentera sa chance ailleurs dans {ville}.',
+  recherche: '📄 Prochaine étape : déposer son CV dans un lieu de {ville}.',
+  travail: '💼 Demain, une nouvelle journée l’attend chez {lieu}.',
+  moment: '✨ {Il} est prêt{e} à repartir quand tu veux.',
+};

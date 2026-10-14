@@ -11,21 +11,23 @@
  * Ouverture : `/aventure` (l'aventure du jour) ou `/aventure?moment=repos|baignade` (moment pour souffler).
  */
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { Easing, FadeIn, SlideInLeft, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, FadeInDown, SlideInLeft, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withTiming } from 'react-native-reanimated';
 
 import { Bouton, Ecran, Texte, Titre } from '@/components/base';
 import { Compagnon } from '@/components/Compagnon';
 import { IconePiece } from '@/components/Pieces';
 import { SceneAventure } from '@/components/SceneAventure';
+import { carnetDeRetour, type Carnet } from '@/logique/carnet';
 import { decorDeMission } from '@/logique/decors';
 import { objetParId } from '@/config/boutique';
 import { accorder, type EspeceId } from '@/config/compagnons';
 import { AVENTURES_PAR_JOUR } from '@/config/energie';
 import { BOUTON_DEPART, COUTS_MISSION, DUREES_MINUTES, HEURES_ENTRE_AVENTURES_PREMIUM, MOMENTS, OBJET_EMPORTE, PIECES_MISSION, type TypeMoment } from '@/config/missions';
-import { arrondis, couleurs, espace, ombre } from '@/config/theme';
+import { arrondis, couleurs, espace, ombre, relief } from '@/config/theme';
 import { useMaintenant } from '@/hooks/useMaintenant';
 import { dureeLisible, energieDisponible, tempsAvantRecharge } from '@/logique/energie';
 import {
@@ -54,7 +56,7 @@ export default function Aventure() {
   const { etat, dispatch } = useApp();
   const maintenant = useMaintenant();
   // Le récit découvert sur cet écran (et les pièces réellement gagnées, plafond compris)
-  const [decouvert, setDecouvert] = useState<{ id: string; pieces: number } | null>(null);
+  const [decouvert, setDecouvert] = useState<{ id: string; pieces: number; carnet: Carnet } | null>(null);
   // Moment pour souffler demandé depuis l'accueil (figé à l'ouverture)
   const [momentChoisi] = useState<Mission | null>(() =>
     MOMENTS.includes(moment as TypeMoment) ? momentDuCompagnon(etat, moment as TypeMoment) : null,
@@ -76,7 +78,7 @@ export default function Aventure() {
   const enCours = missionEnCours(etat);
   const vue = decouvert ? etat.missions.find((m) => m.id === decouvert.id) : undefined;
 
-  /* 4. Retour : d'abord le récit et la récompense, puis (discret) quand il pourra repartir */
+  /* 4. Retour : son carnet de voyage (où, ce qu'il a vécu, découvert, le lien avec toi, ce qu'il rapporte, la suite) */
   if (vue && decouvert) {
     const depart = prochainDepart(etat, maintenant);
     const suite = estUnMoment(vue)
@@ -86,36 +88,91 @@ export default function Aventure() {
         : typeof depart === 'number'
           ? `Prochaine aventure possible à ${heureLisible(depart)}.`
           : 'Une autre aventure est possible aujourd’hui.';
+    const { carnet } = decouvert;
+    // Les pages du carnet apparaissent l'une après l'autre
+    let page = 0;
+    const entree = () => FadeInDown.delay(250 + 180 * page++).duration(450);
     return (
       <Ecran defilant bas={<Bouton titre="Retour à l’accueil" onPress={fermer} />}>
         <Fermer onPress={fermer} />
-        <View style={styles.centre}>
-          <Compagnon
-            espece={compagnon.espece}
-            pose={vue.type === 'refus' ? 'reconfort' : vue.type === 'entretien' ? 'fier' : 'content'}
-            taille={170}
-            reaction={1}
-            equipe={vue.type === 'entretien' && vue.tenue ? [vue.tenue] : etat.equipe}
-          />
-          <Titre style={styles.texteCentre}>{accord(`${nom} est rentré{e} !`)}</Titre>
-        </View>
-        <Animated.View entering={FadeIn.duration(500)} style={styles.carte}>
-          <Text style={styles.lieu}>
-            {iconeMission(vue)} {vue.lieu}
-          </Text>
-          <Text style={styles.recit}>{vue.resultat}</Text>
-          <View style={styles.recompense}>
-            {estUnMoment(vue) ? (
-              <Text style={styles.recompenseTexte}>{accord('💛 Un moment rien que pour {lui}.')}</Text>
-            ) : (
-              <>
-                <IconePiece taille={20} />
-                <Text style={styles.recompenseTexte}>
-                  {decouvert.pieces > 0 ? `+${decouvert.pieces} pièces rapportées` : 'Plafond de pièces atteint aujourd’hui, mais quelle aventure !'}
-                </Text>
-              </>
-            )}
+        {/* 1. Où il est allé : l'image du lieu, et lui, tout fier de rentrer */}
+        <View style={styles.photo}>
+          <Image source={carnet.image} style={styles.photoImage} contentFit="cover" />
+          <View style={styles.photoCompagnon}>
+            <Compagnon
+              espece={compagnon.espece}
+              pose={vue.type === 'refus' ? 'reconfort' : vue.type === 'entretien' ? 'fier' : 'content'}
+              taille={130}
+              reaction={1}
+              equipe={vue.type === 'entretien' && vue.tenue ? [vue.tenue] : etat.equipe}
+            />
           </View>
+          <View style={styles.etiquette}>
+            <Text style={styles.etiquetteTexte} numberOfLines={1}>
+              {carnet.ou}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.entete}>
+          <Titre style={styles.texteCentre}>{accord(`${nom} est rentré{e} !`)}</Titre>
+          {carnet.detail && <Text style={styles.detail}>{carnet.detail}</Text>}
+          {vue.depart && vue.retour && (
+            <Text style={styles.detail}>
+              Parti{accord('{e}')} à {heureLisible(vue.depart)} · rentré{accord('{e}')} à {heureLisible(vue.retour)}
+            </Text>
+          )}
+        </View>
+
+        {/* 2. Ce qu'il a vécu */}
+        <Animated.View entering={entree()} style={styles.carte}>
+          <Text style={styles.rubrique}>📖 Son carnet de voyage</Text>
+          <Text style={styles.texteCarte}>{carnet.vecu}</Text>
+        </Animated.View>
+
+        {/* 3. Ce qu'il a découvert */}
+        {carnet.decouvertes.length > 0 && (
+          <Animated.View entering={entree()} style={styles.carte}>
+            <Text style={styles.rubrique}>✨ Ce qu’{accord('{il}')} a découvert</Text>
+            {carnet.decouvertes.map((l) => (
+              <Ligne key={l.texte} emoji={l.emoji} texte={l.texte} />
+            ))}
+          </Animated.View>
+        )}
+
+        {/* 4. Le lien avec ta recherche */}
+        {carnet.lien && (
+          <Animated.View entering={entree()} style={[styles.carte, styles.carteLien]}>
+            <Text style={styles.rubrique}>🐾 Et toi, de ton côté</Text>
+            <Text style={styles.texteCarte}>{carnet.lien}</Text>
+          </Animated.View>
+        )}
+
+        {/* 5. Ce qu'il rapporte */}
+        <Animated.View entering={entree()} style={styles.carte}>
+          <Text style={styles.rubrique}>🎒 Ce qu’{accord('{il}')} rapporte</Text>
+          {estUnMoment(vue) ? (
+            <Ligne emoji="💛" texte={accord('Un moment rien que pour {lui}.')} />
+          ) : (
+            <View style={styles.ligne}>
+              <IconePiece taille={20} />
+              <Text style={styles.recompenseTexte}>
+                {decouvert.pieces > 0 ? `+${decouvert.pieces} pièces rapportées` : 'Plafond de pièces atteint aujourd’hui, mais quelle aventure !'}
+              </Text>
+            </View>
+          )}
+          {carnet.gains.map((l) => (
+            <Ligne key={l.texte} emoji={l.emoji} texte={l.texte} />
+          ))}
+        </Animated.View>
+
+        {/* 6. Ce qui l'attend ensuite, puis (discret) quand il pourra repartir */}
+        <Animated.View entering={entree()} style={styles.carte}>
+          <Text style={styles.rubrique}>🗓️ Et ensuite ?</Text>
+          {carnet.ensuite.map((t) => (
+            <Text key={t} style={styles.texteCarte}>
+              {t}
+            </Text>
+          ))}
         </Animated.View>
         {suite && <Text style={styles.suite}>{suite}</Text>}
         {depart === 'demain' && !estUnMoment(vue) && !aPremium(etat) && (
@@ -146,7 +203,8 @@ export default function Aventure() {
   if (enCours?.retour) {
     const absent = compagnonAbsent(etat, maintenant);
     const decouvrir = () => {
-      setDecouvert({ id: enCours.id, pieces: gainPlafonne(etat, PIECES_MISSION[enCours.type]) });
+      // Le carnet est écrit avant d'enregistrer la découverte (pour savoir si c'était son premier passage)
+      setDecouvert({ id: enCours.id, pieces: gainPlafonne(etat, PIECES_MISSION[enCours.type]), carnet: carnetDeRetour(etat, enCours) });
       dispatch({ type: 'DECOUVRIR_RESULTAT', id: enCours.id });
     };
     return (
@@ -268,6 +326,15 @@ function Depart({ espece, equipe, objet }: { espece: EspeceId; equipe?: string[]
   );
 }
 
+function Ligne({ emoji, texte }: { emoji: string; texte: string }) {
+  return (
+    <View style={styles.ligne}>
+      <Text style={styles.ligneEmoji}>{emoji}</Text>
+      <Text style={styles.texteCarte}>{texte}</Text>
+    </View>
+  );
+}
+
 function Info({ icone, texte }: { icone: keyof typeof Ionicons.glyphMap; texte: string }) {
   return (
     <View style={styles.info}>
@@ -317,16 +384,28 @@ const styles = StyleSheet.create({
     ...ombre,
   },
   pastilleTexte: { fontWeight: '800', color: couleurs.brun },
-  recompense: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: espace.s,
-    borderTopWidth: 1,
-    borderTopColor: couleurs.ligne,
-    borderStyle: 'dashed',
-    paddingTop: espace.m,
-    marginTop: espace.s,
+  /* Carnet de voyage (retour) */
+  photo: { height: 210, borderRadius: arrondis.l, overflow: 'hidden', backgroundColor: couleurs.ciel, ...relief },
+  photoImage: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  photoCompagnon: { position: 'absolute', left: 0, right: 0, bottom: 6, alignItems: 'center' },
+  etiquette: {
+    position: 'absolute',
+    top: espace.s,
+    left: espace.s,
+    maxWidth: '85%',
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
   },
+  etiquetteTexte: { fontSize: 13, fontWeight: '700', color: couleurs.brun },
+  entete: { alignItems: 'center', gap: 2 },
+  detail: { textAlign: 'center', fontSize: 13, color: couleurs.brunDoux },
+  rubrique: { fontSize: 13, fontWeight: '700', color: couleurs.renardFonce },
+  texteCarte: { flex: 1, fontSize: 15, lineHeight: 21, color: couleurs.brun },
+  carteLien: { backgroundColor: couleurs.saugeClair },
+  ligne: { flexDirection: 'row', alignItems: 'center', gap: espace.s },
+  ligneEmoji: { fontSize: 18, width: 24, textAlign: 'center' },
   recompenseTexte: { flex: 1, fontWeight: '800', color: '#9A6400' },
   suite: { textAlign: 'center', fontSize: 13.5, fontWeight: '600', color: couleurs.brunDoux },
   lien: { textAlign: 'center', fontSize: 13, fontWeight: '800', color: couleurs.renardFonce },
