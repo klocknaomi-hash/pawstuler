@@ -23,7 +23,8 @@ import { REGARDE_A_GAUCHE, type EspeceId, type Pose } from '@/config/compagnons'
 import { ANIMATION_SUR_PLACE, OBJET_EMPORTE } from '@/config/missions';
 import { arrondis, couleurs, ombre } from '@/config/theme';
 import type { VilleId } from '@/config/villes';
-import { animationAventure } from '@/illustrations/registre';
+import { VideoTrajet } from '@/components/VideoTrajet';
+import { animationAventure, videoTrajet } from '@/illustrations/registre';
 import { iconeMission } from '@/logique/missions';
 import type { Mission } from '@/store/types';
 
@@ -190,7 +191,10 @@ function Marche({
 
   return (
     <>
-      {defile && ville ? (
+      {defile && ville && videoTrajet(ville) ? (
+        // La vidéo de la ville défile derrière lui (dans l'autre sens au retour)
+        <VideoTrajet source={videoTrajet(ville)!} sens={phase === 'aller' ? 'aller' : 'retour'} />
+      ) : defile && ville ? (
         <CheminDefilant ville={ville} sens={phase === 'aller' ? 'aller' : 'retour'} debut={debut} fin={fin} largeur={largeur} hauteur={hauteur} />
       ) : (
         <>

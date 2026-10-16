@@ -1,8 +1,8 @@
 /**
  * ONGLET DU COMPAGNON (sa carte d'identité)
  * Sa photo dans sa ville, son nom et ses pronoms, sa série 🐾, sa garde-robe (accès au Shop
- * et à sa chambre), puis trois onglets (À propos / Détails / Traits), sa collection
- * (objets du Shop + souvenirs d'aventure) et la section « Découverte ».
+ * et à sa chambre), puis trois onglets (À propos / Détails / Traits). Page courte : la collection
+ * est dans le Shop, et les lieux découverts dans l'onglet de la ville.
  * En haut à droite : ⚙️ ouvre le Compte (profil, abonnement, paramètres…).
  * Accessible depuis la barre d'onglets et depuis la semaine 🐾 de l'accueil.
  */
@@ -18,7 +18,6 @@ import { useEspaceBarre } from '@/hooks/useEspaceBarre';
 import { objetParId } from '@/config/boutique';
 import { Compagnon } from '@/components/Compagnon';
 import { BadgeSerie } from '@/components/Serie';
-import { objetsPour } from '@/logique/garderobe';
 import { LIBELLES_PRONOMS, accorder, compagnonParId } from '@/config/compagnons';
 import { OBJECTIFS_SERIE } from '@/config/serie';
 import { arrondis, couleurs, espace, ombre, polices, relief } from '@/config/theme';
@@ -52,11 +51,6 @@ export default function ProfilCompagnon() {
   const enPoste = etat.contexte === 'pro' && compagnon.metier;
   const metier = enPoste ? ville.lieux.find((l) => l.id === compagnon.metier?.lieuId) : undefined;
 
-  // Collection : objets du Shop possédés + souvenirs des lieux découverts
-  const decouverts = new Map(etat.decouvertes.filter((d) => d.villeId === ville.id).map((d) => [d.lieuId, d.le]));
-  const objets = objetsPour(compagnon.espece).map((o) => ({ id: o.id, nom: o.nom, emoji: o.emoji, possede: etat.inventaire.includes(o.id) }));
-  const souvenirs = ville.lieux.map((l) => ({ id: l.id, nom: l.souvenir.nom, emoji: l.souvenir.emoji, possede: decouverts.has(l.id) }));
-  const nbPossedes = [...objets, ...souvenirs].filter((x) => x.possede).length;
 
   return (
     <Ecran defilant style={{ paddingBottom: espaceBarre }}>
@@ -160,8 +154,7 @@ export default function ProfilCompagnon() {
             <Detail libelle="Pronoms" valeur={compagnon.pronoms ? LIBELLES_PRONOMS[compagnon.pronoms] : 'Non précisés'} />
             <Detail libelle="Né le" valeur={dateLisible(compagnon.neLe)} />
             <Detail libelle="Ville" valeur={ville.nom} />
-            <Detail libelle="Situation" valeur={enPoste && compagnon.metier ? compagnon.metier.intitule : 'En recherche'} />
-            <Detail libelle="Collection" valeur={`${nbPossedes} sur ${objets.length + souvenirs.length}`} dernier />
+            <Detail libelle="Situation" valeur={enPoste && compagnon.metier ? compagnon.metier.intitule : 'En recherche'} dernier />
           </>
         )}
         {onglet === 'traits' && (
@@ -185,44 +178,6 @@ export default function ProfilCompagnon() {
         <Text style={styles.lien}>Modifier son prénom ou ses pronoms</Text>
       </Pressable>
 
-      {/* Collection */}
-      <View style={styles.section}>
-        <View style={styles.sectionEntete}>
-          <Text style={styles.sectionTitre}>Collection</Text>
-          <Text style={styles.compte}>
-            {nbPossedes}/{objets.length + souvenirs.length}
-          </Text>
-        </View>
-        <Text style={styles.sousSection}>Objets du Shop</Text>
-        <Grille elements={objets} />
-        <Text style={styles.sousSection}>Souvenirs d’aventure</Text>
-        <Grille elements={souvenirs} />
-      </View>
-
-      {/* Découverte */}
-      <View style={styles.section}>
-        <View style={styles.sectionEntete}>
-          <Text style={styles.sectionTitre}>Découverte</Text>
-          <Text style={styles.compte}>
-            {decouverts.size}/{ville.lieux.length} lieux
-          </Text>
-        </View>
-        <View style={styles.carte}>
-          {ville.lieux.map((l, i) => {
-            const le = decouverts.get(l.id);
-            return (
-              <View key={l.id} style={[styles.lieu, i > 0 && styles.separateur]}>
-                <Text style={[styles.lieuEmoji, !le && { opacity: 0.35 }]}>{l.souvenir.emoji}</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.lieuNom, !le && { color: couleurs.brunDoux }]}>{le ? l.nom : 'Lieu à découvrir'}</Text>
-                  <Text style={styles.lieuDetail}>{le ? `Exploré le ${dateLisible(le)}` : 'Pars en aventure pour le découvrir'}</Text>
-                </View>
-                {le && <Ionicons name="checkmark-circle" size={20} color={couleurs.saugeFonce} />}
-              </View>
-            );
-          })}
-        </View>
-      </View>
     </Ecran>
   );
 }
@@ -241,25 +196,6 @@ function Detail({ libelle, valeur, dernier }: { libelle: string; valeur: string;
     <View style={[styles.detail, !dernier && styles.separateurBas]}>
       <Text style={styles.detailLibelle}>{libelle}</Text>
       <Text style={styles.detailValeur}>{valeur}</Text>
-    </View>
-  );
-}
-
-/** Grille de collection : les éléments obtenus en couleur, les autres en silhouette. */
-function Grille({ elements }: { elements: { id: string; nom: string; emoji: string; possede: boolean }[] }) {
-  return (
-    <View style={styles.grille}>
-      {elements.map((e) => (
-        <View
-          key={e.id}
-          style={[styles.case, !e.possede && styles.caseVerrouillee]}
-          accessibilityLabel={e.possede ? e.nom : `${e.nom}, pas encore obtenu`}>
-          <Text style={[styles.caseEmoji, !e.possede && { opacity: 0.25 }]}>{e.emoji}</Text>
-          <Text style={[styles.caseNom, !e.possede && { color: couleurs.brunDoux }]} numberOfLines={2}>
-            {e.possede ? e.nom : '???'}
-          </Text>
-        </View>
-      ))}
     </View>
   );
 }
@@ -332,31 +268,6 @@ const styles = StyleSheet.create({
   trait: { backgroundColor: couleurs.saugeClair, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
   traitTexte: { fontWeight: '800', color: couleurs.saugeFonce, fontSize: 13.5 },
   modifier: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  section: { gap: espace.s },
-  sectionEntete: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
   sectionTitre: { fontFamily: polices.titre, fontSize: 18, fontWeight: '800', color: couleurs.brun },
-  compte: { fontSize: 13, fontWeight: '700', color: couleurs.brunDoux },
-  sousSection: { fontSize: 12.5, fontWeight: '800', color: couleurs.renardFonce, textTransform: 'uppercase', letterSpacing: 0.4 },
-  grille: { flexDirection: 'row', flexWrap: 'wrap', gap: espace.s },
-  case: {
-    width: '23%',
-    flexGrow: 1,
-    maxWidth: '24%',
-    aspectRatio: 0.9,
-    backgroundColor: couleurs.carte,
-    borderRadius: arrondis.m,
-    ...relief,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 4,
-    gap: 2,
-  },
-  caseVerrouillee: { backgroundColor: couleurs.creme, borderStyle: 'dashed' },
-  caseEmoji: { fontSize: 28 },
-  caseNom: { fontSize: 10.5, fontWeight: '700', color: couleurs.brun, textAlign: 'center' },
-  lieu: { flexDirection: 'row', alignItems: 'center', gap: espace.m, paddingVertical: 6 },
-  separateur: { borderTopWidth: 1, borderTopColor: couleurs.ligne },
-  lieuEmoji: { fontSize: 22 },
-  lieuNom: { fontWeight: '800', color: couleurs.brun, fontSize: 14.5 },
   lieuDetail: { fontSize: 12.5, fontWeight: '600', color: couleurs.brunDoux },
 });
