@@ -73,15 +73,16 @@ export const INCLUS_GRATUIT = [
   'Ton compagnon, sa ville et ta progression',
   'Pièces, Shop et personnalisation de base',
   '1 aventure du jour',
+  'Un avant-goût des outils : 5 questions d’entretien, le script et le mail de relance, l’essentiel du CV',
 ];
 
+/** Ce que Premium ajoute : d'abord l'aide concrète à la recherche d'emploi, puis le compagnon. */
 export const INCLUS_PREMIUM = [
-  'Jusqu’à 3 aventures par jour et plus d’interactions avec ton compagnon',
-  'Animations supplémentaires et personnalisation avancée',
+  'Préparer un entretien : toutes les questions, ce que le recruteur cherche, des exemples et l’entraînement',
+  'Tous les scripts d’appel et modèles de mails, préremplis avec tes candidatures',
+  'La checklist CV complète et la méthode pour l’adapter à une offre',
+  'Jusqu’à 3 aventures par jour, énergie 100 rechargée en 3 h',
   'Vêtements, accessoires et événements exclusifs',
-  'Plus de lieux et d’histoires dans ta ville',
-  'Recommandations personnalisées et analyses de ton parcours',
-  'Aide avancée pour ton CV, tes offres et tes entretiens',
 ];
 
 /**
@@ -110,11 +111,11 @@ export const MESSAGES_OFFRE: Record<number, { titre: string; texte: string }> = 
 };
 
 /** Les 4 points forts affichés en haut de l'écran d'abonnement (le détail complet s'ouvre en dessous). */
-export const POINTS_FORTS_PREMIUM: { icone: 'compass' | 'flash' | 'shirt' | 'sparkles'; texte: string }[] = [
+export const POINTS_FORTS_PREMIUM: { icone: 'mic' | 'mail' | 'compass' | 'shirt'; texte: string }[] = [
+  { icone: 'mic', texte: 'Toutes les questions d’entretien' },
+  { icone: 'mail', texte: 'Scripts d’appel, mails et checklist CV' },
   { icone: 'compass', texte: 'Jusqu’à 3 aventures par jour' },
-  { icone: 'flash', texte: 'Énergie 100, recharge en 3 h' },
   { icone: 'shirt', texte: 'Tenues et événements exclusifs' },
-  { icone: 'sparkles', texte: 'Aide avancée CV et entretiens' },
 ];
 
 /** Mention légale affichée en bas de l'écran d'abonnement (exigée par l'App Store). */
