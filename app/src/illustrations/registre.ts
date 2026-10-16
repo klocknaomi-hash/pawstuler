@@ -297,3 +297,25 @@ export const imageTenue = (espece: EspeceId, objetId: string) => TENUES[espece]?
 
 /** Le vêtement que le compagnon porte et qui a une illustration pour son espèce. */
 export const tenuePortee = (espece: EspeceId, equipe: string[]) => equipe.find((id) => imageTenue(espece, id));
+
+/**
+ * ANIMATIONS DES AVENTURES (à venir : fournies par animal et par ville)
+ * Emplacement prêt pour les animations officielles. Format conseillé : image animée (WebP ou GIF,
+ * fond transparent), lue directement par l'app. Fichiers : `assets/animations/<animal>/<ville>/<moment>.webp`,
+ * puis une ligne ici, par exemple :
+ *   crocodile: { clairebourg: { marche: require('../../assets/animations/crocodile/clairebourg/marche.webp') } },
+ * Une animation peut aussi valoir pour les deux villes (clé « toutes »).
+ * Tant qu'un moment n'a pas d'animation, l'app garde l'illustration actuelle et ses petits mouvements.
+ * (Si les fichiers arrivent en Lottie ou Rive, on ajoutera le lecteur correspondant au même endroit.)
+ */
+export type MomentAventure = 'depart' | 'marche' | 'retour' | 'sur-place' | 'telephone' | 'entretien' | 'refus';
+const ANIMATIONS: Partial<Record<EspeceId, Partial<Record<VilleId | 'toutes', Partial<Record<MomentAventure, ImageSourcePropType>>>>>> = {};
+
+/** L'animation officielle d'un moment de l'aventure, pour cet animal et cette ville (ou rien). */
+export function animationAventure(espece: EspeceId, ville: VilleId | undefined, moment: MomentAventure): ImageSourcePropType | undefined {
+  const parAnimal = ANIMATIONS[espece];
+  if (!parAnimal) return undefined;
+  const chercher = (m: MomentAventure) => (ville ? parAnimal[ville]?.[m] : undefined) ?? parAnimal.toutes?.[m];
+  // Le retour reprend la marche si elle n'a pas d'animation à elle
+  return chercher(moment) ?? (moment === 'retour' ? chercher('marche') : undefined);
+}

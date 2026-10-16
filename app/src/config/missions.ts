@@ -260,6 +260,30 @@ export const PRESENTATIONS: Record<TypeMission, string> = {
   baignade: 'Il fait bon aujourd’hui : {nom} file se rafraîchir {lieu}.',
 };
 
+/** La fiche de mission (présentée comme une offre) : le type d'aventure… */
+export const TYPES_AVENTURE: Record<TypeMission, string> = {
+  recherche: 'Exploration',
+  depot: 'Dépôt de CV',
+  relance: 'Appel de relance',
+  entretien: 'Entretien',
+  refus: 'Réponse',
+  travail: 'Journée de travail',
+  repos: 'Moment pour souffler',
+  baignade: 'Moment pour souffler',
+};
+
+/** … et son objectif (les explorations ont le leur dans banqueAventures.ts). */
+export const OBJECTIFS_MISSION: Record<TypeMission, string> = {
+  recherche: 'Découvrir un nouveau lieu de {ville}',
+  depot: 'Déposer sa candidature pour le poste de {metier}',
+  relance: 'Prendre des nouvelles de sa candidature',
+  entretien: 'Convaincre {personne} pour le poste de {metier}',
+  refus: 'Lire la réponse de {lieu}',
+  travail: 'Une nouvelle journée comme {metier}',
+  repos: 'Souffler un peu à la maison',
+  baignade: 'Se rafraîchir {lieu}',
+};
+
 /** Bouton de départ. */
 export const BOUTON_DEPART: Record<TypeMission, string> = {
   recherche: 'Envoyer {nom}',
@@ -333,9 +357,9 @@ export const ANNONCES_ENTRETIEN = {
   jour: '👔 {nom} a un entretien aujourd’hui à {heure} ! Tu crois qu’{il} est prêt{e} ?',
 };
 
-/** Ce que le compagnon emporte avec lui (visible pendant le départ et le trajet). */
+/** Ce que le compagnon emporte avec lui (visible pendant le départ et le trajet ; vide = rien de plus que son sac). */
 export const OBJET_EMPORTE: Record<TypeMission, string> = {
-  recherche: '🗺️',
+  recherche: '',
   depot: '📄',
   relance: '📱',
   entretien: '📁',

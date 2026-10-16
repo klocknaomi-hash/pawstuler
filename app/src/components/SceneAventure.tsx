@@ -23,6 +23,7 @@ import { REGARDE_A_GAUCHE, type EspeceId, type Pose } from '@/config/compagnons'
 import { ANIMATION_SUR_PLACE, OBJET_EMPORTE } from '@/config/missions';
 import { arrondis, couleurs, ombre } from '@/config/theme';
 import type { VilleId } from '@/config/villes';
+import { animationAventure } from '@/illustrations/registre';
 import { iconeMission } from '@/logique/missions';
 import type { Mission } from '@/store/types';
 
@@ -184,6 +185,8 @@ function Marche({
   const depuis = mission.type === 'repos' ? '🌳' : '🏠';
   const arrivee = mission.type === 'entretien' || mission.type === 'travail' ? '🏢' : iconeMission(mission);
   const interieur = phase === 'sur-place' && (mission.type === 'entretien' || mission.type === 'travail');
+  // Animation officielle de la marche (quand elle sera fournie), sinon l'illustration actuelle
+  const animation = enChemin ? animationAventure(espece, ville, phase === 'retour' ? 'retour' : 'marche') : undefined;
 
   return (
     <>
@@ -200,8 +203,12 @@ function Marche({
         </>
       )}
       <Animated.View style={[styles.compagnon, { width: taille }, styleCompagnon]}>
-        {enChemin && <Text style={styles.objet}>{OBJET_EMPORTE[mission.type]}</Text>}
-        <Compagnon espece={espece} pose="aventure" taille={taille} equipe={equipe} />
+        {enChemin && !!OBJET_EMPORTE[mission.type] && <Text style={styles.objet}>{OBJET_EMPORTE[mission.type]}</Text>}
+        {animation ? (
+          <Image source={animation} style={{ width: taille, height: taille }} contentFit="contain" />
+        ) : (
+          <Compagnon espece={espece} pose="aventure" taille={taille} equipe={equipe} />
+        )}
       </Animated.View>
       {interieur && <Interieur espece={espece} equipe={equipe} taille={taille} travail={mission.type === 'travail'} />}
     </>
