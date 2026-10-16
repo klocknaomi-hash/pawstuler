@@ -1,6 +1,6 @@
 /**
  * ONGLET « OUTILS » — l'aide à l'emploi (Pawstuler Premium V1, sans IA en temps réel)
- * Quatre outils : préparer un entretien, scripts d'appel, modèles de mails, checklist CV.
+ * Trois outils : scripts d'appel, modèles de mails, checklist CV (la préparation d'entretien viendra en V2, avec une IA).
  * En gratuit, un avant-goût de chacun ; Premium débloque tout. Le contenu est dans config/outils.ts.
  */
 import { Ionicons } from '@expo/vector-icons';
@@ -17,7 +17,6 @@ import { useApp } from '@/store/etat';
 
 /** Ce que la version gratuite propose dans chaque outil. */
 const AVANT_GOUT: Record<(typeof OUTILS)[number]['id'], string> = {
-  entretien: '5 questions et les questions à poser',
   appel: 'Le script de relance',
   mail: 'Le mail de relance',
   cv: 'Les 5 points essentiels',
@@ -34,7 +33,7 @@ export default function Outils() {
       <View style={styles.entete}>
         <View style={{ flex: 1, gap: 4 }}>
           <Titre>Tes outils</Titre>
-          <Texte>Pour préparer tes candidatures, tes appels et tes entretiens, à ton rythme.</Texte>
+          <Texte>Pour tes appels, tes mails et ton CV, à ton rythme.</Texte>
         </View>
         {compagnon && <Compagnon espece={compagnon.espece} pose="content" taille={84} equipe={etat.equipe} />}
       </View>
@@ -61,7 +60,7 @@ export default function Outils() {
       {!premium && (
         <Pressable onPress={() => router.push('/premium')} accessibilityRole="button" style={styles.premium}>
           <Text style={styles.premiumTitre}>✨ Tout débloquer avec Pawstuler Premium</Text>
-          <Text style={styles.texte}>Toutes les questions d’entretien, tous les scripts et modèles, la checklist complète. Tes candidatures et ton compagnon restent gratuits.</Text>
+          <Text style={styles.texte}>Tous les scripts d’appel et modèles de mails, et la checklist CV complète. Tes candidatures et ton compagnon restent gratuits.</Text>
         </Pressable>
       )}
     </Ecran>

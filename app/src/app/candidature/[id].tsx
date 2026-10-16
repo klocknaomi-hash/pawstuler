@@ -7,8 +7,8 @@
  * pour s'améliorer). Une relance peut être prévue (+1, +3, +5 jours).
  * Chaque changement s'ajoute à l'historique (rien n'est effacé).
  * Un refus fait réagir le compagnon ; « Décroché » ouvre la page de félicitations.
- * En bas : les outils utiles à cette étape (script et mail de relance, préparer l'entretien,
- * remerciement, demande de retour), préremplis avec cette candidature.
+ * En bas : les outils utiles à cette étape (script et mail de relance, mail de remerciement,
+ * demande de retour), préremplis avec cette candidature.
  */
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -360,10 +360,7 @@ const OUTILS_PAR_STATUT: Record<StatutCandidature, { libelle: string; pathname: 
     { libelle: '✉️ Mail de relance', pathname: '/outils/mail', params: { modele: 'relance' } },
   ],
   relancee: [{ libelle: '✉️ Mail de relance', pathname: '/outils/mail', params: { modele: 'relance' } }],
-  entretien: [
-    { libelle: '🎤 Préparer l’entretien', pathname: '/outils/entretien' },
-    { libelle: '🙏 Mail de remerciement', pathname: '/outils/mail', params: { modele: 'remerciement' } },
-  ],
+  entretien: [{ libelle: '🙏 Mail de remerciement', pathname: '/outils/mail', params: { modele: 'remerciement' } }],
   refus: [{ libelle: '🌱 Demander un retour', pathname: '/outils/mail', params: { modele: 'retour' } }],
   decroche: [],
 };

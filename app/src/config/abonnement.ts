@@ -73,12 +73,11 @@ export const INCLUS_GRATUIT = [
   'Ton compagnon, sa ville et ta progression',
   'Pièces, Shop et personnalisation de base',
   '1 aventure du jour',
-  'Un avant-goût des outils : 5 questions d’entretien, le script et le mail de relance, l’essentiel du CV',
+  'Un avant-goût des outils : le script et le mail de relance, l’essentiel du CV',
 ];
 
 /** Ce que Premium ajoute : d'abord l'aide concrète à la recherche d'emploi, puis le compagnon. */
 export const INCLUS_PREMIUM = [
-  'Préparer un entretien : toutes les questions, ce que le recruteur cherche, des exemples et l’entraînement',
   'Tous les scripts d’appel et modèles de mails, préremplis avec tes candidatures',
   'La checklist CV complète et la méthode pour l’adapter à une offre',
   'Jusqu’à 3 aventures par jour, énergie 100 rechargée en 3 h',
@@ -111,9 +110,9 @@ export const MESSAGES_OFFRE: Record<number, { titre: string; texte: string }> = 
 };
 
 /** Les 4 points forts affichés en haut de l'écran d'abonnement (le détail complet s'ouvre en dessous). */
-export const POINTS_FORTS_PREMIUM: { icone: 'mic' | 'mail' | 'compass' | 'shirt'; texte: string }[] = [
-  { icone: 'mic', texte: 'Toutes les questions d’entretien' },
-  { icone: 'mail', texte: 'Scripts d’appel, mails et checklist CV' },
+export const POINTS_FORTS_PREMIUM: { icone: 'call' | 'mail' | 'compass' | 'shirt'; texte: string }[] = [
+  { icone: 'call', texte: 'Tous les scripts d’appel' },
+  { icone: 'mail', texte: 'Tous les modèles de mails et la checklist CV' },
   { icone: 'compass', texte: 'Jusqu’à 3 aventures par jour' },
   { icone: 'shirt', texte: 'Tenues et événements exclusifs' },
 ];

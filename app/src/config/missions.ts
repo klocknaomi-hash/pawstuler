@@ -437,3 +437,26 @@ export const ENSUITE_CARNET = {
   travail: '💼 Demain, une nouvelle journée l’attend chez {lieu}.',
   moment: '✨ {Il} est prêt{e} à repartir quand tu veux.',
 };
+
+/**
+ * Le petit mot du compagnon à son retour (à la première personne, en haut du carnet).
+ * Pour une exploration, il dépend de ce qu'il en retire (l'issue de la banque d'aventures).
+ */
+export const MOTS_RETOUR: Record<TypeMission, string> & Record<`issue-${string}`, string> = {
+  recherche: '« Quelle balade ! J’ai plein de choses à te raconter. »',
+  'issue-piste': '« J’ai peut-être trouvé une piste ! Je la garde précieusement. »',
+  'issue-conseil': '« On m’a donné un conseil… je crois qu’il marche aussi pour toi ! »',
+  'issue-contact': '« J’ai un nouveau contact dans mon carnet ! »',
+  'issue-competence': '« Regarde ce que j’ai appris aujourd’hui ! »',
+  'issue-confiance': '« Je me sens un peu plus sûr{e} de moi. Merci d’être là. »',
+  depot: '« Ça y est, mon CV est déposé ! On croise les pattes ? »',
+  relance: '« J’ai osé appeler ! Pas si terrible, finalement. »',
+  entretien: '« Ouf… j’ai tout donné. Merci de m’avoir encouragé{e} ! »',
+  refus: '« Pas cette fois… Mais on a osé, et c’est ça qui compte. »',
+  travail: '« Une bonne journée de travail ! J’ai appris plein de choses. »',
+  repos: '« Ah, ça fait du bien de souffler un peu… »',
+  baignade: '« Plouf ! L’eau était parfaite. »',
+};
+
+/** Le prochain lieu qu'il aimerait découvrir (« Et ensuite ? »), pour donner envie de revenir. */
+export const ENVIE_DECOUVERTE = '🔭 {Il} rêve d’aller découvrir {prochainLieu} bientôt.';

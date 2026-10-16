@@ -70,7 +70,7 @@ export const ETAT_INITIAL: EtatApp = {
   inventaire: [],
   equipe: [],
   chambre: {},
-  outils: { notes: {}, cv: [] },
+  outils: { cv: [] },
   abonnement: { statut: 'gratuit' },
   parametres: {
     notifications: true,
@@ -160,7 +160,6 @@ export type Action =
   /** Pose un objet de la chambre sur un emplacement (ou le vide, sans objet). */
   | { type: 'PLACER_MEUBLE'; emplacement: string; objetId?: string }
   /* Outils d'aide à l'emploi */
-  | { type: 'NOTER_QUESTION'; id: string; texte: string }
   | { type: 'COCHER_CV'; id: string };
 
 /* ---------- Petits outils ---------- */
@@ -832,10 +831,6 @@ function reducer(etat: EtatApp, action: Action): EtatApp {
       return { ...etat, chambre: placerMeuble(etat, action.emplacement, action.objetId) };
 
     /* ----- Outils d'aide à l'emploi ----- */
-    case 'NOTER_QUESTION': {
-      const outils = etat.outils ?? ETAT_INITIAL.outils;
-      return { ...etat, outils: { ...outils, notes: { ...outils.notes, [action.id]: action.texte } } };
-    }
     case 'COCHER_CV': {
       const outils = etat.outils ?? ETAT_INITIAL.outils;
       const cv = outils.cv.includes(action.id) ? outils.cv.filter((id) => id !== action.id) : [...outils.cv, action.id];
