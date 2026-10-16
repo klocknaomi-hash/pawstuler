@@ -46,7 +46,7 @@ export function EcranFeuille({
     <KeyboardAvoidingView style={styles.ecran} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       {/* Décor : la ville en fond, la mascotte posée en bas, juste au-dessus de la feuille */}
       <View style={[styles.decor, { height: hauteurDecor + top }]}>
-        <Image source={imageVille(ville, 'paysage')} style={StyleSheet.absoluteFill} contentFit="cover" />
+        <Image source={imageVille(ville, 'ville')} style={StyleSheet.absoluteFill} contentFit="cover" />
         <View style={styles.voile} />
         <Compagnon espece={espece} pose={pose} taille={tailleMascotte} style={styles.mascotte} />
         {onFermer ? (

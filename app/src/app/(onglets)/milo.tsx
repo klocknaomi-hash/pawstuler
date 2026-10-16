@@ -1,9 +1,10 @@
 /**
- * PROFIL DU COMPAGNON
- * Sa photo dans sa ville, son nom et ses pronoms, sa série 🐾, puis trois onglets
- * (À propos / Détails / Traits), sa collection (objets du Shop + souvenirs d'aventure)
- * et la section « Découverte » (lieux explorés dans sa ville).
- * Accessible depuis le badge de série de l'accueil et depuis l'onglet Compte.
+ * ONGLET DU COMPAGNON (sa carte d'identité)
+ * Sa photo dans sa ville, son nom et ses pronoms, sa série 🐾, sa garde-robe (accès au Shop
+ * et à sa chambre), puis trois onglets (À propos / Détails / Traits), sa collection
+ * (objets du Shop + souvenirs d'aventure) et la section « Découverte ».
+ * En haut à droite : ⚙️ ouvre le Compte (profil, abonnement, paramètres…).
+ * Accessible depuis la barre d'onglets et depuis la semaine 🐾 de l'accueil.
  */
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
@@ -12,6 +13,9 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Ecran, Pastille } from '@/components/base';
+import { CompteurPieces } from '@/components/Pieces';
+import { useEspaceBarre } from '@/hooks/useEspaceBarre';
+import { objetParId } from '@/config/boutique';
 import { Compagnon } from '@/components/Compagnon';
 import { BadgeSerie } from '@/components/Serie';
 import { objetsPour } from '@/logique/garderobe';
@@ -32,6 +36,7 @@ const ONGLETS: { id: Onglet; libelle: string }[] = [
 
 export default function ProfilCompagnon() {
   const { etat, dispatch } = useApp();
+  const espaceBarre = useEspaceBarre();
   const [onglet, setOnglet] = useState<Onglet>('apropos');
   const [changerObjectif, setChangerObjectif] = useState(false);
 
@@ -39,7 +44,7 @@ export default function ProfilCompagnon() {
   if (!compagnon || !etat.villeId) return null;
   const infos = compagnonParId(compagnon.espece);
   const ville = villeParId(etat.villeId);
-  const decor = imageVille(ville.id, 'portrait');
+  const decor = imageVille(ville.id, 'ville');
   const joursEnsemble = joursEntre(compagnon.neLe) + 1;
   // Pronom sujet choisi par l'utilisateur (« il » par défaut)
   const sujet = accorder('{Il}', compagnon.pronoms);
@@ -54,12 +59,18 @@ export default function ProfilCompagnon() {
   const nbPossedes = [...objets, ...souvenirs].filter((x) => x.possede).length;
 
   return (
-    <Ecran defilant avecEntete>
-      {/* Photo du compagnon dans sa ville */}
+    <Ecran defilant style={{ paddingBottom: espaceBarre }}>
+      {/* Photo du compagnon dans sa ville, avec ses pièces et l'accès au Compte */}
       <View style={styles.photo}>
         {decor && <Image source={decor} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="bottom" />}
         <View style={styles.voile} />
         <Compagnon espece={compagnon.espece} pose="fier" taille={150} equipe={etat.equipe} />
+        <Pressable onPress={() => router.push('/compte/portefeuille')} accessibilityRole="button" accessibilityLabel="Mon portefeuille" style={styles.pieces}>
+          <CompteurPieces pieces={etat.pieces} />
+        </Pressable>
+        <Pressable onPress={() => router.push('/compte')} accessibilityRole="button" accessibilityLabel="Compte et réglages" hitSlop={8} style={styles.reglages}>
+          <Ionicons name="settings-outline" size={22} color={couleurs.brun} />
+        </Pressable>
       </View>
 
       <View style={styles.identite}>
@@ -68,6 +79,29 @@ export default function ProfilCompagnon() {
           {infos.espece.replace(/^(le|la) /, '').replace(/^./, (c) => c.toUpperCase())}
           {compagnon.pronoms ? ` · ${LIBELLES_PRONOMS[compagnon.pronoms]}` : ''} · {ville.nom}
         </Text>
+      </View>
+
+      {/* Garde-robe : ce qu'il porte, le Shop et sa chambre */}
+      <View style={styles.garderobe}>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text style={styles.sectionTitre}>Sa garde-robe</Text>
+          <Text style={styles.lieuDetail}>
+            {(() => {
+              const portes = etat.equipe.map((id) => objetParId(id)?.nom).filter(Boolean);
+              return portes.length ? `${sujet} porte : ${portes.join(', ')}` : `${sujet} porte sa tenue de tous les jours`;
+            })()}
+          </Text>
+        </View>
+      </View>
+      <View style={styles.boutons}>
+        <Pressable onPress={() => router.push('/boutique')} accessibilityRole="button" style={styles.bouton}>
+          <Ionicons name="shirt-outline" size={18} color={couleurs.renardFonce} />
+          <Text style={styles.boutonTexte}>Shop et tenues</Text>
+        </Pressable>
+        <Pressable onPress={() => router.push('/chambre')} accessibilityRole="button" style={styles.bouton}>
+          <Ionicons name="bed-outline" size={18} color={couleurs.renardFonce} />
+          <Text style={styles.boutonTexte}>Sa chambre</Text>
+        </Pressable>
       </View>
 
       {/* Série et chiffres clés */}
@@ -240,6 +274,32 @@ const styles = StyleSheet.create({
     paddingBottom: espace.s,
     backgroundColor: couleurs.pecheClair,
   },
+  pieces: { position: 'absolute', top: espace.s, left: espace.s },
+  reglages: {
+    position: 'absolute',
+    top: espace.s,
+    right: espace.s,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  garderobe: { flexDirection: 'row', alignItems: 'center', gap: espace.s },
+  boutons: { flexDirection: 'row', gap: espace.s },
+  bouton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: couleurs.carte,
+    borderRadius: arrondis.m,
+    paddingVertical: 11,
+    ...relief,
+  },
+  boutonTexte: { fontSize: 14, fontWeight: '700', color: couleurs.renardFonce },
   voile: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(255, 246, 236, 0.15)' },
   identite: { alignItems: 'center', gap: 2 },
   nom: { fontFamily: polices.titre, fontSize: 30, fontWeight: '800', color: couleurs.brun },

@@ -39,7 +39,7 @@ export default function JourneeTerminee() {
 
   return (
     <View style={styles.ecran}>
-      <Image source={imageVille(etat.villeId ?? 'clairebourg', 'portrait')} style={StyleSheet.absoluteFill} contentFit="cover" />
+      <Image source={imageVille(etat.villeId ?? 'clairebourg', 'ville')} style={StyleSheet.absoluteFill} contentFit="cover" />
       <View style={styles.voile} />
       <Confettis />
       <SafeAreaView style={styles.contenu} edges={['top', 'bottom']}>

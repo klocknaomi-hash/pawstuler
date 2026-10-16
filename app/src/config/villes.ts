@@ -22,8 +22,8 @@ export type Lieu = {
   secteur?: SecteurId;
   /**
    * L'illustration de la ville qui sert de décor à ce lieu (onglet ville, aventure sur place),
-   * en attendant une illustration propre à chaque lieu : « centre », « portrait » (le lac),
-   * « paysage », ou un paysage du chemin (« chemin-1 »…).
+   * en attendant une illustration propre à chaque lieu : un paysage du chemin (« chemin-1 »…)
+   * ou « ville » (la vue de la ville).
    */
   decor?: string;
 };
@@ -48,14 +48,14 @@ export const VILLES: Ville[] = [
     baignade: { ou: 'au lac', icone: '🏞️' },
     nomDefinitif: true,
     ambiance: 'campagne',
-    accroche: 'Une petite ville française, son lac, ses chemins fleuris et ses commerces.',
+    accroche: 'Une petite ville française, ses chemins fleuris et ses commerces de quartier.',
     couleur: '#A9C68E',
     lieux: [
-      { id: 'boulangerie', decor: 'centre', secteur: 'boulangerie', nom: 'Boulangerie Mercier', metier: 'Apprenti boulanger', souvenir: { nom: 'Croissant doré', emoji: '🥐' } },
-      { id: 'librairie', decor: 'chemin-1', secteur: 'librairie', nom: 'Librairie des Tilleuls', metier: 'Libraire junior', souvenir: { nom: 'Marque-page', emoji: '📖' } },
-      { id: 'studio', decor: 'paysage', secteur: 'studio', nom: 'Studio Hibou', metier: 'Aide photographe', souvenir: { nom: 'Photo souvenir', emoji: '📷' } },
+      { id: 'boulangerie', decor: 'chemin-1', secteur: 'boulangerie', nom: 'Boulangerie Mercier', metier: 'Apprenti boulanger', souvenir: { nom: 'Croissant doré', emoji: '🥐' } },
+      { id: 'librairie', decor: 'chemin-2', secteur: 'librairie', nom: 'Librairie des Tilleuls', metier: 'Libraire junior', souvenir: { nom: 'Marque-page', emoji: '📖' } },
+      { id: 'studio', decor: 'chemin-3', secteur: 'studio', nom: 'Studio Hibou', metier: 'Aide photographe', souvenir: { nom: 'Photo souvenir', emoji: '📷' } },
       { id: 'agence', decor: 'chemin-2', secteur: 'agence', nom: 'Agence Tamaris', metier: 'Assistant de voyage', souvenir: { nom: 'Carte postale', emoji: '🗺️' } },
-      { id: 'cafe', decor: 'portrait', secteur: 'cafe', nom: 'Café du Lac', metier: 'Barista', souvenir: { nom: 'Tasse du Lac', emoji: '☕' } },
+      { id: 'cafe', decor: 'chemin-1', secteur: 'cafe', nom: 'Café du Lac', metier: 'Barista', souvenir: { nom: 'Tasse du Lac', emoji: '☕' } },
       { id: 'parc', decor: 'chemin-4', nom: 'Le parc et son ponton', souvenir: { nom: 'Plume de canard', emoji: '🪶' } },
     ],
   },
@@ -70,9 +70,9 @@ export const VILLES: Ville[] = [
     // Lieux provisoires, à affiner avec les illustrations de la ville
     lieux: [
       { id: 'bureaux', decor: 'chemin-1', secteur: 'entreprise', nom: 'Les bureaux du centre', metier: 'Assistant de projet', souvenir: { nom: 'Badge visiteur', emoji: '🪪' } },
-      { id: 'startup', decor: 'portrait', secteur: 'studio', nom: 'Start-up Pixel', metier: 'Designer junior', souvenir: { nom: 'Autocollant Pixel', emoji: '💡' } },
-      { id: 'agence-com', decor: 'paysage', secteur: 'agence', nom: 'Agence de communication', metier: 'Chargé de communication', souvenir: { nom: 'Mini mégaphone', emoji: '📣' } },
-      { id: 'cafe-metro', decor: 'portrait', secteur: 'cafe', nom: 'Le café du métro', metier: 'Barista', souvenir: { nom: 'Ticket de métro', emoji: '🎟️' } },
+      { id: 'startup', decor: 'chemin-1', secteur: 'studio', nom: 'Start-up Pixel', metier: 'Designer junior', souvenir: { nom: 'Autocollant Pixel', emoji: '💡' } },
+      { id: 'agence-com', decor: 'chemin-1', secteur: 'agence', nom: 'Agence de communication', metier: 'Chargé de communication', souvenir: { nom: 'Mini mégaphone', emoji: '📣' } },
+      { id: 'cafe-metro', decor: 'chemin-1', secteur: 'cafe', nom: 'Le café du métro', metier: 'Barista', souvenir: { nom: 'Ticket de métro', emoji: '🎟️' } },
       { id: 'parc-urbain', decor: 'chemin-1', nom: 'Le parc urbain', souvenir: { nom: 'Tournesol', emoji: '🌻' } },
     ],
   },
