@@ -13,7 +13,7 @@ import { Bouton, Ecran } from '@/components/base';
 import { Compagnon } from '@/components/Compagnon';
 import { MESSAGES_OFFRE, OFFRE_BIENVENUE } from '@/config/abonnement';
 import { arrondis, couleurs, espace, polices, relief } from '@/config/theme';
-import { jourDe } from '@/logique/dates';
+import { dateLisible, jourDe } from '@/logique/dates';
 import { jourOffreBienvenue } from '@/services/abonnement';
 import { useApp } from '@/store/etat';
 
@@ -22,6 +22,7 @@ export default function Offre() {
   const aujourdhui = jourDe();
   const jour = jourOffreBienvenue(etat, aujourdhui) ?? OFFRE_BIENVENUE.jours;
   const restants = OFFRE_BIENVENUE.jours - jour + 1;
+  const debut = etat.offreBienvenue?.debut ?? aujourdhui;
   const mot = MESSAGES_OFFRE[jour] ?? MESSAGES_OFFRE[OFFRE_BIENVENUE.jours];
 
   // Vu pour aujourd'hui dès l'ouverture : il reviendra demain (tant que l'offre dure)
@@ -49,7 +50,11 @@ export default function Offre() {
         <Text style={styles.chiffre} accessibilityLabel={`Plus que ${restants} jour${restants > 1 ? 's' : ''}`}>
           {restants}
         </Text>
-        <Text style={styles.unite}>{restants > 1 ? 'jours restants' : 'dernier jour'}</Text>
+        <Text style={styles.unite}>{restants > 1 ? `jours pour profiter de −${OFFRE_BIENVENUE.remise} %` : `dernier jour pour profiter de −${OFFRE_BIENVENUE.remise} %`}</Text>
+        {/* À ne pas confondre avec la série 🐾 (jours d'affilée) : l'offre compte les jours du calendrier */}
+        <Text style={styles.precision}>
+          Offre valable {OFFRE_BIENVENUE.jours} jours à partir de ton inscription, le {dateLisible(debut)}.
+        </Text>
         <View style={styles.ronds}>
           {Array.from({ length: OFFRE_BIENVENUE.jours }, (_, i) => (
             <View key={i} style={[styles.rond, i < jour && styles.rondPasse, i === jour - 1 && styles.rondAujourdhui]} />
@@ -80,6 +85,7 @@ export default function Offre() {
 }
 
 const styles = StyleSheet.create({
+  precision: { fontSize: 13, color: couleurs.brunDoux, textAlign: 'center', marginTop: 2 },
   contenu: { justifyContent: 'space-between' },
   fermer: { alignSelf: 'flex-end' },
   haut: { alignItems: 'center', gap: 2 },

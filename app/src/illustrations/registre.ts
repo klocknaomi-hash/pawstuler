@@ -319,3 +319,13 @@ export function animationAventure(espece: EspeceId, ville: VilleId | undefined, 
   // Le retour reprend la marche si elle n'a pas d'animation à elle
   return chercher(moment) ?? (moment === 'retour' ? chercher('marche') : undefined);
 }
+
+/**
+ * Les vidéos du trajet, par ville (Drive, dossiers Clairebourg et Sunnyville, 16/10) :
+ * le décor qui défile pendant « Bonne route » et le trajet de l'aventure. `assets/videos/trajet-<ville>.mp4`.
+ */
+const VIDEOS_TRAJET: Partial<Record<VilleId, number>> = {
+  clairebourg: require('../../assets/videos/trajet-clairebourg.mp4'),
+  sunnyville: require('../../assets/videos/trajet-sunnyville.mp4'),
+};
+export const videoTrajet = (ville?: VilleId) => (ville ? VIDEOS_TRAJET[ville] : undefined);

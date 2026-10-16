@@ -23,10 +23,11 @@ import { IconePiece } from '@/components/Pieces';
 import { SceneAventure } from '@/components/SceneAventure';
 import { carnetDeRetour, type Carnet } from '@/logique/carnet';
 import { villeParId, type VilleId } from '@/config/villes';
-import { animationAventure } from '@/illustrations/registre';
+import { animationAventure, videoTrajet } from '@/illustrations/registre';
 import { decorDeMission } from '@/logique/decors';
 import { objetParId } from '@/config/boutique';
-import { accorder, type EspeceId } from '@/config/compagnons';
+import { accorder, REGARDE_A_GAUCHE, type EspeceId } from '@/config/compagnons';
+import { VideoTrajet } from '@/components/VideoTrajet';
 import { AVENTURES_PAR_JOUR } from '@/config/energie';
 import { BOUTON_DEPART, COUTS_MISSION, DUREES_MINUTES, HEURES_ENTRE_AVENTURES_PREMIUM, MOMENTS, OBJET_EMPORTE, PIECES_MISSION, type TypeMoment } from '@/config/missions';
 import { arrondis, couleurs, espace, ombre, relief } from '@/config/theme';
@@ -67,7 +68,7 @@ export default function Aventure() {
   const [partant, setPartant] = useState<Mission | null>(null);
   useEffect(() => {
     if (!partant) return;
-    const minuterie = setTimeout(() => setPartant(null), 2600);
+    const minuterie = setTimeout(() => setPartant(null), 3200);
     return () => clearTimeout(minuterie);
   }, [partant]);
 
@@ -354,6 +355,7 @@ export default function Aventure() {
 function Depart({ espece, ville, equipe, objet }: { espece: EspeceId; ville?: VilleId; equipe?: string[]; objet: string }) {
   // Animation officielle du départ (quand elle sera fournie), sinon l'illustration et son petit bond
   const animation = animationAventure(espece, ville, 'depart');
+  const video = videoTrajet(ville);
   const x = useSharedValue(0);
   const pas = useSharedValue(0);
   useEffect(() => {
@@ -364,6 +366,25 @@ function Depart({ espece, ville, equipe, objet }: { espece: EspeceId; ville?: Vi
     opacity: 1 - Math.max(0, x.get() - 0.7) / 0.3,
     transform: [{ translateX: x.get() * 360 }, { translateY: -pas.get() * 8 }],
   }));
+  // Avec la vidéo de la ville : il marche sur place, c'est le décor qui défile (en regardant là où il va)
+  const marche = useAnimatedStyle(() => ({
+    transform: [{ translateY: -pas.get() * 6 }, { scaleX: REGARDE_A_GAUCHE.includes(espece) ? -1 : 1 }],
+  }));
+  if (video) {
+    return (
+      <View style={styles.fenetre}>
+        <VideoTrajet source={video} />
+        <Animated.View style={[styles.marcheur, marche]}>
+          {!!objet && <Text style={styles.objetDepart}>{objet}</Text>}
+          {animation ? (
+            <Image source={animation} style={{ width: 150, height: 150 }} contentFit="contain" />
+          ) : (
+            <Compagnon espece={espece} pose="aventure" taille={150} equipe={equipe} vivant={false} />
+          )}
+        </Animated.View>
+      </View>
+    );
+  }
   return (
     <Animated.View style={[styles.depart, style]}>
       {!!objet && <Text style={styles.objetDepart}>{objet}</Text>}
@@ -418,6 +439,9 @@ const styles = StyleSheet.create({
   fermer: { alignSelf: 'flex-end' },
   fermerFlottant: { position: 'absolute', top: espace.s, right: espace.l, zIndex: 2 },
   depart: { alignItems: 'center' },
+  // « Bonne route » : la vidéo de la ville dans une fenêtre arrondie, le compagnon qui marche au centre
+  fenetre: { alignSelf: 'stretch', height: 320, borderRadius: arrondis.l, overflow: 'hidden', backgroundColor: couleurs.pecheClair, justifyContent: 'flex-end', alignItems: 'center', ...relief },
+  marcheur: { alignItems: 'center', marginBottom: 18 },
   objetDepart: { position: 'absolute', top: 0, right: 8, fontSize: 34, zIndex: 1 },
   carte: { backgroundColor: couleurs.carte, borderRadius: arrondis.l, padding: espace.l, gap: espace.s, ...ombre },
   lieu: { fontWeight: '800', color: couleurs.renardFonce, fontSize: 14 },
