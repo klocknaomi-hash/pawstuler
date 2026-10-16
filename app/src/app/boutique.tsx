@@ -21,13 +21,11 @@ import { VueChambre } from '@/components/VueChambre';
 import { COLLECTIONS, LIBELLES_TYPES, RAYONS, estPremium, type ObjetBoutique, type TypeObjet } from '@/config/boutique';
 import { objetsPour } from '@/logique/garderobe';
 import { arrondis, couleurs, espace, polices, relief } from '@/config/theme';
-import { useEspaceBarre } from '@/hooks/useEspaceBarre';
 import { imageObjet, imageTenue } from '@/illustrations/registre';
 import { aPremium } from '@/services/abonnement';
 import { useApp } from '@/store/etat';
 
 export default function Shop() {
-  const espaceBarre = useEspaceBarre();
   const { etat, dispatch } = useApp();
   const plus = aPremium(etat);
   const espece = etat.compagnon?.espece ?? 'renard';
@@ -63,10 +61,11 @@ export default function Shop() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: couleurs.creme }} edges={['top']}>
-      <ScrollView contentContainerStyle={[styles.contenu, { paddingBottom: espaceBarre }]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: couleurs.creme }} edges={['bottom']}>
+      <ScrollView contentContainerStyle={styles.contenu}>
+        {/* Le titre « Shop » est dans l'en-tête (avec le bouton retour) ; ici, le solde */}
         <View style={styles.entete}>
-          <Text style={styles.titre}>Shop</Text>
+          <Text style={styles.solde}>Ton solde</Text>
           <Pressable onPress={() => router.push('/compte/portefeuille')} accessibilityRole="button" accessibilityLabel="Mon portefeuille">
             <CompteurPieces pieces={etat.pieces} />
           </Pressable>
@@ -245,7 +244,7 @@ function LigneSolde({ libelle, valeur, fort }: { libelle: string; valeur: number
 const styles = StyleSheet.create({
   contenu: { padding: espace.l, gap: espace.l, paddingBottom: espace.xxl },
   entete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  titre: { fontFamily: polices.titre, fontSize: 26, fontWeight: '800', color: couleurs.brun },
+  solde: { fontSize: 14, fontWeight: '600', color: couleurs.brunDoux },
   vitrine: {
     flexDirection: 'row',
     alignItems: 'center',

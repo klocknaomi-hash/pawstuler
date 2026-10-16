@@ -47,7 +47,7 @@ export function SemaineSerie({ serie, nomCompagnon }: { serie: Serie; nomCompagn
   return (
     <Pressable
       style={styles.carte}
-      onPress={() => router.push('/compagnon')}
+      onPress={() => router.push('/milo')}
       accessibilityRole="button"
       accessibilityLabel={`Série de ${jours}. Objectif ${serie.objectif} jours. Voir le profil de ${nomCompagnon}`}>
       <View style={styles.jours}>

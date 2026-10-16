@@ -110,21 +110,19 @@ const OEUFS: Record<EspeceId, Oeuf> = {
 };
 
 /**
- * Illustrations des villes :
- * « portrait » pour l'accueil, « paysage » pour les cartes, « centre » pour l'onglet de la ville,
- * « chambre » pour la chambre du compagnon (vide : il la remplit avec les objets du Shop).
+ * Illustrations des villes (références officielles du 12/10, dossiers Clairebourg et Sunnyville du Drive) :
+ * « ville » = la vue de la ville (le village de Clairebourg, la ligne d'immeubles de Sunnyville),
+ * utilisée pour le choix de ville, les décors et les cartes ; « chambre » = la chambre du compagnon
+ * (vide : il la remplit avec les objets du Shop).
  */
-type FormatVille = 'portrait' | 'paysage' | 'centre' | 'chambre';
+type FormatVille = 'ville' | 'chambre';
 const VILLES: Record<VilleId, Images<FormatVille>> = {
   clairebourg: {
-    portrait: require('../../assets/villes/clairebourg/portrait.jpg'),
-    paysage: require('../../assets/villes/clairebourg/paysage.jpg'),
-    centre: require('../../assets/villes/clairebourg/centre.jpg'),
+    ville: require('../../assets/villes/clairebourg/chemin-1.jpg'),
     chambre: require('../../assets/villes/clairebourg/chambre.jpg'),
   },
   sunnyville: {
-    portrait: require('../../assets/villes/sunnyville/portrait.jpg'),
-    paysage: require('../../assets/villes/sunnyville/paysage.jpg'),
+    ville: require('../../assets/villes/sunnyville/chemin-1.jpg'),
     chambre: require('../../assets/villes/sunnyville/chambre.jpg'),
   },
 };
@@ -268,11 +266,11 @@ const CHEMINS: Record<VilleId, ImageSourcePropType[]> = {
 };
 
 /**
- * Les panneaux du trajet, dans l'ordre : la chambre, la ville, puis le chemin.
+ * Les panneaux du trajet, dans l'ordre : la chambre, puis le chemin (qui commence par la ville).
  * `boucle` = à partir de quel panneau le décor recommence (le chemin tourne en boucle).
  */
 export function trajetVille(ville: VilleId): { panneaux: ImageSourcePropType[]; boucle: number } {
-  const debut = [VILLES[ville].chambre, VILLES[ville].paysage ?? VILLES[ville].portrait].filter(Boolean) as ImageSourcePropType[];
+  const debut = [VILLES[ville].chambre].filter(Boolean) as ImageSourcePropType[];
   const chemin = CHEMINS[ville];
   // Clairebourg : le premier paysage (le bout du village) n'est vu qu'une fois, puis la campagne tourne en boucle
   const intro = chemin.length > 1 ? [...debut, chemin[0]] : debut;
@@ -281,18 +279,17 @@ export function trajetVille(ville: VilleId): { panneaux: ImageSourcePropType[]; 
 }
 
 /**
- * Le décor d'un lieu de la ville : un format de la ville (« centre », « portrait », « paysage »)
- * ou un paysage du chemin (« chemin-1 »…). Sans décor précisé : le centre-ville.
+ * Le décor d'un lieu de la ville : un paysage du chemin (« chemin-1 »…), « ville » ou « chambre ».
+ * Un paysage qui n'existe pas dans cette ville est remplacé par la vue de la ville.
  */
-export function imageDecor(ville: VilleId, decor = 'centre'): ImageSourcePropType | undefined {
+export function imageDecor(ville: VilleId, decor = 'ville'): ImageSourcePropType | undefined {
   const chemin = /^chemin-(\d+)$/.exec(decor);
   if (chemin) return CHEMINS[ville][Number(chemin[1]) - 1] ?? CHEMINS[ville][0];
-  return imageVille(ville, (['portrait', 'paysage', 'centre', 'chambre'].includes(decor) ? decor : 'centre') as FormatVille);
+  return imageVille(ville, decor === 'chambre' ? 'chambre' : 'ville');
 }
 
-/** Image d'une ville ; si le format demandé manque, on prend le plus proche. */
-export const imageVille = (ville: VilleId, format: FormatVille) =>
-  VILLES[ville][format] ?? VILLES[ville].portrait ?? VILLES[ville].paysage;
+/** Image d'une ville ; si le format demandé manque, on prend la vue de la ville. */
+export const imageVille = (ville: VilleId, format: FormatVille) => VILLES[ville][format] ?? VILLES[ville].ville;
 export const imageObjet = (id: string) => BOUTIQUE[id];
 
 /** Le compagnon habillé avec ce vêtement (undefined si l'illustration n'existe pas encore pour cet animal). */

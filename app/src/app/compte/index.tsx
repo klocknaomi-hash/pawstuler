@@ -13,7 +13,6 @@ import { Groupe, Ligne } from '@/components/Liste';
 import { compagnonParId } from '@/config/compagnons';
 import { arrondis, couleurs, espace, polices } from '@/config/theme';
 import { villeParId } from '@/config/villes';
-import { useEspaceBarre } from '@/hooks/useEspaceBarre';
 import { emploiActuel } from '@/logique/tachesDuJour';
 import { libelleAbonnement } from '@/services/abonnement';
 import { deconnecter, supprimerCompte } from '@/services/compte';
@@ -29,7 +28,6 @@ function confirmer(titre: string, message: string, action: string, onOk: () => v
 }
 
 export default function Compte() {
-  const espaceBarre = useEspaceBarre();
   const { etat, dispatch } = useApp();
   const compagnon = etat.compagnon;
   const infos = compagnon ? compagnonParId(compagnon.espece) : undefined;
@@ -40,6 +38,8 @@ export default function Compte() {
     confirmer('Se déconnecter ?', 'Tes données restent sur ce téléphone : tu les retrouveras en te reconnectant.', 'Se déconnecter', async () => {
       await deconnecter();
       dispatch({ type: 'DECONNECTER' });
+      // Le Compte est une page posée sur les onglets : on referme tout avant de revenir à la connexion
+      if (router.canDismiss()) router.dismissAll();
       router.replace({ pathname: '/connexion', params: { mode: 'retour' } });
     });
   }
@@ -57,6 +57,7 @@ export default function Compte() {
           return Platform.OS === 'web' ? undefined : Alert.alert('Suppression impossible', message);
         }
         dispatch({ type: 'SUPPRIMER_COMPTE' });
+        if (router.canDismiss()) router.dismissAll();
         router.replace('/connexion');
       },
       true,
@@ -64,9 +65,8 @@ export default function Compte() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: couleurs.creme }} edges={['top']}>
-      <ScrollView contentContainerStyle={[styles.contenu, { paddingBottom: espaceBarre }]}>
-        <Text style={styles.titre}>Compte</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: couleurs.creme }} edges={['bottom']}>
+      <ScrollView contentContainerStyle={styles.contenu}>
 
         <View style={styles.profil}>
           {compagnon && <Compagnon espece={compagnon.espece} pose="neutre" taille={86} equipe={etat.equipe} />}
@@ -84,7 +84,7 @@ export default function Compte() {
         <Groupe titre="Mon profil">
           <Ligne premiere icone="person-outline" libelle="Profil et compagnon" onPress={() => router.push('/compte/profil')} />
           {compagnon && (
-            <Ligne icone="paw-outline" libelle={`Profil de ${compagnon.nom}`} valeur={`Série : ${etat.serie.actuelle} j`} onPress={() => router.push('/compagnon')} />
+            <Ligne icone="paw-outline" libelle={`Profil de ${compagnon.nom}`} valeur={`Série : ${etat.serie.actuelle} j`} onPress={() => router.navigate('/milo')} />
           )}
           <Ligne icone="wallet-outline" libelle="Mon portefeuille" valeur={`${etat.pieces} pièces`} onPress={() => router.push('/compte/portefeuille')} />
           <Ligne
@@ -120,7 +120,6 @@ export default function Compte() {
 
 const styles = StyleSheet.create({
   contenu: { padding: espace.l, gap: espace.l, paddingBottom: espace.xxl },
-  titre: { fontFamily: polices.titre, fontSize: 26, fontWeight: '800', color: couleurs.brun },
   profil: {
     flexDirection: 'row',
     alignItems: 'center',

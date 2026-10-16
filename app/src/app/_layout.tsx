@@ -54,7 +54,8 @@ function Navigation() {
       <Stack.Screen name="compte/parametres" options={avecEntete('Paramètres')} />
       <Stack.Screen name="compte/confidentialite" options={avecEntete('Mes données')} />
       <Stack.Screen name="compte/portefeuille" options={avecEntete('Portefeuille')} />
-      <Stack.Screen name="compagnon" options={avecEntete('Mon compagnon')} />
+      <Stack.Screen name="boutique" options={avecEntete('Shop')} />
+      <Stack.Screen name="compte/index" options={avecEntete('Compte')} />
       <Stack.Screen name="chambre" options={avecEntete('Sa chambre')} />
       <Stack.Screen name="premium" options={{ presentation: 'modal' }} />
       <Stack.Screen name="essai-jour" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />

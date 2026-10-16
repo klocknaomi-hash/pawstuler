@@ -2,7 +2,7 @@
  * LA VILLE DU COMPAGNON (Clairebourg ou Sunnyville)
  * L'endroit où l'on suit Milo quand il explore — l'accueil, lui, montre sa chambre.
  *  - En haut, une grande scène animée qui montre ce qu'il fait en ce moment :
- *    il se promène près du lac (avant l'aventure), il dort chez lui (la nuit),
+ *    il se promène dans sa ville (avant l'aventure), il dort chez lui (la nuit),
  *    il marche sur le chemin (le décor défile), il est sur place (dans le lieu visité),
  *    il rentre, puis il revient avec un récit à découvrir.
  *  - Pendant l'aventure, la progression du trajet en temps réel : départ → lieu → retour.
@@ -74,7 +74,7 @@ export default function Ville() {
   if (absent) etiquette = `${iconeMission(absent)} ${ouEst(etat, absent)}`;
   else if (revenu) etiquette = `🎒 ${nom} est rentré${compagnon.pronoms === 'elle' ? 'e' : ''} : découvre son aventure !`;
   else if (dort) etiquette = `🌙 ${nom} dort chez lui · réveil à ${heureRythme(etat.rythme.reveil)}`;
-  else etiquette = `🌿 ${nom} se promène ${ville.baignade.ou === 'au lac' ? 'près du lac' : 'près de la fontaine'}`;
+  else etiquette = `🌿 ${nom} se promène dans ${ville.nom}`;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: couleurs.creme }} edges={['top']}>
@@ -109,8 +109,8 @@ export default function Ville() {
             </>
           ) : (
             <>
-              {/* Avant l'aventure (ou de retour) : il se promène dans sa ville, près du lac */}
-              <Image source={imageVille(ville.id, 'portrait')} style={StyleSheet.absoluteFill} contentFit="cover" />
+              {/* Avant l'aventure (ou de retour) : il se promène dans sa ville */}
+              <Image source={imageVille(ville.id, 'ville')} style={StyleSheet.absoluteFill} contentFit="cover" />
               <Pressable
                 style={styles.sol}
                 onPress={() => router.push('/aventure')}
