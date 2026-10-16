@@ -117,6 +117,10 @@ export default function Aventure() {
         </View>
         <View style={styles.entete}>
           <Titre style={styles.texteCentre}>{accord(`${nom} est rentré{e} !`)}</Titre>
+          {/* Son petit mot, à la première personne */}
+          <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.mot}>
+            <Text style={styles.motTexte}>{carnet.mot}</Text>
+          </Animated.View>
           {carnet.detail && <Text style={styles.detail}>{carnet.detail}</Text>}
           {vue.depart && vue.retour && (
             <Text style={styles.detail}>
@@ -142,10 +146,19 @@ export default function Aventure() {
         )}
 
         {/* 4. Le lien avec ta recherche */}
-        {carnet.lien && (
+        {(carnet.lien || carnet.action) && (
           <Animated.View entering={entree()} style={[styles.carte, styles.carteLien]}>
             <Text style={styles.rubrique}>🐾 Et toi, de ton côté</Text>
-            <Text style={styles.texteCarte}>{carnet.lien}</Text>
+            {carnet.lien && <Text style={styles.texteCarte}>{carnet.lien}</Text>}
+            {/* Un petit pas pour toi aussi, relié à ta recherche */}
+            {carnet.action && (
+              <Pressable
+                onPress={() => router.push({ pathname: carnet.action!.pathname as never, params: carnet.action!.params })}
+                accessibilityRole="button"
+                style={styles.action}>
+                <Text style={styles.actionTexte}>{carnet.action.libelle}</Text>
+              </Pressable>
+            )}
           </Animated.View>
         )}
 
@@ -451,6 +464,10 @@ const styles = StyleSheet.create({
   rubrique: { fontSize: 13, fontWeight: '700', color: couleurs.renardFonce },
   texteCarte: { flex: 1, fontSize: 15, lineHeight: 21, color: couleurs.brun },
   carteLien: { backgroundColor: couleurs.saugeClair },
+  mot: { backgroundColor: couleurs.carte, borderRadius: arrondis.l, paddingHorizontal: espace.l, paddingVertical: espace.s, marginTop: espace.xs, ...relief },
+  motTexte: { fontSize: 15, lineHeight: 21, color: couleurs.brun, fontStyle: 'italic', textAlign: 'center' },
+  action: { alignSelf: 'flex-start', backgroundColor: couleurs.carte, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 9, marginTop: espace.xs },
+  actionTexte: { fontSize: 14, fontWeight: '600', color: couleurs.saugeFonce },
   ligne: { flexDirection: 'row', alignItems: 'center', gap: espace.s },
   ligneEmoji: { fontSize: 18, width: 24, textAlign: 'center' },
   recompenseTexte: { flex: 1, fontWeight: '800', color: '#9A6400' },

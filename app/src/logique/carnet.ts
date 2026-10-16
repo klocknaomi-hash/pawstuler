@@ -14,6 +14,8 @@ import { ISSUES } from '@/config/banqueAventures';
 import {
   CHEMINS_CARNET,
   ENSUITE_CARNET,
+  ENVIE_DECOUVERTE,
+  MOTS_RETOUR,
   LIENS_CARNET,
   REMARQUES_LIEU,
   SECTEURS,
@@ -28,14 +30,23 @@ import {
   iconeMission,
   jourLisible,
   lieuDeMission,
+  parcoursDeLaVille,
   prochainEntretienDeMilo,
   remplir,
 } from '@/logique/missions';
+import { relanceDue } from '@/logique/tachesDuJour';
 import type { Candidature, EtatApp, Mission } from '@/store/types';
 
 export type LigneCarnet = { emoji: string; texte: string };
 
+/** Un petit pas pour toi, relié à ta propre recherche (un outil, ou ajouter une candidature). */
+export type ActionCarnet = { libelle: string; pathname: string; params?: Record<string, string> };
+
 export type Carnet = {
+  /** Son petit mot à son retour, à la première personne. */
+  mot: string;
+  /** Un bouton concret dans « Et toi, de ton côté ». */
+  action?: ActionCarnet;
   /** 1. Où : l'image, une étiquette (« 📍 Boulangerie du Lac ») et le métier visé. */
   image: ReturnType<typeof decorDeMission>;
   ou: string;
@@ -145,6 +156,21 @@ export function carnetDeRetour(etat: EtatApp, m: Mission): Carnet {
       : texte(LIENS_CARNET.sansCandidature);
   }
 
+  // Un petit pas pour toi aussi, selon ta situation (jamais une obligation)
+  let action: ActionCarnet | undefined;
+  if (ta && m.type === 'relance' && ta.statut !== 'refus' && ta.statut !== 'decroche') {
+    action = { libelle: '📞 Revoir le script de relance', pathname: '/outils/appel', params: { script: 'relance', candidature: ta.id } };
+  } else if (ta && m.type === 'entretien' && ta.statut === 'entretien') {
+    action = { libelle: `🙏 Écrire un mot de remerciement à ${ta.entreprise}`, pathname: '/outils/mail', params: { modele: 'remerciement', candidature: ta.id } };
+  } else if (ta && m.type === 'refus') {
+    action = { libelle: '🌱 Demander un retour pour progresser', pathname: '/outils/mail', params: { modele: 'retour', candidature: ta.id } };
+  } else if (m.type === 'recherche' || m.type === 'depot') {
+    const aRelancer = etat.candidatures.find((c) => relanceDue(c, aujourdhui));
+    action = aRelancer
+      ? { libelle: `✉️ Relancer ${aRelancer.entreprise}`, pathname: '/outils/mail', params: { modele: 'relance', candidature: aRelancer.id } }
+      : { libelle: '➕ Ajouter une candidature', pathname: '/nouvelle-candidature' };
+  }
+
   /* 5. Ce qu'il rapporte (les pièces sont affichées à part, plafond du jour compris) */
   const gains: LigneCarnet[] = [];
   if (premierPassage && lieu) gains.push({ emoji: lieu.souvenir.emoji, texte: `Un souvenir pour sa collection : ${lieu.souvenir.nom}` });
@@ -181,5 +207,13 @@ export function carnetDeRetour(etat: EtatApp, m: Mission): Carnet {
     );
   }
 
-  return { image: decorDeMission(etat, m), ou, detail, vecu, decouvertes, lien, gains, ensuite };
+  if (!estUnMoment(m) && m.type !== 'travail') {
+    const aDecouvrir = parcoursDeLaVille(etat).find((p) => p.etape === 'a-visiter' && p.lieu.id !== lieu?.id);
+    if (aDecouvrir) ensuite.push(texte(ENVIE_DECOUVERTE, { prochainLieu: aDecouvrir.lieu.nom }));
+  }
+
+  /* Son petit mot, à la première personne */
+  const mot = texte(m.type === 'recherche' && m.issue ? MOTS_RETOUR[`issue-${m.issue}`] : MOTS_RETOUR[m.type]);
+
+  return { mot, action, image: decorDeMission(etat, m), ou, detail, vecu, decouvertes, lien, gains, ensuite };
 }
