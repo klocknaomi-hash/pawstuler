@@ -268,6 +268,8 @@ export type EtatApp = {
   offreBienvenue?: { debut: string; vueLe?: string };
   /** La chambre du compagnon : quel objet est posé sur quel emplacement (voir config/chambre.ts). */
   chambre: Record<string, string>;
+  /** Les outils d'aide à l'emploi : tes notes sur les questions d'entretien, et les points cochés de la checklist CV. */
+  outils: { notes: Record<string, string>; cv: string[] };
   /** Dernier jour fêté par l'écran « Journée terminée 🎉 » (une fois par jour au plus). */
   journeeFeteeLe?: string;
   parametres: Parametres;

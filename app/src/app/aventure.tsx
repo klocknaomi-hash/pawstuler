@@ -22,6 +22,8 @@ import { Compagnon } from '@/components/Compagnon';
 import { IconePiece } from '@/components/Pieces';
 import { SceneAventure } from '@/components/SceneAventure';
 import { carnetDeRetour, type Carnet } from '@/logique/carnet';
+import { villeParId, type VilleId } from '@/config/villes';
+import { animationAventure } from '@/illustrations/registre';
 import { decorDeMission } from '@/logique/decors';
 import { objetParId } from '@/config/boutique';
 import { accorder, type EspeceId } from '@/config/compagnons';
@@ -40,7 +42,7 @@ import {
   missionEnCours,
   momentDuCompagnon,
   ouEst,
-  presentationMission,
+  ficheMission,
   prochainDepart,
   remplir,
   titreMission,
@@ -187,9 +189,10 @@ export default function Aventure() {
   /* 2. Départ : il s'en va, avec ce qu'il emporte */
   if (partant) {
     return (
-      <Ecran fond={couleurs.ciel} style={styles.centre}>
+      <Ecran fond={couleurs.pecheClair} style={styles.centre}>
         <Depart
           espece={compagnon.espece}
+          ville={etat.villeId}
           equipe={partant.type === 'entretien' && partant.tenue ? [partant.tenue] : etat.equipe}
           objet={OBJET_EMPORTE[partant.type]}
         />
@@ -209,7 +212,7 @@ export default function Aventure() {
     };
     return (
       <Ecran
-        fond={couleurs.ciel}
+        fond={couleurs.creme}
         style={styles.centre}
         bas={absent ? <Bouton titre="D’accord, à tout à l’heure !" onPress={fermer} /> : <Bouton titre="Découvrir son aventure" onPress={decouvrir} />}>
         <Fermer onPress={fermer} flottant />
@@ -273,24 +276,51 @@ export default function Aventure() {
     setPartant(mission);
   };
 
+  const fiche = ficheMission(etat, mission);
+  const image = decorDeMission(etat, mission);
+
+  // Présentée comme une petite offre : le lieu, l'objectif, ce qu'il va faire, puis le bouton juste dessous
   return (
-    <Ecran defilant bas={<Bouton titre={remplir(etat, BOUTON_DEPART[mission.type])} onPress={envoyer} desactive={!!empechement} />}>
-      <Fermer onPress={fermer} />
+    <Ecran defilant style={styles.presentation}>
+      <Fermer onPress={fermer} flottant />
       <View style={styles.centre}>
-        <Compagnon espece={compagnon.espece} pose="aventure" taille={160} promenade equipe={tenue ? [tenue.id] : etat.equipe} />
+        <Compagnon espece={compagnon.espece} pose="aventure" taille={140} promenade equipe={tenue ? [tenue.id] : etat.equipe} />
         <Titre style={styles.texteCentre}>{titreMission(etat, mission)}</Titre>
       </View>
-      <View style={styles.carte}>
-        <Text style={styles.lieu}>
-          {iconeMission(mission)} {mission.lieu}
-        </Text>
-        <Text style={styles.recit}>{presentationMission(etat, mission)}</Text>
+
+      <View style={styles.offre}>
+        {/* En-tête de l'offre : image du lieu, type d'aventure, lieu, ville et métier */}
+        <View style={styles.offreEntete}>
+          <View style={styles.vignette}>
+            {image ? <Image source={image} style={StyleSheet.absoluteFill} contentFit="cover" /> : null}
+            <Text style={styles.vignetteIcone}>{iconeMission(mission)}</Text>
+          </View>
+          <View style={{ flex: 1, gap: 1 }}>
+            <Text style={styles.type}>{fiche.type}</Text>
+            <Text style={styles.offreLieu} numberOfLines={1}>
+              {mission.lieu.charAt(0).toUpperCase() + mission.lieu.slice(1)}
+            </Text>
+            <Text style={styles.offreDetail} numberOfLines={1}>
+              {villeParId(etat.villeId).nom}
+              {mission.metier && !estUnMoment(mission) ? ` · ${mission.metier}` : ''}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.offreBloc}>
+          <Text style={styles.rubrique}>🎯 Objectif</Text>
+          <Text style={styles.texteCarte}>{fiche.objectif}</Text>
+        </View>
+        <View style={styles.offreBloc}>
+          <Text style={styles.rubrique}>🐾 Ce qu’{accord('{il}')} va faire</Text>
+          <Text style={styles.texteCarte}>{fiche.action}</Text>
+        </View>
         <View style={styles.infos}>
           <Info icone="time-outline" texte={`${DUREES_MINUTES[mission.type]} min`} />
           <Info icone="flash-outline" texte={`${cout} énergie`} />
           {PIECES_MISSION[mission.type] > 0 && <Info icone="ellipse-outline" texte={`+${PIECES_MISSION[mission.type]} pièces`} />}
         </View>
       </View>
+
       {/* Entretien : sa tenue (achetée au Shop), jamais obligatoire */}
       {mission.type === 'entretien' &&
         (tenue ? (
@@ -302,12 +332,15 @@ export default function Aventure() {
           </Pressable>
         ))}
       {empechement && <Texte style={styles.texteCentre}>{empechement}</Texte>}
+      <Bouton titre={remplir(etat, BOUTON_DEPART[mission.type])} onPress={envoyer} desactive={!!empechement} />
     </Ecran>
   );
 }
 
 /** Le départ : il fait un petit bond, puis s'en va vers la droite avec ce qu'il emporte. */
-function Depart({ espece, equipe, objet }: { espece: EspeceId; equipe?: string[]; objet: string }) {
+function Depart({ espece, ville, equipe, objet }: { espece: EspeceId; ville?: VilleId; equipe?: string[]; objet: string }) {
+  // Animation officielle du départ (quand elle sera fournie), sinon l'illustration et son petit bond
+  const animation = animationAventure(espece, ville, 'depart');
   const x = useSharedValue(0);
   const pas = useSharedValue(0);
   useEffect(() => {
@@ -320,8 +353,12 @@ function Depart({ espece, equipe, objet }: { espece: EspeceId; equipe?: string[]
   }));
   return (
     <Animated.View style={[styles.depart, style]}>
-      <Text style={styles.objetDepart}>{objet}</Text>
-      <Compagnon espece={espece} pose="aventure" taille={170} equipe={equipe} />
+      {!!objet && <Text style={styles.objetDepart}>{objet}</Text>}
+      {animation ? (
+        <Image source={animation} style={{ width: 170, height: 170 }} contentFit="contain" />
+      ) : (
+        <Compagnon espece={espece} pose="aventure" taille={170} equipe={equipe} />
+      )}
     </Animated.View>
   );
 }
@@ -354,6 +391,16 @@ function Fermer({ onPress, flottant }: { onPress: () => void; flottant?: boolean
 
 const styles = StyleSheet.create({
   centre: { alignItems: 'center', justifyContent: 'center', gap: espace.m },
+  /* Présentation (comme une offre), centrée verticalement */
+  presentation: { flexGrow: 1, justifyContent: 'center', gap: espace.m },
+  offre: { backgroundColor: couleurs.carte, borderRadius: arrondis.l, padding: espace.l, gap: espace.m, ...relief },
+  offreEntete: { flexDirection: 'row', alignItems: 'center', gap: espace.m },
+  vignette: { width: 58, height: 58, borderRadius: arrondis.m, overflow: 'hidden', backgroundColor: couleurs.pecheClair, alignItems: 'flex-end', justifyContent: 'flex-end' },
+  vignetteIcone: { fontSize: 18, margin: 2 },
+  type: { fontSize: 13, fontWeight: '700', color: couleurs.renardFonce },
+  offreLieu: { fontSize: 16, fontWeight: '700', color: couleurs.brun },
+  offreDetail: { fontSize: 13, color: couleurs.brunDoux },
+  offreBloc: { gap: 2, borderTopWidth: 1, borderTopColor: couleurs.ligne, paddingTop: espace.s },
   texteCentre: { textAlign: 'center' },
   fermer: { alignSelf: 'flex-end' },
   fermerFlottant: { position: 'absolute', top: espace.s, right: espace.l, zIndex: 2 },
@@ -362,7 +409,7 @@ const styles = StyleSheet.create({
   carte: { backgroundColor: couleurs.carte, borderRadius: arrondis.l, padding: espace.l, gap: espace.s, ...ombre },
   lieu: { fontWeight: '800', color: couleurs.renardFonce, fontSize: 14 },
   recit: { fontSize: 16, lineHeight: 23, color: couleurs.brun, fontWeight: '600' },
-  infos: { flexDirection: 'row', flexWrap: 'wrap', gap: espace.s, marginTop: espace.s },
+  infos: { flexDirection: 'row', flexWrap: 'wrap', gap: espace.s },
   info: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -385,7 +432,7 @@ const styles = StyleSheet.create({
   },
   pastilleTexte: { fontWeight: '800', color: couleurs.brun },
   /* Carnet de voyage (retour) */
-  photo: { height: 210, borderRadius: arrondis.l, overflow: 'hidden', backgroundColor: couleurs.ciel, ...relief },
+  photo: { height: 210, borderRadius: arrondis.l, overflow: 'hidden', backgroundColor: couleurs.pecheClair, ...relief },
   photoImage: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   photoCompagnon: { position: 'absolute', left: 0, right: 0, bottom: 6, alignItems: 'center' },
   etiquette: {

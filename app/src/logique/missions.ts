@@ -25,6 +25,8 @@ import {
   HEURES_ENTRE_AVENTURES_PREMIUM,
   OU_EST,
   PRESENTATIONS,
+  OBJECTIFS_MISSION,
+  TYPES_AVENTURE,
   RESULTATS,
   RESULTATS_ENTRETIEN,
   RESULTATS_REFUS,
@@ -439,13 +441,14 @@ export const titreMission = (etat: EtatApp, m: Mission) =>
   remplir(etat, m.activite ? ACTIVITES[m.activite].titre : m.decouverte ? TITRE_DECOUVERTE : TITRES[m.type], m);
 
 /** La petite fiche de mission (comme une offre) : l'objectif et ce qu'il va faire. */
-export function ficheMission(etat: EtatApp, m: Mission): { objectif?: string; action: string } {
-  if (m.activite) return { objectif: remplir(etat, ACTIVITES[m.activite].objectif, m), action: remplir(etat, ACTIVITES[m.activite].action, m) };
-  return { action: remplir(etat, PRESENTATIONS[m.type], m) };
+export function ficheMission(etat: EtatApp, m: Mission): { type: string; objectif: string; action: string } {
+  const type = TYPES_AVENTURE[m.type];
+  if (m.activite) return { type, objectif: remplir(etat, ACTIVITES[m.activite].objectif, m), action: remplir(etat, ACTIVITES[m.activite].action, m) };
+  return { type, objectif: remplir(etat, OBJECTIFS_MISSION[m.type], m), action: remplir(etat, PRESENTATIONS[m.type], m) };
 }
 export const presentationMission = (etat: EtatApp, m: Mission) => {
   const { objectif, action } = ficheMission(etat, m);
-  return objectif ? `${objectif}. ${action}` : action;
+  return `${objectif}. ${action}`;
 };
 /** « Milo est chez Boulangerie du Lac », « Milo est au téléphone », « Milo est à la maison ». */
 export const ouEst = (etat: EtatApp, m: Mission) => remplir(etat, OU_EST[m.type], m);

@@ -54,7 +54,7 @@ export const VILLES: Ville[] = [
       { id: 'boulangerie', decor: 'chemin-1', secteur: 'boulangerie', nom: 'Boulangerie Mercier', metier: 'Apprenti boulanger', souvenir: { nom: 'Croissant doré', emoji: '🥐' } },
       { id: 'librairie', decor: 'chemin-2', secteur: 'librairie', nom: 'Librairie des Tilleuls', metier: 'Libraire junior', souvenir: { nom: 'Marque-page', emoji: '📖' } },
       { id: 'studio', decor: 'chemin-3', secteur: 'studio', nom: 'Studio Hibou', metier: 'Aide photographe', souvenir: { nom: 'Photo souvenir', emoji: '📷' } },
-      { id: 'agence', decor: 'chemin-2', secteur: 'agence', nom: 'Agence Tamaris', metier: 'Assistant de voyage', souvenir: { nom: 'Carte postale', emoji: '🗺️' } },
+      { id: 'agence', decor: 'chemin-2', secteur: 'agence', nom: 'Agence Tamaris', metier: 'Assistant de voyage', souvenir: { nom: 'Carte postale', emoji: '💌' } },
       { id: 'cafe', decor: 'chemin-1', secteur: 'cafe', nom: 'Café du Lac', metier: 'Barista', souvenir: { nom: 'Tasse du Lac', emoji: '☕' } },
       { id: 'parc', decor: 'chemin-4', nom: 'Le parc et son ponton', souvenir: { nom: 'Plume de canard', emoji: '🪶' } },
     ],

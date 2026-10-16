@@ -7,6 +7,8 @@
  * pour s'améliorer). Une relance peut être prévue (+1, +3, +5 jours).
  * Chaque changement s'ajoute à l'historique (rien n'est effacé).
  * Un refus fait réagir le compagnon ; « Décroché » ouvre la page de félicitations.
+ * En bas : les outils utiles à cette étape (script et mail de relance, préparer l'entretien,
+ * remerciement, demande de retour), préremplis avec cette candidature.
  */
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -274,6 +276,9 @@ export default function FicheCandidature() {
         style={{ minHeight: 90, textAlignVertical: 'top' }}
       />
 
+      {/* Les outils utiles à cette étape (préremplis avec cette candidature) */}
+      <OutilsDeLaCandidature id={c.id} statut={c.statut} />
+
       <View style={{ gap: espace.s }}>
         <SousTitre>Historique</SousTitre>
         <View style={styles.historique}>
@@ -302,6 +307,9 @@ export default function FicheCandidature() {
 }
 
 const styles = StyleSheet.create({
+  outils: { flexDirection: 'row', flexWrap: 'wrap', gap: espace.s },
+  outil: { backgroundColor: couleurs.pecheClair, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 9 },
+  outilTexte: { fontSize: 14, fontWeight: '600', color: couleurs.renardFonce },
   poste: { fontSize: 16, fontWeight: '700', color: couleurs.brunDoux },
   pastilles: { flexDirection: 'row', flexWrap: 'wrap', gap: espace.s },
   meta: { fontSize: 13, fontWeight: '600', color: couleurs.brunDoux },
@@ -344,3 +352,39 @@ const styles = StyleSheet.create({
   etapeTexte: { flex: 1, fontWeight: '700', color: couleurs.brun },
   note: { fontSize: 12.5, color: couleurs.brunDoux, textAlign: 'center' },
 });
+
+/** Les raccourcis vers les outils d'aide à l'emploi, selon l'étape de la candidature. */
+const OUTILS_PAR_STATUT: Record<StatutCandidature, { libelle: string; pathname: string; params?: Record<string, string> }[]> = {
+  envoyee: [
+    { libelle: '📞 Script de relance', pathname: '/outils/appel', params: { script: 'relance' } },
+    { libelle: '✉️ Mail de relance', pathname: '/outils/mail', params: { modele: 'relance' } },
+  ],
+  relancee: [{ libelle: '✉️ Mail de relance', pathname: '/outils/mail', params: { modele: 'relance' } }],
+  entretien: [
+    { libelle: '🎤 Préparer l’entretien', pathname: '/outils/entretien' },
+    { libelle: '🙏 Mail de remerciement', pathname: '/outils/mail', params: { modele: 'remerciement' } },
+  ],
+  refus: [{ libelle: '🌱 Demander un retour', pathname: '/outils/mail', params: { modele: 'retour' } }],
+  decroche: [],
+};
+
+function OutilsDeLaCandidature({ id, statut }: { id: string; statut: StatutCandidature }) {
+  const outils = OUTILS_PAR_STATUT[statut];
+  if (!outils.length) return null;
+  return (
+    <View style={{ gap: espace.s }}>
+      <SousTitre>Pour avancer</SousTitre>
+      <View style={styles.outils}>
+        {outils.map((o) => (
+          <Pressable
+            key={o.libelle}
+            onPress={() => router.push({ pathname: o.pathname as never, params: { ...o.params, candidature: id } })}
+            accessibilityRole="button"
+            style={styles.outil}>
+            <Text style={styles.outilTexte}>{o.libelle}</Text>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}

@@ -1,6 +1,6 @@
 /**
- * Les onglets : Accueil · Candidatures · la ville du compagnon · le compagnon (sa carte d'identité,
- * avec sa garde-robe, le Shop et le Compte derrière ⚙️). Un onglet « Outils » s'ajoutera avec l'aide à l'emploi.
+ * Les 5 onglets : Accueil · Candidatures · Outils (l'aide à l'emploi) · la ville du compagnon ·
+ * le compagnon (sa carte d'identité, avec sa garde-robe, le Shop et le Compte derrière ⚙️).
  * Barre flottante : une capsule arrondie posée au-dessus du bas de l'écran, l'onglet actif dans une pastille.
  */
 import { Ionicons } from '@expo/vector-icons';
@@ -75,6 +75,7 @@ export default function LayoutOnglets() {
           tabBarIcon: icone('folder-open-outline', 'folder-open'),
         }}
       />
+      <Tabs.Screen name="outils" options={{ title: 'Outils', tabBarIcon: icone('construct-outline', 'construct') }} />
       <Tabs.Screen name="ville" options={{ title: nomVille, tabBarIcon: icone('map-outline', 'map') }} />
       <Tabs.Screen name="milo" options={{ title: etat.compagnon?.nom ?? 'Compagnon', tabBarIcon: icone('paw-outline', 'paw') }} />
     </Tabs>
