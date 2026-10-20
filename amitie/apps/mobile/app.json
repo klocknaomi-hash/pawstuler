@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Amitié (nom provisoire)",
+    "slug": "app-amitie",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "scheme": "appamitie",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.appamitie.app"
+    },
+    "android": {
+      "package": "com.appamitie.app"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": false,
+      "reactCompiler": false
+    }
+  }
+}
