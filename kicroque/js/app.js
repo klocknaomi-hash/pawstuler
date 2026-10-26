@@ -51,7 +51,7 @@
     selectedDay: null,
     cart: [],                  // [{ item, qty }]
     firstOrderDone: local.get('kc_first_order_done', false),
-    bannerDismissed: local.get('kc_banner_dismissed', false),
+    texture: KC.TEXTURES[local.get('kc_texture', 'plat')] ? local.get('kc_texture', 'plat') : 'plat',
     embedded: null,            // instance Stripe Embedded Checkout
   };
 
@@ -110,7 +110,7 @@
     const left = MAX - taken;
     const day = state.days.find((d) => d.iso === iso);
     const slots = Array.from({ length: MAX }, (_, i) =>
-      `<span class="slot ${i < taken ? 'taken' : 'free'}" title="${i < taken ? 'Commande prise' : 'Créneau disponible'}"></span>`).join('');
+      `<span class="slot ${i < taken ? 'taken' : 'free'}" title="${i < taken ? 'Commande prise' : 'Créneau disponible'}">${i < taken ? Art.cookie(KC.FLAVORS[i % KC.FLAVORS.length].colors, i % 2 ? 'epais' : 'plat', 'slot' + i) : ''}</span>`).join('');
     $('#stock-gauge').innerHTML = `
       <div class="slots" role="img" aria-label="${taken} commandes prises sur ${MAX} pour ${esc(day ? day.label : '')}">${slots}</div>
       <div class="stock-legend">
@@ -144,6 +144,56 @@
      ====================================================================== */
   const SOLDOUT_HTML = '<div class="soldout" aria-hidden="true"><span>Complet</span><small data-soldout-msg></small></div>';
 
+  /* ---- Photos et logos : détectés automatiquement ----
+     Si le fichier existe (ex. assets/photos/double-chocolat-epais.jpg), il remplace
+     l'illustration. Sinon, l'illustration SVG reste. Rien d'autre à modifier. */
+  const PHOTOS = Object.assign({ enabled: true, folder: 'assets/photos', extension: 'jpg' }, CFG.photos);
+  const probeCache = new Map();
+  function probe(url) {
+    if (!probeCache.has(url)) {
+      probeCache.set(url, new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(img.naturalWidth > 0);
+        img.onerror = () => resolve(false);
+        img.src = url;
+      }));
+    }
+    return probeCache.get(url);
+  }
+  function photoUrl(name) {
+    return `${PHOTOS.folder}/${name}${/\.[a-z0-9]+$/i.test(name) ? '' : '.' + PHOTOS.extension}`;
+  }
+  /** Emplacement d'image : l'illustration de secours, remplacée par la photo si elle existe. */
+  function photoSlot(name, fallback, alt, cls) {
+    return `<span class="visual ${cls || ''}" data-photo="${esc(name)}" data-alt="${esc(alt || '')}">${fallback}</span>`;
+  }
+  function hydratePhotos(root) {
+    if (!PHOTOS.enabled) return;
+    $$('[data-photo]:not([data-photo-done])', root || document).forEach((el) => {
+      el.setAttribute('data-photo-done', '');
+      const url = photoUrl(el.dataset.photo);
+      probe(url).then((ok) => {
+        if (!ok || !el.isConnected || el.dataset.photo === undefined) return;
+        el.innerHTML = `<img src="${esc(url)}" alt="${esc(el.dataset.alt || '')}" loading="lazy" class="${el.dataset.imgClass || ''}">`;
+        el.classList.add('has-photo');
+        const hint = el.parentElement && $('.photo-hint', el.parentElement);
+        if (hint) hint.remove();
+      });
+    });
+  }
+  function hydrateLogos() {
+    const logos = CFG.logo || {};
+    $$('[data-logo]').forEach((a) => {
+      const src = logos[a.dataset.logo];
+      if (!src) return;
+      probe(src).then((ok) => { if (ok) a.innerHTML = `<img src="${esc(src)}" alt="KiCroque">`; });
+    });
+  }
+
+  function cookieVisual(p, texture, extraClass) {
+    return photoSlot(`${p.id}-${texture}`, Art.cookie(p.colors, texture, p.id), `Cookie ${p.name}, ${KC.TEXTURES[texture].label.toLowerCase()}`, extraClass);
+  }
+
   function stepperHTML(qty, label) {
     return `<div class="qty" role="group" aria-label="${esc(label || 'Quantité')}">
       <button type="button" data-step="-1" aria-label="Retirer un">−</button>
@@ -152,11 +202,11 @@
     </div>`;
   }
 
-  function textureRadios(name, prices) {
+  function textureRadios(name, prices, checked) {
     return `<fieldset class="texture-picker"><legend class="sr-only">Texture</legend>
-      ${Object.values(KC.TEXTURES).map((t, i) => `
+      ${Object.values(KC.TEXTURES).map((t) => `
         <label class="texture-option">
-          <input type="radio" name="${name}" value="${t.id}" ${i === 0 ? 'checked' : ''}>
+          <input type="radio" name="${name}" value="${t.id}" ${t.id === checked ? 'checked' : ''}>
           <span><strong>${t.label}</strong><small>${price(prices[t.id])}</small></span>
         </label>`).join('')}
     </fieldset>`;
@@ -166,37 +216,55 @@
     return `<details class="allergens"><summary>Allergènes</summary>${esc(list.join(', '))}. Fabriqué dans un atelier utilisant des fruits à coque.</details>`;
   }
 
-  // Vitrine du hero : 4 cookies
-  function renderShowcase() {
-    const picks = [
-      ['double-chocolat', 'epais'], ['matcha-white', 'plat'], ['pistache-gianduja', 'epais'], ['speculoos-cream', 'plat'],
-    ];
-    $('#hero-showcase').innerHTML = picks.map(([id, tex]) => {
-      const f = KC.FLAVOR_BY_ID[id];
-      return `<a class="showcase-item" href="#cookie-${id}" style="text-decoration:none">
-        ${Art.cookie(f.colors, tex, f.id)}
-        <strong>${esc(f.name)}</strong><small>${KC.TEXTURES[tex].short} · ${price(KC.TEXTURES[tex].price)}</small>
-      </a>`;
+  const ADD_BTN = '<button class="add-btn" type="button" data-add><b aria-hidden="true">+</b> Ajouter</button>';
+
+  // Hero : trois cookies qui flottent entre les deux lignes du titre (ou la photo hero.png)
+  function renderHero() {
+    const F = KC.FLAVOR_BY_ID;
+    const crumbs = Array.from({ length: 14 }, (_, i) => {
+      const a = (i / 14) * Math.PI * 2;
+      const d = 44 + (i % 3) * 5;
+      const s = 6 + (i % 4) * 3;
+      return `<span class="crumb" style="left:${50 + Math.cos(a) * d}%;top:${50 + Math.sin(a) * d}%;width:${s}px;height:${s * 0.8}px;transform:rotate(${i * 40}deg)"></span>`;
     }).join('');
+    const stack = `<div class="stack">${crumbs}
+      <div class="hc hc-1">${Art.cookie(F['chocolat-caramel'].colors, 'epais', 'hero-1')}</div>
+      <div class="hc hc-2">${Art.cookie(F['double-chocolat'].colors, 'plat', 'hero-2')}</div>
+      <div class="hc hc-3">${Art.cookie(F['pistache-gianduja'].colors, 'epais', 'hero-3')}</div>
+    </div>`;
+    const el = $('#hero-cookies');
+    el.innerHTML = `<span class="visual" data-photo="hero.png" data-img-class="hero-photo" data-alt="" style="width:100%;max-width:none;height:100%">${stack}</span>`;
+
+    // Duel des textures
+    const caramel = F['chocolat-caramel'];
+    $('#vs-visual-plat').innerHTML = photoSlot('texture-plat', Art.cookie(caramel.colors, 'plat', 'vs'), 'Cookie plat croustillant');
+    $('#vs-visual-epais').innerHTML = photoSlot('texture-epais', Art.cookie(caramel.colors, 'epais', 'vs'), 'Cookie épais moelleux garni');
+    $$('#textures .visual').forEach((v) => { v.style.width = '100%'; v.style.maxWidth = 'none'; v.style.height = '100%'; });
+
+    // L'atelier
+    $('#story-visual').innerHTML = photoSlot('atelier', Art.cookie(F['double-chocolat'].colors, 'epais', 'story'), 'Notre atelier');
+    const sv = $('#story-visual .visual');
+    sv.style.width = '100%'; sv.style.maxWidth = 'none'; sv.style.height = '100%';
   }
 
   // Carte cookie (saveur permanente ou recette de saison)
   function cookieCard(p, opts) {
     const o = opts || {};
     const prices = o.prices || { plat: KC.TEXTURES.plat.price, epais: KC.TEXTURES.epais.price };
+    const tex = state.texture;
     const tag = o.tag ? `<span class="tag ${o.event ? 'event' : ''}">${esc(o.tag)}</span>` : '';
-    return `<article class="card product" id="${o.idPrefix || 'cookie'}-${p.id}" data-type="${o.type || 'cookie'}" data-id="${p.id}" style="--tint:${p.tint}">
-      <div class="product-visual" data-art>${Art.cookie(p.colors, 'plat', p.id)}<span class="emoji-badge" aria-hidden="true">${p.emoji}</span>${tag}</div>
+    return `<article class="product" id="${o.idPrefix || 'cookie'}-${p.id}" data-type="${o.type || 'cookie'}" data-id="${p.id}" style="--tint:${p.tint}">
+      <div class="product-visual" data-art>${cookieVisual(p, tex)}<span class="emoji-badge" aria-hidden="true">${p.emoji}</span>${tag}</div>
       <div class="product-body">
         <h3>${esc(p.name)}</h3>
         ${o.until ? `<p class="until">${esc(o.until)}</p>` : ''}
         <p class="muted">${esc(p.desc)}</p>
-        ${textureRadios(`tex-${p.id}`, prices)}
+        ${textureRadios(`tex-${p.id}`, prices, tex)}
         ${allergensHTML(p.allergens)}
         <div class="product-foot">
-          <p class="price" data-price>${price(prices.plat)}</p>
+          <p class="price" data-price>${price(prices[tex])}</p>
           ${stepperHTML(1)}
-          <button class="btn btn-primary" type="button" data-add>Ajouter</button>
+          ${ADD_BTN}
         </div>
       </div>
       ${SOLDOUT_HTML}
@@ -209,10 +277,11 @@
 
   function renderSeasonal() {
     const active = KC.activeSeasonal(state.today);
+    $$('[data-seasonal-count]').forEach((el) => { el.textContent = active.length; });
     const grid = $('#seasonal-grid');
     if (!active.length) {
       grid.classList.remove('sellable');
-      grid.innerHTML = '<p class="card seasonal-empty">Entre deux saisons… la prochaine recette signature arrive très vite ! 👀</p>';
+      grid.innerHTML = '<p class="seasonal-empty">Entre deux saisons… la prochaine recette signature arrive très vite ! 👀</p>';
     } else {
       grid.innerHTML = active.map((s) => {
         const period = KC.seasonalPeriod(s, state.today);
@@ -243,14 +312,15 @@
     const [disc, six, duo] = ['decouverte', 'six-saveurs', 'duo-textures'].map((id) => KC.BOX_BY_ID[id]);
     const season = KC.currentSeasonRecipe(state.today);
     const F = KC.FLAVOR_BY_ID;
+    const boxPhoto = (id, fallback, alt) => photoSlot(`coffret-${id}`, fallback, alt, 'box-photo');
 
     // Découverte
     const discCookies = disc.contents.map((c) => {
       const p = c.flavor === 'saison' ? (season || F['chocolat-caramel']) : F[c.flavor];
       return { p, t: c.texture };
     });
-    const discHTML = `<article class="card box" data-type="box" data-id="decouverte">
-      <div class="box-visual">${discCookies.map(({ p, t }) => Art.cookie(p.colors, t, p.id)).join('')}</div>
+    const discHTML = `<article class="box" data-type="box" data-id="decouverte">
+      <div class="box-visual">${boxPhoto('decouverte', discCookies.map(({ p, t }) => Art.cookie(p.colors, t, p.id)).join(''), disc.name)}</div>
       <div class="box-body">
         <h3>${disc.emoji} ${esc(disc.name)}</h3>
         <p class="box-tagline">${esc(disc.tagline)}</p>
@@ -259,24 +329,24 @@
         <div class="product-foot">
           <p class="price" data-price>${price(disc.price)}</p>
           ${stepperHTML(1)}
-          <button class="btn btn-primary" type="button" data-add>Ajouter</button>
+          ${ADD_BTN}
         </div>
       </div>
       ${SOLDOUT_HTML}
     </article>`;
 
     // 6 saveurs
-    const sixHTML = `<article class="card box" data-type="box" data-id="six-saveurs">
-      <div class="box-visual" data-art>${sixArt('plat')}</div>
+    const sixHTML = `<article class="box" data-type="box" data-id="six-saveurs">
+      <div class="box-visual" data-art>${sixArt(state.texture)}</div>
       <div class="box-body">
         <h3>${six.emoji} ${esc(six.name)}</h3>
         <p class="box-tagline">${esc(six.tagline)}</p>
         <p class="muted">${esc(six.desc)}</p>
-        ${textureRadios('tex-box-six', six.prices)}
+        ${textureRadios('tex-box-six', six.prices, state.texture)}
         <div class="product-foot">
-          <p class="price" data-price>${price(six.prices.plat)}</p>
+          <p class="price" data-price>${price(six.prices[state.texture])}</p>
           ${stepperHTML(1)}
-          <button class="btn btn-primary" type="button" data-add>Ajouter</button>
+          ${ADD_BTN}
         </div>
       </div>
       ${SOLDOUT_HTML}
@@ -284,13 +354,12 @@
 
     // Duo textures (mis en avant)
     const defaults = ['double-chocolat', 'vanille-pecan', 'pistache-gianduja'];
-    const duoHTML = `<article class="card box featured" data-type="box" data-id="duo-textures" id="coffret-duo">
-      <span class="box-ribbon">Le préféré ⭐</span>
-      <div class="box-visual duo">
-        <div class="duo-half">${Art.cookie(F['chocolat-caramel'].colors, 'plat', 'duo')}<small>Plat</small></div>
+    const duoArt = `<div class="duo-half">${Art.cookie(F['chocolat-caramel'].colors, 'plat', 'duo')}<small>Plat</small></div>
         <span class="duo-vs" aria-hidden="true">vs</span>
-        <div class="duo-half">${Art.cookie(F['chocolat-caramel'].colors, 'epais', 'duo')}<small>Épais</small></div>
-      </div>
+        <div class="duo-half">${Art.cookie(F['chocolat-caramel'].colors, 'epais', 'duo')}<small>Épais</small></div>`;
+    const duoHTML = `<article class="box featured" data-type="box" data-id="duo-textures" id="coffret-duo">
+      <span class="box-ribbon">Le préféré ⭐</span>
+      <div class="box-visual duo">${boxPhoto('duo-textures', `<span style="display:flex;align-items:center;gap:10px">${duoArt}</span>`, duo.name)}</div>
       <div class="box-body">
         <h3>${duo.emoji} ${esc(duo.name)}</h3>
         <p class="box-tagline">${esc(duo.tagline)}</p>
@@ -315,18 +384,20 @@
         <div class="product-foot">
           <p class="price" data-price>${price(duo.sizes[3].price)}</p>
           ${stepperHTML(1)}
-          <button class="btn btn-primary" type="button" data-add>Ajouter</button>
+          ${ADD_BTN}
         </div>
       </div>
       ${SOLDOUT_HTML}
     </article>`;
 
     $('#box-grid').innerHTML = discHTML + duoHTML + sixHTML;
+    // Les photos de coffret couvrent tout le bandeau
+    $$('#box-grid .box-photo').forEach((v) => { v.style.width = 'auto'; v.style.maxWidth = 'none'; v.dataset.imgClass = 'photo-cover'; });
     updateDuoCard($('#coffret-duo'));
   }
 
   function sixArt(texture) {
-    return KC.FLAVORS.slice(0, 5).map((f) => Art.cookie(f.colors, texture, f.id)).join('');
+    return photoSlot(`coffret-six-saveurs-${texture}`, KC.FLAVORS.slice(0, 5).map((f) => Art.cookie(f.colors, texture, f.id)).join(''), 'Coffret 6 saveurs', 'box-photo');
   }
 
   /** Lit les options choisies sur une carte et construit l'article du panier. */
@@ -350,6 +421,38 @@
       const d = KC.describeItem(readCardItem(card), state.today);
       $('[data-price]', card).textContent = price(d.unit);
     } catch (e) { /* sélection incomplète (coffret duo) : on garde l'affichage */ }
+  }
+
+  /** Change la texture affichée sur une carte (visuel + prix). */
+  function applyCardTexture(card, tex, animate) {
+    const radio = $(`input[type="radio"][name^="tex-"][value="${tex}"]`, card);
+    if (!radio) return;
+    radio.checked = true;
+    const art = $('[data-art]', card);
+    if (card.dataset.id === 'six-saveurs') {
+      art.innerHTML = sixArt(tex);
+      const v = $('.box-photo', art); v.style.width = 'auto'; v.style.maxWidth = 'none'; v.dataset.imgClass = 'photo-cover';
+    } else {
+      const p = KC.FLAVOR_BY_ID[card.dataset.id] || KC.SEASONAL_BY_ID[card.dataset.id];
+      const tmp = document.createElement('div');
+      tmp.innerHTML = cookieVisual(p, tex);
+      const fresh = tmp.firstElementChild;
+      if (animate) fresh.classList.add('swap');
+      $('.visual', art).replaceWith(fresh);
+    }
+    hydratePhotos(card);
+    updateCardPrice(card);
+  }
+
+  /** Choix de texture pour toute la carte (switch « Plat / Épais » et boutons « Team ») */
+  function setTexture(tex, opts) {
+    if (!KC.TEXTURES[tex]) return;
+    state.texture = tex;
+    local.set('kc_texture', tex);
+    $$('.texture-switch [data-set-texture]').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.setTexture === tex)));
+    $$('.vs-card').forEach((c) => c.classList.toggle('is-chosen', c.classList.contains('vs-' + tex)));
+    $$('.product, .box[data-id="six-saveurs"]').forEach((card) => applyCardTexture(card, tex, true));
+    if (opts && opts.announce) toast(tex === 'plat' ? 'Team plat croustillant ! Toute la carte passe en plat 🍪' : 'Team épais moelleux ! Toute la carte passe en épais 🍪', 'success');
   }
 
   function updateDuoCard(card) {
@@ -376,25 +479,16 @@
       const card = e.target.closest('.product, .box');
       if (!card) return;
       if (card.dataset.id === 'duo-textures') { updateDuoCard(card); return; }
-      if (e.target.matches('input[type="radio"][name^="tex-"]')) {
-        const tex = e.target.value;
-        const art = $('[data-art]', card);
-        if (card.dataset.id === 'six-saveurs') {
-          art.innerHTML = sixArt(tex);
-        } else {
-          const p = KC.FLAVOR_BY_ID[card.dataset.id] || KC.SEASONAL_BY_ID[card.dataset.id];
-          const svg = $('.cookie-svg', art);
-          const tmp = document.createElement('div');
-          tmp.innerHTML = Art.cookie(p.colors, tex, p.id);
-          const fresh = tmp.firstElementChild;
-          fresh.classList.add('swap');
-          svg.replaceWith(fresh);
-        }
-        updateCardPrice(card);
-      }
+      if (e.target.matches('input[type="radio"][name^="tex-"]')) applyCardTexture(card, e.target.value, true);
     });
 
     document.addEventListener('click', (e) => {
+      const setter = e.target.closest('[data-set-texture]');
+      if (setter) {
+        setTexture(setter.dataset.setTexture, { announce: setter.hasAttribute('data-scroll') });
+        if (setter.hasAttribute('data-scroll')) $('#cookies').scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
       const card = e.target.closest('.product, .box');
       if (!card) return;
       const step = e.target.closest('[data-step]');
@@ -461,7 +555,7 @@
   }
 
   function thumbHTML(line) {
-    if (line.colors) return Art.cookie(line.colors, line.texture, line.item.id);
+    if (line.colors) return photoSlot(`${line.item.id}-${line.texture}`, Art.cookie(line.colors, line.texture, line.item.id), line.name);
     return `<span aria-hidden="true">${line.emoji}</span>`;
   }
 
@@ -517,6 +611,7 @@
           <p class="cart-line-total">${price(l.total)}</p>
         </div>
       </li>`).join('');
+    hydratePhotos(list);
     $('#cart-totals').innerHTML = totalsHTML(t, { estimate: true });
     $('#cart-footer').hidden = false;
   }
@@ -821,7 +916,7 @@
   }
 
   function renderBanner() {
-    $('#top-banner').hidden = state.firstOrderDone || state.bannerDismissed;
+    $$('[data-first-order]').forEach((el) => { el.hidden = state.firstOrderDone; });
   }
 
   function applyTheme(theme) {
@@ -841,11 +936,6 @@
       const next = isDark ? 'light' : 'dark';
       local.set('kc_theme', next);
       applyTheme(next);
-    });
-    $('[data-dismiss-banner]').addEventListener('click', () => {
-      state.bannerDismissed = true;
-      local.set('kc_banner_dismissed', true);
-      renderBanner();
     });
     $('#stock-days').addEventListener('click', (e) => {
       const tab = e.target.closest('[data-day]');
@@ -868,10 +958,13 @@
     bindChrome();
     loadCart();
     renderBanner();
-    renderShowcase();
+    renderHero();
     renderProducts();
     renderBoxes();
     renderSeasonal();
+    setTexture(state.texture);
+    hydratePhotos();
+    hydrateLogos();
     bindCards();
     bindCart();
     bindModals();

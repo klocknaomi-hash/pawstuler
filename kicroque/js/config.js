@@ -21,6 +21,24 @@ window.KC_CONFIG = {
   // Thème : 'light' (clair par défaut) ou 'auto' (suit le réglage du téléphone)
   defaultTheme: 'light',
 
+  // Vos logos : déposez les fichiers à ces adresses, ils remplacent le logo dessiné automatiquement.
+  //   onLight = logo bleu, pour les fonds clairs (en-tête)
+  //   onBlue  = logo crème, pour les fonds bleus (pied de page)
+  // PNG à fond transparent ou SVG. Changez l'extension ici si besoin (.svg, .webp…).
+  logo: {
+    onLight: 'assets/logo/logo-bleu.png',
+    onBlue: 'assets/logo/logo-creme.png',
+  },
+
+  // Vos photos de cookies : déposez-les dans assets/photos/ avec les noms listés
+  // dans assets/photos/LISEZMOI.md (ex. double-chocolat-plat.jpg, double-chocolat-epais.jpg).
+  // Une photo présente remplace l'illustration ; absente, l'illustration reste.
+  photos: {
+    enabled: true,
+    folder: 'assets/photos',
+    extension: 'jpg',
+  },
+
   contactEmail: 'contact@kicroque.fr',
   instagramUrl: 'https://www.instagram.com/kicroque',
   instagramHandle: '@kicroque',

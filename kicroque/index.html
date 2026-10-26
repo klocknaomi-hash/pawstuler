@@ -7,7 +7,7 @@
   <meta name="description" content="Cookies artisanaux faits maison à Paris. 6 saveurs en plat croustillant ou épais moelleux garni, coffrets, recettes de saison. Livrés le jour même par Stuart ou partout en France par Colissimo.">
   <meta name="theme-color" content="#4BA3E3">
   <meta property="og:title" content="KiCroque — Cookies artisanaux">
-  <meta property="og:description" content="Plat croustillant ou épais moelleux ? 6 saveurs, coffrets et recettes de saison. Ventes le vendredi et le samedi.">
+  <meta property="og:description" content="Team plat ou team épais ? 6 saveurs, coffrets et recettes de saison. Ventes le vendredi et le samedi.">
   <meta property="og:type" content="website">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 
@@ -36,210 +36,304 @@
 <body>
   <a class="skip-link" href="#cookies">Aller aux cookies</a>
 
-  <!-- 1. Bannière première commande -->
-  <div class="top-banner" id="top-banner" role="note">
-    <p>Première commande ? <strong>Livraison offerte</strong> 🎉</p>
-    <button class="top-banner-close" type="button" aria-label="Masquer le bandeau" data-dismiss-banner>×</button>
+  <!-- 1. Bandeau défilant (le message « 1re commande » disparaît après la première commande) -->
+  <div class="marquee" id="top-banner" role="note" aria-label="Infos">
+    <div class="marquee-track">
+      <div class="marquee-group">
+        <span data-first-order>🎉 Première commande ? Livraison offerte</span>
+        <span>🛵 Livré le jour même à Paris</span>
+        <span>📦 Colissimo partout en France</span>
+        <span>✨ Gratuit dès 30 €</span>
+        <span>📅 Vendredi & samedi</span>
+      </div>
+      <div class="marquee-group" aria-hidden="true">
+        <span data-first-order>🎉 Première commande ? Livraison offerte</span>
+        <span>🛵 Livré le jour même à Paris</span>
+        <span>📦 Colissimo partout en France</span>
+        <span>✨ Gratuit dès 30 €</span>
+        <span>📅 Vendredi & samedi</span>
+      </div>
+    </div>
   </div>
 
-  <!-- 2. Navigation -->
-  <header class="site-header" id="site-header">
-    <nav class="nav container" aria-label="Navigation principale">
-      <a class="logo" href="#top" aria-label="KiCroque, accueil">
-        <span class="logo-text">kicr<span class="logo-o">o<svg class="logo-cookie" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="currentColor"/><circle cx="8.5" cy="9" r="1.7" class="logo-chip"/><circle cx="14.5" cy="7.8" r="1.3" class="logo-chip"/><circle cx="15.5" cy="14" r="1.8" class="logo-chip"/><circle cx="9.5" cy="15.2" r="1.3" class="logo-chip"/></svg></span>que</span>
-      </a>
-      <ul class="nav-links">
-        <li><a href="#cookies">Cookies</a></li>
-        <li><a href="#coffrets">Coffrets</a></li>
-        <li><a href="#saisons">Saisons</a></li>
-        <li><a href="#livraison">Livraison</a></li>
-      </ul>
-      <div class="nav-actions">
-        <button class="icon-btn" type="button" id="theme-toggle" aria-label="Activer le thème sombre">
-          <span class="theme-icon" aria-hidden="true">🌙</span>
-        </button>
-        <button class="cart-btn" type="button" id="cart-open" aria-label="Ouvrir le panier" aria-controls="cart-drawer" aria-expanded="false">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1.2 11.1a2 2 0 0 1-2 1.9H9.2a2 2 0 0 1-2-1.9L6 7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7V6a3 3 0 0 1 6 0v1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          <span class="cart-btn-label">Panier</span>
-          <span class="cart-count" data-cart-count hidden>0</span>
-        </button>
-      </div>
-    </nav>
-  </header>
+  <div class="page">
+    <!-- 2. Navigation -->
+    <header class="site-header" id="site-header">
+      <nav class="nav" aria-label="Navigation principale">
+        <!-- Logo : remplacé automatiquement par assets/logo/logo-bleu.png s'il existe (voir js/config.js) -->
+        <a class="logo" href="#top" aria-label="KiCroque, accueil" data-logo="onLight">
+          <span class="logo-text">kicr<span class="logo-o">o<svg class="logo-cookie" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="currentColor"/><circle cx="8.5" cy="9" r="1.7" class="logo-chip"/><circle cx="14.5" cy="7.8" r="1.3" class="logo-chip"/><circle cx="15.5" cy="14" r="1.8" class="logo-chip"/><circle cx="9.5" cy="15.2" r="1.3" class="logo-chip"/></svg></span>que</span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="#cookies">Cookies</a></li>
+          <li><a href="#textures">Plat ou épais ?</a></li>
+          <li><a href="#coffrets">Coffrets</a></li>
+          <li><a href="#saisons">Saisons</a></li>
+          <li><a href="#livraison">Livraison</a></li>
+        </ul>
+        <div class="nav-actions">
+          <button class="icon-btn" type="button" id="theme-toggle" aria-label="Activer le thème sombre">
+            <span class="theme-icon" aria-hidden="true">🌙</span>
+          </button>
+          <a class="btn btn-yellow nav-cta" href="#cookies">Commander</a>
+          <button class="cart-btn" type="button" id="cart-open" aria-label="Ouvrir le panier" aria-controls="cart-drawer" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1.2 11.1a2 2 0 0 1-2 1.9H9.2a2 2 0 0 1-2-1.9L6 7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7V6a3 3 0 0 1 6 0v1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <span class="cart-count" data-cart-count hidden>0</span>
+          </button>
+        </div>
+      </nav>
+    </header>
 
-  <main id="top">
-    <!-- 3. Hero -->
-    <section class="hero">
-      <div class="container hero-grid">
-        <div class="hero-copy">
-          <p class="eyebrow">Cookies artisanaux · Paris</p>
-          <h1>Ça croque <span class="hl">ou</span> ça fond ?<br>Pas besoin de choisir.</h1>
-          <p class="hero-lead">6 saveurs gourmandes, chacune en <strong>plat croustillant</strong> ou en <strong>épais moelleux garni</strong>. Cuits le matin, livrés le jour même.</p>
-          <ul class="badges" aria-label="Nos engagements">
-            <li class="badge">🧑‍🍳 Fait maison</li>
-            <li class="badge">🛵 Livré le jour même</li>
-            <li class="badge">📅 Ven + Sam</li>
-          </ul>
+    <main id="top">
+      <!-- 3. Hero -->
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-stage">
+          <h1 class="hero-title" id="hero-title">
+            <span class="ht ht-1">Ça croque</span>
+            <span class="ht ht-2">ou ça fond&nbsp;?</span>
+          </h1>
+          <span class="sticker sticker-pink" style="--r:-8deg">Fait maison</span>
+          <span class="sticker sticker-yellow" style="--r:6deg">Plat croustillant</span>
+          <span class="sticker sticker-green" style="--r:-5deg">Épais moelleux</span>
+          <span class="sparkle sp-1" aria-hidden="true">✦</span>
+          <span class="sparkle sp-2" aria-hidden="true">+</span>
+          <span class="sparkle sp-3" aria-hidden="true">✦</span>
+          <!-- Cookies du hero : remplacés par assets/photos/hero.png (cookies détourés) s'il existe -->
+          <div class="hero-cookies" id="hero-cookies" aria-hidden="true"></div>
+          <a class="spin-badge" href="#cookies" aria-label="Commander">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+              <defs><path id="badge-circle" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0"/></defs>
+              <text><textPath href="#badge-circle" textLength="272" lengthAdjust="spacing">COMMANDER • COMMANDER •</textPath></text>
+            </svg>
+            <span class="spin-arrow" aria-hidden="true">↗</span>
+          </a>
+        </div>
+        <div class="hero-bottom">
+          <p class="hero-lead">Cookies artisanaux faits main à Paris. Chaque saveur existe en <strong>plat croustillant</strong> et en <strong>épais moelleux garni</strong>. Cuits le matin, livrés le jour même.</p>
           <div class="hero-ctas">
-            <a class="btn btn-primary btn-lg" href="#cookies">Choisir mes cookies</a>
-            <a class="btn btn-ghost btn-lg" href="#coffrets">Comparer les textures ⚖️</a>
+            <a class="btn btn-cream btn-lg" href="#cookies">Choisir mes cookies</a>
+            <a class="btn btn-outline-cream btn-lg" href="#textures">Team plat ou team épais ?</a>
           </div>
         </div>
-        <div class="hero-showcase" id="hero-showcase" aria-label="Aperçu de nos cookies"></div>
-      </div>
-    </section>
+        <svg class="scallop" viewBox="0 0 1200 70" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0,70 V34 Q50,0 100,34 Q150,68 200,34 Q250,0 300,34 Q350,68 400,34 Q450,0 500,34 Q550,68 600,34 Q650,0 700,34 Q750,68 800,34 Q850,0 900,34 Q950,68 1000,34 Q1050,0 1100,34 Q1150,68 1200,34 V70 Z"/>
+        </svg>
+      </section>
 
-    <!-- 4. Barre d'infos -->
-    <section class="info-bar" aria-label="Infos livraison">
-      <ul class="container info-list">
-        <li><span aria-hidden="true">🛵</span><div><strong>Stuart</strong><small>Paris & banlieue · 5,90 €</small></div></li>
-        <li><span aria-hidden="true">📦</span><div><strong>Colissimo</strong><small>France entière · 7,50 €</small></div></li>
-        <li><span aria-hidden="true">🎉</span><div><strong>Gratuit dès 30 €</strong><small>Et pour ta 1ʳᵉ commande</small></div></li>
-        <li><span aria-hidden="true">📅</span><div><strong>Ven & Sam</strong><small>8 commandes max / jour</small></div></li>
-      </ul>
-    </section>
+      <!-- 4. Barre d'infos -->
+      <section class="info-bar" aria-label="Infos livraison">
+        <ul class="info-list">
+          <li><span class="info-emoji" aria-hidden="true">🛵</span><div><strong>Stuart</strong><small>Paris & banlieue · 5,90 €</small></div></li>
+          <li><span class="info-emoji" aria-hidden="true">📦</span><div><strong>Colissimo</strong><small>France entière · 7,50 €</small></div></li>
+          <li><span class="info-emoji" aria-hidden="true">🎉</span><div><strong>Gratuit dès 30 €</strong><small>Et pour ta 1ʳᵉ commande</small></div></li>
+          <li><span class="info-emoji" aria-hidden="true">📅</span><div><strong>Ven & Sam</strong><small>8 commandes max / jour</small></div></li>
+        </ul>
+      </section>
 
-    <!-- 5. Jauge de stock -->
-    <section class="section stock-section" id="stock" aria-labelledby="stock-title">
-      <div class="container">
-        <div class="stock-card card">
+      <!-- Le choix de texture : Team Plat vs Team Épais -->
+      <section class="section" id="textures" aria-labelledby="textures-title">
+        <div class="section-head">
+          <p class="eyebrow">Le grand débat</p>
+          <h2 id="textures-title" class="display">Team plat <span class="vs-word">ou</span> team épais&nbsp;?</h2>
+          <p class="muted">Toutes nos saveurs existent dans les deux formats. Choisis ton camp, toute la carte s’adapte.</p>
+        </div>
+        <div class="vs-grid">
+          <article class="vs-card vs-plat">
+            <div class="vs-visual" id="vs-visual-plat"></div>
+            <div class="vs-body">
+              <h3 class="display">Plat croustillant</h3>
+              <p class="vs-price">3,50 € <small>/ pièce</small></p>
+              <ul class="vs-traits">
+                <li>📏 Fin et large</li>
+                <li>🔊 Croque sous la dent</li>
+                <li>🧈 Bords dorés et caramélisés</li>
+                <li>☕ Parfait avec un café</li>
+              </ul>
+              <button class="btn btn-ink btn-lg" type="button" data-set-texture="plat" data-scroll>Je suis team plat</button>
+            </div>
+          </article>
+          <div class="vs-badge" aria-hidden="true">VS</div>
+          <article class="vs-card vs-epais">
+            <div class="vs-visual" id="vs-visual-epais"></div>
+            <div class="vs-body">
+              <h3 class="display">Épais moelleux garni</h3>
+              <p class="vs-price">4,50 € <small>/ pièce</small></p>
+              <ul class="vs-traits">
+                <li>📏 Épais et généreux</li>
+                <li>🫠 Cœur fondant, presque cru</li>
+                <li>🍫 Garni au centre</li>
+                <li>🥛 Parfait avec un verre de lait</li>
+              </ul>
+              <button class="btn btn-ink btn-lg" type="button" data-set-texture="epais" data-scroll>Je suis team épais</button>
+            </div>
+          </article>
+        </div>
+        <p class="vs-undecided">Impossible de choisir ? <a href="#coffret-duo">Le coffret Duo Textures</a> réunit les deux versions de chaque saveur ⚖️</p>
+      </section>
+
+      <!-- 5. Jauge de stock -->
+      <section class="section stock-section" id="stock" aria-labelledby="stock-title">
+        <div class="stock-card">
           <div class="stock-head">
             <div>
-              <h2 id="stock-title">Les créneaux du jour</h2>
-              <p class="muted">On cuit tout à la main : <strong>8 commandes maximum</strong> par jour de vente.</p>
+              <h2 id="stock-title" class="display">Les créneaux du jour</h2>
+              <p>On cuit tout à la main : <strong>8 commandes maximum</strong> par jour de vente.</p>
             </div>
             <div class="stock-days" id="stock-days" role="tablist" aria-label="Jour de livraison"></div>
           </div>
           <div class="stock-gauge" id="stock-gauge" aria-live="polite"></div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- 6. Grille produits -->
-    <section class="section" id="cookies" aria-labelledby="cookies-title">
-      <div class="container">
-        <div class="section-head">
-          <p class="eyebrow">La carte</p>
-          <h2 id="cookies-title">6 saveurs, 2 textures</h2>
-          <p class="muted">Plat croustillant <strong>3,50 €</strong> · Épais moelleux garni <strong>4,50 €</strong></p>
+      <!-- 6. Les cookies -->
+      <section class="section" id="cookies" aria-labelledby="cookies-title">
+        <div class="shop-head">
+          <div>
+            <p class="eyebrow">La carte</p>
+            <h2 id="cookies-title" class="display">Nos cookies cuits<br>chaque matin</h2>
+            <nav class="pills" aria-label="Rayons">
+              <a class="pill pill-blue" href="#cookies">Cookies <b>6</b></a>
+              <a class="pill pill-yellow" href="#coffrets">Coffrets <b>3</b></a>
+              <a class="pill pill-pink" href="#saisons">Saisons <b data-seasonal-count>0</b></a>
+            </nav>
+          </div>
+          <div class="texture-switch-wrap">
+            <p class="switch-label">Texture pour toute la carte</p>
+            <div class="texture-switch" role="radiogroup" aria-label="Texture pour toute la carte">
+              <button type="button" role="radio" data-set-texture="plat" aria-checked="true"><strong>Plat croustillant</strong><small>3,50 €</small></button>
+              <button type="button" role="radio" data-set-texture="epais" aria-checked="false"><strong>Épais moelleux</strong><small>4,50 €</small></button>
+            </div>
+          </div>
         </div>
         <div class="product-grid sellable" id="product-grid"></div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Coffrets -->
-    <section class="section section-alt" id="coffrets" aria-labelledby="coffrets-title">
-      <div class="container">
+      <!-- Coffrets -->
+      <section class="section section-alt" id="coffrets" aria-labelledby="coffrets-title">
         <div class="section-head">
           <p class="eyebrow">À offrir (ou pas)</p>
-          <h2 id="coffrets-title">Les coffrets</h2>
-          <p class="muted">Pour découvrir, pour tout goûter, ou pour trancher enfin le grand débat : plat ou épais ?</p>
+          <h2 id="coffrets-title" class="display">Les coffrets</h2>
+          <p class="muted">Pour découvrir, pour tout goûter, ou pour trancher enfin le grand débat.</p>
         </div>
         <div class="box-grid sellable" id="box-grid"></div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Recettes signature -->
-    <section class="section" id="saisons" aria-labelledby="saisons-title">
-      <div class="container">
+      <!-- Recettes signature -->
+      <section class="section" id="saisons" aria-labelledby="saisons-title">
         <div class="section-head">
           <p class="eyebrow">Recettes signature</p>
-          <h2 id="saisons-title">Au fil des saisons et des fêtes</h2>
+          <h2 id="saisons-title" class="display">Au fil des saisons et des fêtes</h2>
           <p class="muted">Une recette par saison, une édition limitée pour chaque fête. Elles ne restent jamais longtemps.</p>
         </div>
         <div class="product-grid sellable" id="seasonal-grid"></div>
-        <h3 class="calendar-title">Le calendrier gourmand</h3>
+        <h3 class="calendar-title display">Le calendrier gourmand</h3>
         <ol class="calendar" id="seasonal-calendar"></ol>
-      </div>
-    </section>
+      </section>
 
-    <!-- 7. Comment ça marche -->
-    <section class="section section-blue" id="comment" aria-labelledby="comment-title">
-      <div class="container">
-        <div class="section-head on-blue">
+      <!-- L'atelier -->
+      <section class="story" aria-labelledby="story-title">
+        <div class="story-inner">
+          <!-- Photo : assets/photos/atelier.jpg s'il existe -->
+          <div class="story-visual" id="story-visual"></div>
+          <div class="story-copy">
+            <p class="eyebrow">L’atelier</p>
+            <h2 id="story-title" class="display">Deux textures,<br>une seule obsession</h2>
+            <p>Chez KiCroque, on n’a jamais réussi à se mettre d’accord : plutôt fin et croustillant, ou épais et coulant ? Alors on fait les deux, avec la même pâte au beurre, les mêmes bons chocolats et la même patience.</p>
+            <p>Tout est pesé, façonné et cuit à la main, en petites fournées, le matin même de ta livraison. C’est pour ça qu’on s’arrête à 8 commandes par jour.</p>
+            <a class="btn btn-yellow btn-lg" href="#cookies">Goûter la différence</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. Comment ça marche -->
+      <section class="section" id="comment" aria-labelledby="comment-title">
+        <div class="section-head">
           <p class="eyebrow">Simple comme un cookie</p>
-          <h2 id="comment-title">Comment ça marche ?</h2>
+          <h2 id="comment-title" class="display">Comment ça marche ?</h2>
         </div>
         <ol class="steps">
-          <li class="step"><span class="step-num">1</span><span class="step-emoji" aria-hidden="true">🍪</span><h3>Choisis</h3><p>Tes saveurs, ta texture (ou les deux) et tes coffrets.</p></li>
-          <li class="step"><span class="step-num">2</span><span class="step-emoji" aria-hidden="true">📅</span><h3>Réserve</h3><p>Ton créneau du vendredi ou du samedi. 8 commandes par jour, pas une de plus.</p></li>
-          <li class="step"><span class="step-num">3</span><span class="step-emoji" aria-hidden="true">🔥</span><h3>On cuit</h3><p>Le matin même, à la main, avec de vrais ingrédients.</p></li>
-          <li class="step"><span class="step-num">4</span><span class="step-emoji" aria-hidden="true">🛵</span><h3>Tu croques</h3><p>Livré le jour même par Stuart, ou en 48 h partout en France.</p></li>
+          <li class="step" style="--c:var(--blue-soft)"><span class="step-num">1</span><span class="step-emoji" aria-hidden="true">🍪</span><h3>Choisis</h3><p>Tes saveurs, ta texture (ou les deux) et tes coffrets.</p></li>
+          <li class="step" style="--c:var(--yellow-soft)"><span class="step-num">2</span><span class="step-emoji" aria-hidden="true">📅</span><h3>Réserve</h3><p>Ton créneau du vendredi ou du samedi. 8 commandes par jour, pas une de plus.</p></li>
+          <li class="step" style="--c:var(--pink-soft)"><span class="step-num">3</span><span class="step-emoji" aria-hidden="true">🔥</span><h3>On cuit</h3><p>Le matin même, à la main, avec de vrais ingrédients.</p></li>
+          <li class="step" style="--c:var(--green-soft)"><span class="step-num">4</span><span class="step-emoji" aria-hidden="true">🛵</span><h3>Tu croques</h3><p>Livré le jour même par Stuart, ou en 48 h partout en France.</p></li>
         </ol>
-      </div>
-    </section>
+      </section>
 
-    <!-- Livraison -->
-    <section class="section" id="livraison" aria-labelledby="livraison-title">
-      <div class="container">
+      <!-- Livraison -->
+      <section class="section section-alt" id="livraison" aria-labelledby="livraison-title">
         <div class="section-head">
           <p class="eyebrow">Livraison</p>
-          <h2 id="livraison-title">Chez toi, encore tièdes (ou presque)</h2>
+          <h2 id="livraison-title" class="display">Chez toi, encore tièdes<br>(ou presque)</h2>
         </div>
         <div class="delivery-grid">
-          <article class="card delivery-card">
+          <article class="delivery-card">
             <span class="delivery-emoji" aria-hidden="true">🛵</span>
             <h3>Stuart <span class="price-tag">5,90 €</span></h3>
             <p>Paris et petite couronne (75, 92, 93, 94). Un coursier t’apporte tes cookies <strong>le jour même</strong>, le vendredi ou le samedi.</p>
           </article>
-          <article class="card delivery-card">
+          <article class="delivery-card">
             <span class="delivery-emoji" aria-hidden="true">📦</span>
             <h3>Colissimo <span class="price-tag">7,50 €</span></h3>
             <p>Partout en France métropolitaine. Expédié le jour choisi dans un emballage qui protège le croustillant, <strong>livré en 48 h</strong>.</p>
           </article>
-          <article class="card delivery-card highlight">
+          <article class="delivery-card highlight">
             <span class="delivery-emoji" aria-hidden="true">🎉</span>
             <h3>Offerte</h3>
             <p>Automatiquement <strong>dès 30 € d’achat</strong>, et pour <strong>ta toute première commande</strong>, quel que soit le montant.</p>
           </article>
         </div>
-        <p class="fine-print">Commande pour le jour même possible jusqu’à midi. Au-delà, réserve le prochain vendredi ou samedi. Allergènes : tous nos cookies contiennent gluten, lait et œufs ; le détail est indiqué sur chaque fiche.</p>
-      </div>
-    </section>
-  </main>
+        <p class="fine-print center">Commande pour le jour même possible jusqu’à midi. Au-delà, réserve le prochain vendredi ou samedi. Allergènes : tous nos cookies contiennent gluten, lait et œufs ; le détail est indiqué sur chaque fiche.</p>
+      </section>
+    </main>
 
-  <!-- 8. Footer -->
-  <footer class="site-footer">
-    <div class="container footer-grid">
-      <div>
-        <a class="logo logo-cream" href="#top" aria-label="KiCroque, retour en haut">
-          <span class="logo-text">kicr<span class="logo-o">o<svg class="logo-cookie" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="currentColor"/><circle cx="8.5" cy="9" r="1.7" class="logo-chip"/><circle cx="14.5" cy="7.8" r="1.3" class="logo-chip"/><circle cx="15.5" cy="14" r="1.8" class="logo-chip"/><circle cx="9.5" cy="15.2" r="1.3" class="logo-chip"/></svg></span>que</span>
-        </a>
-        <p class="footer-tagline">Cookies artisanaux, plat ou épais. Faits main, avec amour et beaucoup de beurre.</p>
+    <!-- 8. Footer -->
+    <footer class="site-footer">
+      <div class="footer-cta">
+        <h2 class="display">Une petite faim&nbsp;?</h2>
+        <a class="btn btn-yellow btn-lg" href="#cookies">Commander mes cookies</a>
       </div>
-      <nav aria-label="Liens du pied de page">
-        <h3>Explorer</h3>
-        <ul>
-          <li><a href="#cookies">Nos cookies</a></li>
-          <li><a href="#coffrets">Coffrets</a></li>
-          <li><a href="#saisons">Recettes de saison</a></li>
-          <li><a href="#livraison">Livraison</a></li>
-        </ul>
-      </nav>
-      <div>
-        <h3>Contact</h3>
-        <ul>
-          <li><a data-contact-email href="mailto:contact@kicroque.fr">contact@kicroque.fr</a></li>
-          <li><a data-instagram href="https://www.instagram.com/kicroque" target="_blank" rel="noopener">Instagram @kicroque</a></li>
-        </ul>
+      <div class="footer-grid">
+        <div>
+          <!-- Logo crème : remplacé automatiquement par assets/logo/logo-creme.png s'il existe -->
+          <a class="logo logo-cream" href="#top" aria-label="KiCroque, retour en haut" data-logo="onBlue">
+            <span class="logo-text">kicr<span class="logo-o">o<svg class="logo-cookie" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="currentColor"/><circle cx="8.5" cy="9" r="1.7" class="logo-chip"/><circle cx="14.5" cy="7.8" r="1.3" class="logo-chip"/><circle cx="15.5" cy="14" r="1.8" class="logo-chip"/><circle cx="9.5" cy="15.2" r="1.3" class="logo-chip"/></svg></span>que</span>
+          </a>
+          <p class="footer-tagline">Cookies artisanaux, plat ou épais. Faits main à Paris, avec beaucoup de beurre et un peu de folie.</p>
+        </div>
+        <nav aria-label="Liens du pied de page">
+          <h3>Explorer</h3>
+          <ul>
+            <li><a href="#cookies">Nos cookies</a></li>
+            <li><a href="#coffrets">Coffrets</a></li>
+            <li><a href="#saisons">Recettes de saison</a></li>
+            <li><a href="#livraison">Livraison</a></li>
+          </ul>
+        </nav>
+        <div>
+          <h3>Contact</h3>
+          <ul>
+            <li><a data-contact-email href="mailto:contact@kicroque.fr">contact@kicroque.fr</a></li>
+            <li><a data-instagram href="https://www.instagram.com/kicroque" target="_blank" rel="noopener">Instagram @kicroque</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Infos</h3>
+          <ul>
+            <li><a href="mentions-legales.html">Mentions légales</a></li>
+            <li><a href="mentions-legales.html#cgv">Conditions générales de vente</a></li>
+            <li><a href="mentions-legales.html#allergenes">Allergènes</a></li>
+          </ul>
+        </div>
       </div>
-      <div>
-        <h3>Infos</h3>
-        <ul>
-          <li><a href="mentions-legales.html">Mentions légales</a></li>
-          <li><a href="mentions-legales.html#cgv">Conditions générales de vente</a></li>
-          <li><a href="mentions-legales.html#allergenes">Allergènes</a></li>
-        </ul>
-      </div>
-    </div>
-    <p class="container footer-bottom">© <span data-year>2026</span> KiCroque · Fait avec 🍪 à Paris</p>
-  </footer>
+      <p class="footer-bottom">© <span data-year>2026</span> KiCroque · Fait avec 🍪 à Paris</p>
+    </footer>
+  </div>
 
   <!-- Panier latéral -->
   <div class="overlay" data-overlay="cart" hidden></div>
   <aside class="drawer" id="cart-drawer" aria-labelledby="cart-title" aria-hidden="true" tabindex="-1">
     <div class="drawer-head">
-      <h2 id="cart-title">Ton panier</h2>
+      <h2 id="cart-title" class="display">Ton panier</h2>
       <button class="icon-btn" type="button" data-close-cart aria-label="Fermer le panier">×</button>
     </div>
     <div class="free-progress" id="free-progress"></div>
@@ -256,7 +350,7 @@
     <div class="modal-backdrop" data-close-modal></div>
     <div class="modal-panel modal-lg">
       <div class="modal-head">
-        <h2 id="checkout-title">Finaliser ma commande</h2>
+        <h2 id="checkout-title" class="display">Finaliser ma commande</h2>
         <button class="icon-btn" type="button" data-close-modal aria-label="Fermer">×</button>
       </div>
 
@@ -296,7 +390,7 @@
           </fieldset>
         </div>
 
-        <aside class="checkout-summary card">
+        <aside class="checkout-summary">
           <h3>Récapitulatif</h3>
           <ul class="summary-lines" id="summary-lines"></ul>
           <dl class="totals" id="summary-totals"></dl>
@@ -319,7 +413,7 @@
     <div class="modal-panel confirm-panel">
       <div class="confetti" aria-hidden="true"></div>
       <div class="confirm-icon" aria-hidden="true">🍪</div>
-      <h2 id="confirm-title">Merci !</h2>
+      <h2 id="confirm-title" class="display">Merci !</h2>
       <p class="muted" id="confirm-text">Ta commande est confirmée.</p>
       <p class="order-number" id="confirm-number">KC-XXXXX</p>
       <dl class="confirm-details" id="confirm-details"></dl>

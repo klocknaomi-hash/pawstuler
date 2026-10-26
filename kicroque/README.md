@@ -35,6 +35,25 @@ Tout est dans `js/shared.js` : `TEXTURES` (3,50 € / 4,50 €), `FLAVORS`, `BOX
 commande le jour même avant midi, gratuit dès 30 €). Les recettes de saison et d'événement s'affichent
 et disparaissent toutes seules selon leurs dates (Pâques est calculée chaque année).
 
+## Vos logos et vos photos
+
+Pas besoin de toucher au code : déposez les fichiers, ils remplacent automatiquement les illustrations.
+
+- **Logos** → `assets/logo/logo-bleu.png` (en-tête, fond clair) et `assets/logo/logo-creme.png` (pied de page,
+  fond bleu nuit). Détails dans `assets/logo/LISEZMOI.md`.
+- **Photos des cookies, dans les deux formats** → `assets/photos/`, par exemple `double-chocolat-plat.jpg` et
+  `double-chocolat-epais.jpg`. La liste complète des noms (saveurs, recettes de saison, coffrets, haut de page,
+  duel des textures, atelier) est dans `assets/photos/LISEZMOI.md`.
+
+Tant qu'un fichier manque, l'illustration dessinée reste à sa place.
+
+## Le choix de texture
+
+- Section **« Team plat ou team épais ? »** : les deux formats côte à côte ; « Je suis team plat / épais » passe
+  toute la carte dans ce format.
+- Le **sélecteur « Texture pour toute la carte »** au-dessus des cookies fait la même chose.
+- Chaque carte garde son propre choix plat / épais, et le prix suit. Le choix est mémorisé pour la visite suivante.
+
 ## Mise en production
 
 1. **Vercel** : importer le dépôt, *Root Directory* = `kicroque`. Rien à compiler.
