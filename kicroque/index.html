@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>KiCroque — Cookies artisanaux, plat croustillant ou épais moelleux</title>
+  <meta name="description" content="Cookies artisanaux faits maison à Paris. 6 saveurs en plat croustillant ou épais moelleux garni, coffrets, recettes de saison. Livrés le jour même par Stuart ou partout en France par Colissimo.">
+  <meta name="theme-color" content="#4BA3E3">
+  <meta property="og:title" content="KiCroque — Cookies artisanaux">
+  <meta property="og:description" content="Plat croustillant ou épais moelleux ? 6 saveurs, coffrets et recettes de saison. Ventes le vendredi et le samedi.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+
+  <!-- Thème appliqué avant l'affichage (évite un flash) -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('kc_theme');
+        if (saved) document.documentElement.setAttribute('data-theme', JSON.parse(saved));
+      } catch (e) {}
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Stripe.js doit être chargé depuis js.stripe.com (exigence Stripe) -->
+  <script src="https://js.stripe.com/v3/" async></script>
+  <script src="js/config.js"></script>
+  <script src="js/shared.js"></script>
+  <script src="js/cookies-svg.js"></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#cookies">Aller aux cookies</a>
+
+  <!-- 1. Bannière première commande -->
+  <div class="top-banner" id="top-banner" role="note">
+    <p>Première commande ? <strong>Livraison offerte</strong> 🎉</p>
+    <button class="top-banner-close" type="button" aria-label="Masquer le bandeau" data-dismiss-banner>×</button>
+  </div>
+
+  <!-- 2. Navigation -->
+  <header class="site-header" id="site-header">
+    <nav class="nav container" aria-label="Navigation principale">
+      <a class="logo" href="#top" aria-label="KiCroque, accueil">
+        <span class="logo-text">kicr<span class="logo-o">o<svg class="logo-cookie" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="currentColor"/><circle cx="8.5" cy="9" r="1.7" class="logo-chip"/><circle cx="14.5" cy="7.8" r="1.3" class="logo-chip"/><circle cx="15.5" cy="14" r="1.8" class="logo-chip"/><circle cx="9.5" cy="15.2" r="1.3" class="logo-chip"/></svg></span>que</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#cookies">Cookies</a></li>
+        <li><a href="#coffrets">Coffrets</a></li>
+        <li><a href="#saisons">Saisons</a></li>
+        <li><a href="#livraison">Livraison</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="icon-btn" type="button" id="theme-toggle" aria-label="Activer le thème sombre">
+          <span class="theme-icon" aria-hidden="true">🌙</span>
+        </button>
+        <button class="cart-btn" type="button" id="cart-open" aria-label="Ouvrir le panier" aria-controls="cart-drawer" aria-expanded="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1.2 11.1a2 2 0 0 1-2 1.9H9.2a2 2 0 0 1-2-1.9L6 7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7V6a3 3 0 0 1 6 0v1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <span class="cart-btn-label">Panier</span>
+          <span class="cart-count" data-cart-count hidden>0</span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="top">
+    <!-- 3. Hero -->
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Cookies artisanaux · Paris</p>
+          <h1>Ça croque <span class="hl">ou</span> ça fond ?<br>Pas besoin de choisir.</h1>
+          <p class="hero-lead">6 saveurs gourmandes, chacune en <strong>plat croustillant</strong> ou en <strong>épais moelleux garni</strong>. Cuits le matin, livrés le jour même.</p>
+          <ul class="badges" aria-label="Nos engagements">
+            <li class="badge">🧑‍🍳 Fait maison</li>
+            <li class="badge">🛵 Livré le jour même</li>
+            <li class="badge">📅 Ven + Sam</li>
+          </ul>
+          <div class="hero-ctas">
+            <a class="btn btn-primary btn-lg" href="#cookies">Choisir mes cookies</a>
+            <a class="btn btn-ghost btn-lg" href="#coffrets">Comparer les textures ⚖️</a>
+          </div>
+        </div>
+        <div class="hero-showcase" id="hero-showcase" aria-label="Aperçu de nos cookies"></div>
+      </div>
+    </section>
+
+    <!-- 4. Barre d'infos -->
+    <section class="info-bar" aria-label="Infos livraison">
+      <ul class="container info-list">
+        <li><span aria-hidden="true">🛵</span><div><strong>Stuart</strong><small>Paris & banlieue · 5,90 €</small></div></li>
+        <li><span aria-hidden="true">📦</span><div><strong>Colissimo</strong><small>France entière · 7,50 €</small></div></li>
+        <li><span aria-hidden="true">🎉</span><div><strong>Gratuit dès 30 €</strong><small>Et pour ta 1ʳᵉ commande</small></div></li>
+        <li><span aria-hidden="true">📅</span><div><strong>Ven & Sam</strong><small>8 commandes max / jour</small></div></li>
+      </ul>
+    </section>
+
+    <!-- 5. Jauge de stock -->
+    <section class="section stock-section" id="stock" aria-labelledby="stock-title">
+      <div class="container">
+        <div class="stock-card card">
+          <div class="stock-head">
+            <div>
+              <h2 id="stock-title">Les créneaux du jour</h2>
+              <p class="muted">On cuit tout à la main : <strong>8 commandes maximum</strong> par jour de vente.</p>
+            </div>
+            <div class="stock-days" id="stock-days" role="tablist" aria-label="Jour de livraison"></div>
+          </div>
+          <div class="stock-gauge" id="stock-gauge" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Grille produits -->
+    <section class="section" id="cookies" aria-labelledby="cookies-title">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">La carte</p>
+          <h2 id="cookies-title">6 saveurs, 2 textures</h2>
+          <p class="muted">Plat croustillant <strong>3,50 €</strong> · Épais moelleux garni <strong>4,50 €</strong></p>
+        </div>
+        <div class="product-grid sellable" id="product-grid"></div>
+      </div>
+    </section>
+
+    <!-- Coffrets -->
+    <section class="section section-alt" id="coffrets" aria-labelledby="coffrets-title">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">À offrir (ou pas)</p>
+          <h2 id="coffrets-title">Les coffrets</h2>
+          <p class="muted">Pour découvrir, pour tout goûter, ou pour trancher enfin le grand débat : plat ou épais ?</p>
+        </div>
+        <div class="box-grid sellable" id="box-grid"></div>
+      </div>
+    </section>
+
+    <!-- Recettes signature -->
+    <section class="section" id="saisons" aria-labelledby="saisons-title">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">Recettes signature</p>
+          <h2 id="saisons-title">Au fil des saisons et des fêtes</h2>
+          <p class="muted">Une recette par saison, une édition limitée pour chaque fête. Elles ne restent jamais longtemps.</p>
+        </div>
+        <div class="product-grid sellable" id="seasonal-grid"></div>
+        <h3 class="calendar-title">Le calendrier gourmand</h3>
+        <ol class="calendar" id="seasonal-calendar"></ol>
+      </div>
+    </section>
+
+    <!-- 7. Comment ça marche -->
+    <section class="section section-blue" id="comment" aria-labelledby="comment-title">
+      <div class="container">
+        <div class="section-head on-blue">
+          <p class="eyebrow">Simple comme un cookie</p>
+          <h2 id="comment-title">Comment ça marche ?</h2>
+        </div>
+        <ol class="steps">
+          <li class="step"><span class="step-num">1</span><span class="step-emoji" aria-hidden="true">🍪</span><h3>Choisis</h3><p>Tes saveurs, ta texture (ou les deux) et tes coffrets.</p></li>
+          <li class="step"><span class="step-num">2</span><span class="step-emoji" aria-hidden="true">📅</span><h3>Réserve</h3><p>Ton créneau du vendredi ou du samedi. 8 commandes par jour, pas une de plus.</p></li>
+          <li class="step"><span class="step-num">3</span><span class="step-emoji" aria-hidden="true">🔥</span><h3>On cuit</h3><p>Le matin même, à la main, avec de vrais ingrédients.</p></li>
+          <li class="step"><span class="step-num">4</span><span class="step-emoji" aria-hidden="true">🛵</span><h3>Tu croques</h3><p>Livré le jour même par Stuart, ou en 48 h partout en France.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Livraison -->
+    <section class="section" id="livraison" aria-labelledby="livraison-title">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">Livraison</p>
+          <h2 id="livraison-title">Chez toi, encore tièdes (ou presque)</h2>
+        </div>
+        <div class="delivery-grid">
+          <article class="card delivery-card">
+            <span class="delivery-emoji" aria-hidden="true">🛵</span>
+            <h3>Stuart <span class="price-tag">5,90 €</span></h3>
+            <p>Paris et petite couronne (75, 92, 93, 94). Un coursier t’apporte tes cookies <strong>le jour même</strong>, le vendredi ou le samedi.</p>
+          </article>
+          <article class="card delivery-card">
+            <span class="delivery-emoji" aria-hidden="true">📦</span>
+            <h3>Colissimo <span class="price-tag">7,50 €</span></h3>
+            <p>Partout en France métropolitaine. Expédié le jour choisi dans un emballage qui protège le croustillant, <strong>livré en 48 h</strong>.</p>
+          </article>
+          <article class="card delivery-card highlight">
+            <span class="delivery-emoji" aria-hidden="true">🎉</span>
+            <h3>Offerte</h3>
+            <p>Automatiquement <strong>dès 30 € d’achat</strong>, et pour <strong>ta toute première commande</strong>, quel que soit le montant.</p>
+          </article>
+        </div>
+        <p class="fine-print">Commande pour le jour même possible jusqu’à midi. Au-delà, réserve le prochain vendredi ou samedi. Allergènes : tous nos cookies contiennent gluten, lait et œufs ; le détail est indiqué sur chaque fiche.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- 8. Footer -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <a class="logo logo-cream" href="#top" aria-label="KiCroque, retour en haut">
+          <span class="logo-text">kicr<span class="logo-o">o<svg class="logo-cookie" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="currentColor"/><circle cx="8.5" cy="9" r="1.7" class="logo-chip"/><circle cx="14.5" cy="7.8" r="1.3" class="logo-chip"/><circle cx="15.5" cy="14" r="1.8" class="logo-chip"/><circle cx="9.5" cy="15.2" r="1.3" class="logo-chip"/></svg></span>que</span>
+        </a>
+        <p class="footer-tagline">Cookies artisanaux, plat ou épais. Faits main, avec amour et beaucoup de beurre.</p>
+      </div>
+      <nav aria-label="Liens du pied de page">
+        <h3>Explorer</h3>
+        <ul>
+          <li><a href="#cookies">Nos cookies</a></li>
+          <li><a href="#coffrets">Coffrets</a></li>
+          <li><a href="#saisons">Recettes de saison</a></li>
+          <li><a href="#livraison">Livraison</a></li>
+        </ul>
+      </nav>
+      <div>
+        <h3>Contact</h3>
+        <ul>
+          <li><a data-contact-email href="mailto:contact@kicroque.fr">contact@kicroque.fr</a></li>
+          <li><a data-instagram href="https://www.instagram.com/kicroque" target="_blank" rel="noopener">Instagram @kicroque</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Infos</h3>
+        <ul>
+          <li><a href="mentions-legales.html">Mentions légales</a></li>
+          <li><a href="mentions-legales.html#cgv">Conditions générales de vente</a></li>
+          <li><a href="mentions-legales.html#allergenes">Allergènes</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="container footer-bottom">© <span data-year>2026</span> KiCroque · Fait avec 🍪 à Paris</p>
+  </footer>
+
+  <!-- Panier latéral -->
+  <div class="overlay" data-overlay="cart" hidden></div>
+  <aside class="drawer" id="cart-drawer" aria-labelledby="cart-title" aria-hidden="true" tabindex="-1">
+    <div class="drawer-head">
+      <h2 id="cart-title">Ton panier</h2>
+      <button class="icon-btn" type="button" data-close-cart aria-label="Fermer le panier">×</button>
+    </div>
+    <div class="free-progress" id="free-progress"></div>
+    <ul class="cart-items" id="cart-items"></ul>
+    <div class="drawer-foot" id="cart-footer" hidden>
+      <dl class="totals" id="cart-totals"></dl>
+      <button class="btn btn-primary btn-lg btn-block" type="button" id="checkout-open">Commander</button>
+      <p class="fine-print center">Paiement sécurisé par Stripe 🔒</p>
+    </div>
+  </aside>
+
+  <!-- Modale de commande -->
+  <div class="modal" id="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title" hidden>
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-panel modal-lg">
+      <div class="modal-head">
+        <h2 id="checkout-title">Finaliser ma commande</h2>
+        <button class="icon-btn" type="button" data-close-modal aria-label="Fermer">×</button>
+      </div>
+
+      <form id="checkout-form" class="checkout-grid" novalidate>
+        <div class="checkout-fields">
+          <fieldset class="form-block">
+            <legend>📅 Jour de livraison</legend>
+            <div class="choice-list" id="checkout-days"></div>
+          </fieldset>
+
+          <fieldset class="form-block">
+            <legend>🙋 Tes coordonnées</legend>
+            <div class="field-row">
+              <label class="field"><span>Prénom</span><input name="firstName" autocomplete="given-name" required></label>
+              <label class="field"><span>Nom</span><input name="lastName" autocomplete="family-name" required></label>
+            </div>
+            <div class="field-row">
+              <label class="field"><span>E-mail</span><input name="email" type="email" autocomplete="email" inputmode="email" required></label>
+              <label class="field"><span>Téléphone</span><input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="06 12 34 56 78" required></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="form-block">
+            <legend>🏠 Adresse de livraison</legend>
+            <label class="field"><span>Adresse</span><input name="address" autocomplete="address-line1" placeholder="12 rue des Cookies" required></label>
+            <label class="field"><span>Complément <em>(facultatif)</em></span><input name="address2" autocomplete="address-line2" placeholder="Bât., étage, digicode…"></label>
+            <div class="field-row">
+              <label class="field field-sm"><span>Code postal</span><input name="postcode" autocomplete="postal-code" inputmode="numeric" maxlength="5" required></label>
+              <label class="field"><span>Ville</span><input name="city" autocomplete="address-level2" required></label>
+            </div>
+            <label class="field"><span>Un mot pour nous ? <em>(facultatif)</em></span><textarea name="notes" rows="2" maxlength="300" placeholder="Allergie, message cadeau, instructions pour le coursier…"></textarea></label>
+          </fieldset>
+
+          <fieldset class="form-block">
+            <legend>🚚 Mode de livraison</legend>
+            <div class="choice-list" id="checkout-shipping"></div>
+          </fieldset>
+        </div>
+
+        <aside class="checkout-summary card">
+          <h3>Récapitulatif</h3>
+          <ul class="summary-lines" id="summary-lines"></ul>
+          <dl class="totals" id="summary-totals"></dl>
+          <button class="btn btn-primary btn-lg btn-block" type="submit" id="pay-btn">Payer</button>
+          <p class="fine-print center" id="pay-note">Paiement sécurisé par Stripe 🔒</p>
+        </aside>
+      </form>
+
+      <!-- Étape paiement Stripe (Embedded Checkout) -->
+      <div class="stripe-step" id="stripe-step" hidden>
+        <button class="link-btn" type="button" id="stripe-back">← Modifier ma commande</button>
+        <div id="stripe-checkout"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modale de confirmation -->
+  <div class="modal" id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title" hidden>
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-panel confirm-panel">
+      <div class="confetti" aria-hidden="true"></div>
+      <div class="confirm-icon" aria-hidden="true">🍪</div>
+      <h2 id="confirm-title">Merci !</h2>
+      <p class="muted" id="confirm-text">Ta commande est confirmée.</p>
+      <p class="order-number" id="confirm-number">KC-XXXXX</p>
+      <dl class="confirm-details" id="confirm-details"></dl>
+      <p class="fine-print center">Un e-mail de confirmation est en route. Garde ton numéro de commande sous le coude !</p>
+      <button class="btn btn-primary btn-lg" type="button" data-close-modal>Super, j’ai hâte !</button>
+    </div>
+  </div>
+
+  <!-- Toasts -->
+  <div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
+</body>
+</html>

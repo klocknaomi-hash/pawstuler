@@ -1,0 +1,14 @@
+{
+  "name": "kicroque",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Site e-commerce KiCroque : cookies artisanaux (HTML/CSS/JS + fonctions Vercel pour Stripe et Resend)",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "dev": "vercel dev",
+    "check": "node --check js/shared.js && node --check js/app.js && node --check js/cookies-svg.js && for f in api/*.js api/_lib/*.js; do node --check \"$f\" || exit 1; done"
+  },
+  "dependencies": {
+    "stripe": "^17.0.0"
+  }
+}
