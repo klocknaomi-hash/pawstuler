@@ -177,6 +177,14 @@
       prices: { plat: 19, epais: 24 },
     },
     {
+      // Box signature : 4 cookies de la recette de saison ou d'événement (2 plats + 2 épais).
+      // La recette est choisie automatiquement (voir featuredSignature).
+      id: 'signature', name: 'Box signature', emoji: '✨',
+      tagline: 'L’édition du moment',
+      desc: '4 cookies de la recette signature, 2 plats croustillants et 2 épais moelleux.',
+      price: 17,
+    },
+    {
       id: 'duo-textures', name: 'Coffret Duo Textures', emoji: '⚖️', featured: true,
       tagline: 'Le match : plat vs épais',
       desc: 'Chaque saveur en version plat croustillant ET épais moelleux. Goûtez, comparez, votez !',
@@ -250,6 +258,25 @@
   }
 
   function isSeasonalActive(item, iso) { return seasonalPeriod(item, iso).active; }
+
+  /**
+   * Recette mise en avant dans la « Box signature » :
+   *   1. l'événement en cours (sauf s'il se termine dans moins de 7 jours et qu'un autre arrive),
+   *   2. sinon le prochain événement s'il commence dans moins de 45 jours (ex. Noël annoncé dès fin octobre),
+   *   3. sinon la recette de saison.
+   * Retourne { recipe, period, available } — available = commandable aujourd'hui.
+   */
+  function featuredSignature(iso) {
+    const withPeriod = SEASONAL.map((s) => ({ recipe: s, period: seasonalPeriod(s, iso) }));
+    const upcoming = withPeriod
+      .filter((x) => x.recipe.kind === 'event' && !x.period.active && x.period.start <= addDays(iso, 45))
+      .sort((a, b) => (a.period.start < b.period.start ? -1 : 1))[0];
+    const activeEvent = withPeriod.find((x) => x.recipe.kind === 'event' && x.period.active);
+    const season = withPeriod.find((x) => x.recipe.kind === 'season' && x.period.active);
+    const endingSoon = activeEvent && activeEvent.period.end < addDays(iso, 7);
+    const pick = (activeEvent && !(endingSoon && upcoming)) ? activeEvent : (upcoming || activeEvent || season);
+    return pick ? Object.assign({ available: pick.period.active }, pick) : null;
+  }
   function activeSeasonal(iso) { return SEASONAL.filter((s) => isSeasonalActive(s, iso)); }
   /** La recette de SAISON (pas événement) active, utilisée dans le coffret Découverte */
   function currentSeasonRecipe(iso) { return SEASONAL.find((s) => s.kind === 'season' && isSeasonalActive(s, iso)) || null; }
@@ -282,7 +309,7 @@
 
   /** Clé unique d'une ligne de panier (même produit + mêmes options = même ligne) */
   function lineKey(item) {
-    return [item.type, item.id, item.texture || '', item.size || '', (item.flavors || []).slice().sort().join('+')].join('|');
+    return [item.type, item.id, item.texture || '', item.size || '', (item.flavors || []).slice().sort().join('+'), item.recipe || ''].join('|');
   }
 
   /**
@@ -325,6 +352,17 @@
           item: { type: 'box', id: b.id },
           name: b.name, emoji: b.emoji, unit: b.price, box: true,
           detail: `4 cookies · ${b.contents.map((c) => (c.flavor === 'saison' ? (season ? season.name : 'Recette du moment') : FLAVOR_BY_ID[c.flavor].name)).join(', ')}`,
+        };
+      }
+
+      if (b.id === 'signature') {
+        const s = SEASONAL_BY_ID[item.recipe];
+        if (!s) throw userError('Recette inconnue.');
+        if (!isSeasonalActive(s, iso)) throw userError(`La box ${s.label} n’est pas encore disponible.`);
+        return {
+          item: { type: 'box', id: b.id, recipe: s.id },
+          name: `Box signature ${s.label}`, emoji: s.emoji, unit: b.price, box: true,
+          detail: `4 cookies ${s.name} · 2 plats + 2 épais`, colors: s.colors,
         };
       }
 
@@ -451,7 +489,7 @@
     TIMEZONE, RULES, TEXTURES, SHIPPING, FLAVORS, SEASONAL, SEASONAL_PRICES, BOXES,
     FLAVOR_BY_ID, SEASONAL_BY_ID, BOX_BY_ID,
     parisParts, addDays, weekdayOf, formatDateFr, easterDate,
-    seasonalPeriod, isSeasonalActive, activeSeasonal, currentSeasonRecipe, getDeliveryDays,
+    seasonalPeriod, isSeasonalActive, activeSeasonal, featuredSignature, currentSeasonRecipe, getDeliveryDays,
     lineKey, describeItem, computeTotals, isStuartEligible, validateCustomer,
     formatPrice, generateOrderNumber, round2,
   };

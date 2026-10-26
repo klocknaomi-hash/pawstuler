@@ -41,6 +41,11 @@ async function command(args) {
     }
     case 'INCR': { const v = Number(memory.get(key) || 0) + 1; memory.set(key, String(v)); return v; }
     case 'EXPIRE': return 1;
+    case 'SADD': {
+      const set = new Set(JSON.parse(memory.get(key) || '[]'));
+      const before = set.size; rest.forEach((v) => set.add(v));
+      memory.set(key, JSON.stringify([...set])); return set.size - before;
+    }
     default: throw new Error('Commande non gérée en mémoire : ' + cmd);
   }
 }
@@ -63,7 +68,10 @@ module.exports = {
     if (ttl) await command(['EXPIRE', key, String(ttl)]);
     return Number(v);
   },
+  /** Ajoute une valeur à un ensemble ; renvoie true si elle n'y était pas déjà. */
+  async sadd(key, value) { return Number(await command(['SADD', key, value])) === 1; },
   keys: {
+    newsletter: 'kc:newsletter',
     ordersOfDay: (iso) => `kc:orders:${iso}`,
     customer: (email) => `kc:customer:${String(email).toLowerCase()}`,
     order: (number) => `kc:order:${number}`,

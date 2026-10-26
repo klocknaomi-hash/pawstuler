@@ -18,18 +18,6 @@ window.KC_CONFIG = {
   // true = toujours démo, false = jamais démo.
   demoMode: 'auto',
 
-  // Thème : 'light' (clair par défaut) ou 'auto' (suit le réglage du téléphone)
-  defaultTheme: 'light',
-
-  // Vos logos : déposez les fichiers à ces adresses, ils remplacent le logo dessiné automatiquement.
-  //   onLight = logo bleu, pour les fonds clairs (en-tête)
-  //   onBlue  = logo crème, pour les fonds bleus (pied de page)
-  // PNG à fond transparent ou SVG. Changez l'extension ici si besoin (.svg, .webp…).
-  logo: {
-    onLight: 'assets/logo/logo-bleu.png',
-    onBlue: 'assets/logo/logo-creme.png',
-  },
-
   // Vos photos de cookies : déposez-les dans assets/photos/ avec les noms listés
   // dans assets/photos/LISEZMOI.md (ex. double-chocolat-plat.jpg, double-chocolat-epais.jpg).
   // Une photo présente remplace l'illustration ; absente, l'illustration reste.
@@ -38,6 +26,16 @@ window.KC_CONFIG = {
     folder: 'assets/photos',
     extension: 'jpg',
   },
+
+  // Avis clients et vidéos UGC (section « Ils ont croqué »), dans l'ordre d'affichage.
+  // Déposez les vidéos dans assets/videos/ (MP4 vertical, 9:16, moins de 8 Mo) et
+  // une image d'aperçu (poster) dans assets/photos/. Tant que la liste est vide,
+  // la section invite les clients à partager leur vidéo.
+  // N'ajoutez que de vrais avis, avec l'accord de la personne.
+  reviews: [
+    // { type: 'video', src: 'assets/videos/avis-1.mp4', poster: 'assets/photos/avis-1.jpg', handle: '@prenom' },
+    // { type: 'quote', text: 'Le Pistache Gianduja épais, c’est une dinguerie.', author: 'Prénom N.' },
+  ],
 
   contactEmail: 'contact@kicroque.fr',
   instagramUrl: 'https://www.instagram.com/kicroque',

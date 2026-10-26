@@ -1,11 +1,9 @@
 # Logos KiCroque
 
-Déposez ici vos deux logos (fond transparent, sans contour blanc) :
-
 | Fichier | Utilisé où |
 |---|---|
-| `logo-bleu.png` | En-tête du site (logo bleu sur fond clair) |
-| `logo-creme.png` | Pied de page (logo crème sur fond bleu nuit) |
+| `logo-bleu.png` | En-tête du site et page des mentions légales (fond blanc) |
+| `logo-creme.png` | Pied de page (fond bleu) |
 
-Ils remplacent automatiquement le logo dessiné. Format SVG ou WebP ? Changez simplement
-l'extension dans `js/config.js` (rubrique `logo`). Hauteur conseillée : au moins 200 px.
+Ils ont été détourés (fond transparent) et recadrés à partir de vos fichiers carrés.
+Pour les remplacer, gardez les mêmes noms de fichiers.

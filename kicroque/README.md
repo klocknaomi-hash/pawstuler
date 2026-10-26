@@ -21,12 +21,12 @@ d'hiver, etc.). Ça ne marche qu'en démo.
 | Fichier | Rôle |
 |---|---|
 | `index.html` | La page (bannière, nav, hero, infos, jauge, cookies, coffrets, saisons, étapes, livraison, footer, panier, modales) |
-| `css/styles.css` | Le style (mobile d'abord, thème clair par défaut, thème sombre) |
+| `css/styles.css` | Le style (mobile d'abord, fond blanc et bleu, typographie Bricolage Grotesque) |
 | `js/shared.js` | **Le catalogue et les règles** : prix, saveurs, coffrets, recettes de saison, livraison, quota. Utilisé par le site ET par le serveur |
-| `js/config.js` | Clé **publique** Stripe, mode démo, thème, contact |
+| `js/config.js` | Clé **publique** Stripe, mode démo, photos, avis vidéo, contact |
 | `js/cookies-svg.js` | Illustrations des cookies (en attendant vos photos) |
 | `js/app.js` | Panier, jauge, commande, toasts, confirmation |
-| `api/*.js` | Fonctions serveur : `create-checkout-session`, `stripe-webhook`, `stock`, `order-status` |
+| `api/*.js` | Fonctions serveur : `create-checkout-session`, `stripe-webhook`, `stock`, `order-status`, `newsletter` |
 | `mentions-legales.html` | Mentions légales, CGV, allergènes, données (les « [À COMPLÉTER] » sont à remplir) |
 
 ### Modifier les produits
@@ -35,24 +35,35 @@ Tout est dans `js/shared.js` : `TEXTURES` (3,50 € / 4,50 €), `FLAVORS`, `BOX
 commande le jour même avant midi, gratuit dès 30 €). Les recettes de saison et d'événement s'affichent
 et disparaissent toutes seules selon leurs dates (Pâques est calculée chaque année).
 
-## Vos logos et vos photos
+## Vos logos, photos et vidéos
 
 Pas besoin de toucher au code : déposez les fichiers, ils remplacent automatiquement les illustrations.
 
-- **Logos** → `assets/logo/logo-bleu.png` (en-tête, fond clair) et `assets/logo/logo-creme.png` (pied de page,
-  fond bleu nuit). Détails dans `assets/logo/LISEZMOI.md`.
-- **Photos des cookies, dans les deux formats** → `assets/photos/`, par exemple `double-chocolat-plat.jpg` et
-  `double-chocolat-epais.jpg`. La liste complète des noms (saveurs, recettes de saison, coffrets, haut de page,
-  duel des textures, atelier) est dans `assets/photos/LISEZMOI.md`.
+- **Logos** : déjà en place (`assets/logo/logo-bleu.png` dans l'en-tête, `logo-creme.png` dans le pied de page),
+  détourés à partir de vos fichiers.
+- **Photos** → `assets/photos/`. Grande photo du haut : `hero.jpg`. Cookies dans les deux formats : par exemple
+  `double-chocolat-plat.jpg` et `double-chocolat-epais.jpg`. Coffrets, box signature, atelier : la liste complète
+  des noms est dans `assets/photos/LISEZMOI.md`.
+- **Avis vidéo et UGC** → vidéos dans `assets/videos/`, puis une ligne par avis dans `js/config.js` (rubrique
+  `reviews`). Tant que la liste est vide, la section invite vos clients à partager leur vidéo.
 
 Tant qu'un fichier manque, l'illustration dessinée reste à sa place.
 
 ## Le choix de texture
 
-- Section **« Team plat ou team épais ? »** : les deux formats côte à côte ; « Je suis team plat / épais » passe
-  toute la carte dans ce format.
-- Le **sélecteur « Texture pour toute la carte »** au-dessus des cookies fait la même chose.
-- Chaque carte garde son propre choix plat / épais, et le prix suit. Le choix est mémorisé pour la visite suivante.
+- Chaque cookie de la rangée « Nos 6 saveurs » a son bouton **Plat / Épais** : la photo et le prix changent.
+- Le **sélecteur en haut à droite** passe toute la carte en plat ou en épais (choix mémorisé).
+
+## La box signature
+
+Elle se met à jour toute seule selon le calendrier des recettes (`SEASONAL` dans `js/shared.js`) :
+l'événement en cours, ou le prochain s'il commence dans moins de 45 jours (fin octobre, c'est donc Noël
+qui est annoncé, commandable du 1er au 24 décembre). Prix : `BOXES` › `signature` (17 €).
+
+## Newsletter
+
+Le formulaire « Les recettes en avant-première » enregistre les adresses dans Redis (`/api/newsletter`).
+Pour récupérer la liste : console Upstash, commande `SMEMBERS kc:newsletter`.
 
 ## Mise en production
 
