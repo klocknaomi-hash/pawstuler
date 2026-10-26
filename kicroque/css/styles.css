@@ -583,3 +583,18 @@ button { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+/* Grandes photos (hero, bandeau) : pleine largeur, sans l'arrondi des photos de cookies */
+.hero-media .visual, .banner-media .visual { width: 100%; height: 100%; max-width: none; display: block; transform: none; }
+.hero-media .visual img, .banner-media .visual img { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 0; object-fit: cover; }
+.hero-media .visual img { object-position: 46% 30%; }
+@media (min-width: 900px) { .hero-media .visual img { object-position: 60% 35%; } }
+
+/* Mobile : la photo en haut de la carte, le texte en dessous sur fond bleu nuit */
+@media (max-width: 899px) {
+  .hero::before { content: ''; position: absolute; inset: 0 var(--gutter); border-radius: var(--radius-l); background: var(--navy); }
+  .hero-media { bottom: auto; height: 360px; border-radius: var(--radius-l) var(--radius-l) 0 0; }
+  .hero-shade { bottom: auto; height: 361px; border-radius: var(--radius-l) var(--radius-l) 0 0; background: linear-gradient(to bottom, rgba(18, 53, 91, 0) 55%, var(--navy) 100%); }
+  .hero-content { min-height: 0; padding-top: 330px; }
+  .hero-media .visual img { object-position: 62% 30%; }
+}
