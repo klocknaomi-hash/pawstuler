@@ -209,9 +209,8 @@
 
   // Photos plein cadre : hero, présentation, bandeau
   function renderMedia() {
-    $('#hero-media').innerHTML = photoSlot('hero',
-      `<div class="hero-fallback">${Art.cookie(F['chocolat-caramel'].colors, 'epais', 'h1')}${Art.cookie(F['double-chocolat'].colors, 'plat', 'h2')}${Art.cookie(F['pistache-gianduja'].colors, 'epais', 'h3')}</div>`,
-      'Deux amis croquent dans des cookies KiCroque');
+    // Sans photo, le fond bleu dégradé reste
+    $('#hero-media').innerHTML = photoSlot('hero', '', 'Deux amis croquent dans des cookies KiCroque');
     $('#intro-mark').innerHTML = Art.cookie(F['chocolat-caramel'].colors, 'plat', 'mark');
     $('#intro-photo-1').innerHTML = photoSlot('intro-1', Art.cookie(F['double-chocolat'].colors, 'epais', 'i1'), 'Cookie épais');
     $('#intro-photo-2').innerHTML = photoSlot('intro-2', Art.cookie(F['vanille-pecan'].colors, 'plat', 'i2'), 'Cookie plat');
@@ -956,7 +955,7 @@
   }
 
   function renderBanner() {
-    $$('[data-first-order]').forEach((el) => { el.hidden = state.firstOrderDone; });
+    $('#top-banner').hidden = state.firstOrderDone;
   }
 
   function bindChrome() {
