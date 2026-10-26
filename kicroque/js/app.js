@@ -110,7 +110,7 @@
     const left = MAX - taken;
     const day = state.days.find((d) => d.iso === iso);
     const slots = Array.from({ length: MAX }, (_, i) =>
-      `<span class="slot ${i < taken ? 'taken' : 'free'}" title="${i < taken ? 'Commande prise' : 'Créneau disponible'}">${i < taken ? Art.cookie(KC.FLAVORS[i % KC.FLAVORS.length].colors, i % 2 ? 'epais' : 'plat', 'slot' + i) : ''}</span>`).join('');
+      `<span class="slot ${i < taken ? 'taken' : 'free'}" title="${i < taken ? 'Commande prise' : 'Créneau disponible'}"></span>`).join('');
     $('#stock-gauge').innerHTML = `
       <div class="slots" role="img" aria-label="${taken} commandes prises sur ${MAX} pour ${esc(day ? day.label : '')}">${slots}</div>
       <div class="stock-legend">
@@ -211,12 +211,10 @@
   function renderMedia() {
     // Sans photo, le fond bleu dégradé reste
     $('#hero-media').innerHTML = photoSlot('hero', '', 'Deux amis croquent dans des cookies KiCroque');
-    $('#intro-mark').innerHTML = Art.cookie(F['chocolat-caramel'].colors, 'plat', 'mark');
-    $('#intro-photo-1').innerHTML = photoSlot('intro-1', Art.cookie(F['double-chocolat'].colors, 'epais', 'i1'), 'Cookie épais');
-    $('#intro-photo-2').innerHTML = photoSlot('intro-2', Art.cookie(F['vanille-pecan'].colors, 'plat', 'i2'), 'Cookie plat');
-    $('#banner-media').innerHTML = photoSlot('atelier',
-      `<div class="banner-pattern">${KC.FLAVORS.concat(KC.FLAVORS).map((f, i) => Art.cookie(f.colors, i % 2 ? 'epais' : 'plat', 'b' + i)).join('')}</div>`, 'Notre atelier');
-    $('#dome-cookies').innerHTML = Art.cookie(F['double-chocolat'].colors, 'epais', 'd1') + Art.cookie(F['matcha-white'].colors, 'plat', 'd2');
+    // Petites photos rondes et bandeau : affichés seulement quand la photo existe
+    $('#intro-photo-1').innerHTML = photoSlot('intro-1', '', 'Cookie épais');
+    $('#intro-photo-2').innerHTML = photoSlot('intro-2', '', 'Cookie plat');
+    $('#banner-media').innerHTML = photoSlot('atelier', '', 'Notre atelier');
   }
 
   // Un cookie de la rangée (saveur permanente ou recette de saison)
@@ -230,9 +228,8 @@
       ${o.until ? `<p class="until">${esc(o.until)}</p>` : ''}
       <p class="price" data-price>${price(prices[tex])}</p>
       ${textureRadios(`tex-${o.idPrefix || 'cookie'}-${p.id}`, prices, tex, true)}
-      <p class="desc">${esc(p.desc)}</p>
-      <button class="add-btn" type="button" data-add>Ajouter au panier</button>
-      ${allergensHTML(p.allergens)}
+      <button class="add-btn" type="button" data-add>Ajouter</button>
+      <details class="allergens"><summary>Détails & allergènes</summary><p>${esc(p.desc)}</p><p>Allergènes : ${esc(p.allergens.join(', '))}. Atelier utilisant des fruits à coque.</p></details>
       ${SOLDOUT_HTML}
     </article>`;
   }
@@ -306,7 +303,7 @@
   }
 
   function sixArt(texture) {
-    return photoSlot(`coffret-six-saveurs-${texture}`, boxArt(KC.FLAVORS.slice(0, 5).map((f) => [f, texture])), 'Coffret 6 saveurs', 'box-photo');
+    return photoSlot(`coffret-six-saveurs-${texture}`, boxArt(KC.FLAVORS.slice(0, 4).map((f) => [f, texture])), 'Coffret 6 saveurs', 'box-photo');
   }
 
   // Box signature : prochaine fête (ex. Noël) ou recette du moment
@@ -326,10 +323,6 @@
       </svg>
       <div class="sig-stage">
         <div class="sig-visual">${photoSlot(`box-signature-${r.id}`, `<div class="sig-cookies">${Art.cookie(r.colors, 'plat', r.id + 'a')}${Art.cookie(r.colors, 'epais', r.id + 'b')}${Art.cookie(r.colors, 'epais', r.id + 'c')}${Art.cookie(r.colors, 'plat', r.id + 'd')}</div>`, `Box signature ${r.label}`)}</div>
-        <span class="sig-feature f1"><b aria-hidden="true">4</b>cookies</span>
-        <span class="sig-feature f2"><b aria-hidden="true">★</b>Édition limitée</span>
-        <span class="sig-feature f3"><b aria-hidden="true">2</b>plats</span>
-        <span class="sig-feature f4"><b aria-hidden="true">2</b>épais</span>
       </div>
       <div class="sig-copy">
         <span class="sig-date">${esc(when)}</span>
@@ -361,11 +354,11 @@
         });
       }).join('');
     }
-    const items = KC.SEASONAL.map((s) => ({ s, p: KC.seasonalPeriod(s, state.today) }))
-      .sort((a, b) => (a.p.active === b.p.active ? (a.p.start < b.p.start ? -1 : 1) : a.p.active ? -1 : 1));
-    const fmt = (iso) => KC.formatDateFr(iso, { day: 'numeric', month: 'short' });
-    $('#seasonal-calendar').innerHTML = items.map(({ s, p }) => `
-      <li class="cal-item ${p.active ? 'active' : ''}"><strong>${esc(s.label)}</strong><span>${esc(s.name)} · ${p.active ? 'jusqu’au ' + fmt(p.end) : 'dès le ' + fmt(p.start)}</span></li>`).join('');
+    const upcoming = KC.SEASONAL.map((s) => ({ s, p: KC.seasonalPeriod(s, state.today) }))
+      .filter((x) => !x.p.active).sort((a, b) => (a.p.start < b.p.start ? -1 : 1)).slice(0, 3);
+    const fmt = (iso) => KC.formatDateFr(iso, { day: 'numeric', month: 'long' });
+    $('#seasonal-calendar').innerHTML = '<li class="cal-label">Bientôt</li>' + upcoming.map(({ s, p }) => `
+      <li class="cal-item"><strong>${esc(s.label)}</strong> · ${esc(s.name)}, dès le ${fmt(p.start)}</li>`).join('');
   }
 
   // Avis vidéo et citations (js/config.js › reviews)
@@ -374,9 +367,9 @@
     const track = $('#reviews-track');
     if (!list.length) {
       const handle = esc(CFG.instagramHandle || '@kicroque');
-      track.innerHTML = KC.FLAVORS.slice(0, 4).map((f, i) => `
+      track.innerHTML = [0, 1, 2, 3].map(() => `
         <div class="review review-empty">
-          ${Art.cookie(f.colors, i % 2 ? 'epais' : 'plat', 'r' + i)}
+          <span class="play-ring" aria-hidden="true">▶</span>
           <strong>Ta vidéo ici</strong>
           <p>Filme ta dégustation et identifie ${handle}</p>
         </div>`).join('');

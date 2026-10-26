@@ -141,16 +141,18 @@ button { cursor: pointer; }
 
 /* Bulles qui flottent */
 .bubbles { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+/* Bulles : même style partout (verre dépoli clair), une seule en jaune */
 .bubble {
-  position: absolute; padding: 8px 16px; border-radius: 999px; font-weight: 700; font-size: .9rem; white-space: nowrap;
-  box-shadow: 0 8px 20px rgba(5, 25, 45, .25); animation: bob 6s ease-in-out infinite; transform: rotate(var(--r, 0deg));
+  position: absolute; padding: 8px 18px; border-radius: 999px; font-weight: 600; font-size: .9rem; white-space: nowrap; letter-spacing: .02em;
+  background: rgba(255, 255, 255, .16); color: #fff; border: 1px solid rgba(255, 255, 255, .45);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); animation: bob 7s ease-in-out infinite; transform: rotate(var(--r, 0deg));
 }
-.b-1 { --r: -6deg; left: 6%; top: 14%; background: #fff; color: var(--navy); }
-.b-2 { --r: 5deg; right: 7%; top: 18%; background: #FFD24D; color: var(--navy); animation-delay: -1.5s; }
-.b-3 { --r: -4deg; left: 9%; top: 58%; background: var(--blue); color: #fff; animation-delay: -3s; }
-.b-4 { --r: 6deg; right: 10%; top: 56%; background: var(--cream); color: var(--navy); animation-delay: -2s; }
-.b-5 { --r: 4deg; left: 18%; bottom: 17%; background: var(--navy); color: #fff; animation-delay: -4s; }
-.b-6 { --r: -7deg; right: 22%; bottom: 20%; background: #fff; color: var(--blue); animation-delay: -.8s; }
+.b-1 { --r: -4deg; left: 7%; top: 16%; }
+.b-2 { --r: 3deg; right: 8%; top: 20%; background: #FFD24D; color: var(--navy); border-color: #FFD24D; animation-delay: -1.5s; }
+.b-3 { --r: -3deg; left: 10%; top: 56%; animation-delay: -3s; }
+.b-4 { --r: 4deg; right: 11%; top: 54%; animation-delay: -2s; }
+.b-5 { --r: 2deg; left: 19%; bottom: 18%; animation-delay: -4s; }
+.b-6 { --r: -4deg; right: 23%; bottom: 21%; animation-delay: -.8s; }
 @keyframes bob { 0%, 100% { transform: translateY(0) rotate(var(--r)); } 50% { transform: translateY(-14px) rotate(calc(var(--r) * -1)); } }
 
 /* Badge « Commander » qui tourne : mène à la carte des cookies */
@@ -618,3 +620,48 @@ button { cursor: pointer; }
   .b-6 { right: 6%; top: 15%; bottom: auto; display: none; }
   .spin-badge { width: 92px; right: 5%; bottom: 52px; }
 }
+
+/* ---------- Nettoyage visuel ---------- */
+/* Présentation : photos rondes seulement si elles existent */
+.intro { padding-top: 96px; }
+.intro-photo:not(:has(.has-photo)) { display: none !important; }
+/* Rangée des saveurs, version épurée */
+.flavor-row { gap: 22px; }
+.product { gap: 8px; }
+.product-visual { width: min(100%, 200px); box-shadow: 0 10px 30px rgba(18, 53, 91, .10); margin-bottom: 10px; }
+.product-visual::before { opacity: .4; }
+.product h3 { font-size: 1.15rem; }
+.product .price { font-size: 1.05rem; font-weight: 700; margin-bottom: 4px; }
+.product .texture-picker { max-width: 180px; }
+.product .add-btn { width: 100%; max-width: 180px; padding: 10px 16px; border-radius: 999px; }
+.product .allergens { max-width: 200px; text-align: center; }
+.product .allergens p { margin: 6px 0 0; text-align: left; line-height: 1.45; }
+/* Coffrets : cookies alignés proprement en bas de carte */
+.box-visual .cookie-svg { width: 110px; margin: 0 -18px -22px; }
+.box-visual .cookie-svg:nth-child(even) { transform: translateY(-10px); }
+/* Calendrier sur une ligne */
+.calendar { gap: 6px 18px; font-size: .9rem; color: var(--ink-soft); margin-top: 32px; }
+.cal-label { font-weight: 700; text-transform: uppercase; letter-spacing: .12em; font-size: .78rem; color: var(--blue); align-self: center; }
+.cal-item { border: 0; padding: 0; background: none; display: inline; font-size: .9rem; }
+.cal-item strong { color: var(--navy); }
+/* Bandeau : bleu nuit uni tant qu'il n'y a pas de photo */
+.banner-media { background: linear-gradient(135deg, var(--navy) 0%, #1C4F82 100%); }
+/* Avis : cadres sobres */
+.review-empty { border: 1px solid var(--blue-soft); background: var(--blue-light); gap: 12px; }
+.play-ring { width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--blue); color: var(--blue); display: grid; place-items: center; font-size: 1rem; padding-left: 3px; }
+/* Jauge : pastilles pleines */
+.slot.taken { background: var(--navy); border: 0; }
+.slot.taken::after { content: '✓'; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: .9rem; }
+/* Newsletter : plus d'air */
+.dome-sub { margin-bottom: 26px; }
+.dome { padding-bottom: 72px; }
+/* Coffrets : image en haut de carte, prix et bouton alignés en bas */
+.box { padding-top: 0; }
+.box-visual { order: -1; margin: 0 -22px 24px; height: 170px; align-items: center; background: rgba(255, 255, 255, .55); }
+.box.featured .box-visual { background: rgba(255, 255, 255, .14); }
+.box-visual .box-photo { align-items: center; }
+.box-visual .cookie-svg { margin: 0 -16px; }
+.box-visual .cookie-svg:nth-child(even) { transform: translateY(8px); }
+.box .box-ribbon { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); margin: 0; white-space: nowrap; }
+.box .price { margin-top: auto; padding-top: 6px; }
+.box .add-btn { margin-bottom: 26px; }
