@@ -26,6 +26,7 @@
     freeShippingThreshold: 30,   // livraison gratuite dès 30 € de sous-total
     firstOrderFreeShipping: true,
     maxQtyPerLine: 24,
+    minCookiesPerOrder: 4,       // pas de commande à 1 cookie : 4 cookies minimum (coffrets compris)
   };
 
   /* ---------- Textures (communes à toutes les saveurs) ---------- */
@@ -326,7 +327,7 @@
       return {
         item: { type: 'cookie', id: f.id, texture: texture.id },
         name: f.name, emoji: f.emoji, detail: texture.label, unit: texture.price,
-        colors: f.colors, texture: texture.id,
+        colors: f.colors, texture: texture.id, cookies: 1,
       };
     }
 
@@ -338,7 +339,7 @@
         item: { type: 'seasonal', id: s.id, texture: texture.id },
         name: s.name, emoji: s.emoji,
         detail: `${texture.label} · ${s.kind === 'event' ? 'Édition ' + s.label : 'Recette de saison · ' + s.label}`,
-        unit: SEASONAL_PRICES[texture.id], colors: s.colors, texture: texture.id,
+        unit: SEASONAL_PRICES[texture.id], colors: s.colors, texture: texture.id, cookies: 1,
       };
     }
 
@@ -350,7 +351,7 @@
         const season = currentSeasonRecipe(iso);
         return {
           item: { type: 'box', id: b.id },
-          name: b.name, emoji: b.emoji, unit: b.price, box: true,
+          name: b.name, emoji: b.emoji, unit: b.price, box: true, cookies: b.contents.length,
           detail: `4 cookies · ${b.contents.map((c) => (c.flavor === 'saison' ? (season ? season.name : 'Recette du moment') : FLAVOR_BY_ID[c.flavor].name)).join(', ')}`,
         };
       }
@@ -361,7 +362,7 @@
         if (!isSeasonalActive(s, iso)) throw userError(`La box ${s.label} n’est pas encore disponible.`);
         return {
           item: { type: 'box', id: b.id, recipe: s.id },
-          name: `Box signature ${s.label}`, emoji: s.emoji, unit: b.price, box: true,
+          name: `Box signature ${s.label}`, emoji: s.emoji, unit: b.price, box: true, cookies: 4,
           detail: `4 cookies ${s.name} · 2 plats + 2 épais`, colors: s.colors,
         };
       }
@@ -370,7 +371,7 @@
         if (!texture) throw userError('Choisissez une texture.');
         return {
           item: { type: 'box', id: b.id, texture: texture.id },
-          name: b.name, emoji: b.emoji, unit: b.prices[texture.id], box: true,
+          name: b.name, emoji: b.emoji, unit: b.prices[texture.id], box: true, cookies: 6,
           detail: `6 cookies · ${texture.label}`, texture: texture.id,
         };
       }
@@ -389,7 +390,7 @@
         flavors.sort();
         return {
           item: size === FLAVORS.length ? { type: 'box', id: b.id, size } : { type: 'box', id: b.id, size, flavors },
-          name: `${b.name} · ${cfg.label}`, emoji: b.emoji, unit: cfg.price, box: true,
+          name: `${b.name} · ${cfg.label}`, emoji: b.emoji, unit: cfg.price, box: true, cookies: cfg.count,
           detail: `${cfg.count} cookies (plat + épais) · ${size === FLAVORS.length ? 'toutes les saveurs' : flavors.map((id) => FLAVOR_BY_ID[id].name).join(', ')}`,
         };
       }
@@ -424,9 +425,12 @@
     if (subtotal >= RULES.freeShippingThreshold) freeReason = 'threshold';
     else if (firstOrder && RULES.firstOrderFreeShipping) freeReason = 'first-order';
     const shipping = lines.length && !freeReason ? shippingBase : 0;
+    const cookieCount = lines.reduce((s, l) => s + l.qty * (l.cookies || 1), 0);
     return {
       lines,
       count: lines.reduce((s, l) => s + l.qty, 0),
+      cookieCount,
+      cookiesMissing: Math.max(0, RULES.minCookiesPerOrder - cookieCount),
       subtotal,
       shippingBase,
       shipping,

@@ -47,6 +47,9 @@ module.exports = async function handler(req, res) {
     const firstOrder = !(await store.get(store.keys.customer(customer.email)));
     const totals = KC.computeTotals({ items: body.items, shippingMethod: method.id, firstOrder, iso: today });
     if (!totals.lines.length) return send(res, 400, { error: 'Ton panier est vide.' });
+    if (totals.cookiesMissing > 0) {
+      return send(res, 400, { error: `Commande minimum : ${KC.RULES.minCookiesPerOrder} cookies. Ajoute encore ${totals.cookiesMissing} cookie${totals.cookiesMissing > 1 ? 's' : ''}.` });
+    }
 
     // 5. Numéro de commande unique KC-XXXXX
     let orderNumber;

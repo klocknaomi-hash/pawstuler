@@ -665,3 +665,8 @@ button { cursor: pointer; }
 .box .box-ribbon { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); margin: 0; white-space: nowrap; }
 .box .price { margin-top: auto; padding-top: 6px; }
 .box .add-btn { margin-bottom: 26px; }
+
+/* Minimum de commande dans le panier */
+.cart-minimum { display: grid; gap: 2px; margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: #FFF4CC; color: var(--navy); font-size: .88rem; }
+.cart-minimum[hidden] { display: none; }
+.cart-minimum span { color: var(--ink-soft); font-size: .82rem; }

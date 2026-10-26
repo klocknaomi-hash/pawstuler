@@ -644,6 +644,13 @@
       </li>`).join('');
     hydratePhotos(list);
     $('#cart-totals').innerHTML = totalsHTML(t, { estimate: true });
+    // Minimum de commande : 4 cookies (coffrets compris)
+    const min = KC.RULES.minCookiesPerOrder;
+    $('#cart-minimum').innerHTML = t.cookiesMissing > 0
+      ? `<strong>Encore ${t.cookiesMissing} cookie${t.cookiesMissing > 1 ? 's' : ''} pour commander</strong><span>Commande minimum : ${min} cookies (${t.cookieCount}/${min}). Un coffret compte pour tous ses cookies.</span>`
+      : '';
+    $('#cart-minimum').hidden = t.cookiesMissing === 0;
+    $('#checkout-open').disabled = t.cookiesMissing > 0;
     $('#cart-footer').hidden = false;
   }
 
@@ -742,6 +749,8 @@
 
   function openCheckout() {
     if (!state.cart.length) { toast('Ton panier est vide'); return; }
+    const missing = totalsFor(null).cookiesMissing;
+    if (missing > 0) { toast(`Commande minimum : ${KC.RULES.minCookiesPerOrder} cookies. Ajoute encore ${missing} cookie${missing > 1 ? 's' : ''}.`, 'error'); return; }
     if (state.days.every((d) => isFull(d.iso))) { toast('Tous les créneaux sont complets, désolé', 'error'); return; }
     // Coordonnées mémorisées sur cet appareil
     const saved = local.get('kc_customer', null);
