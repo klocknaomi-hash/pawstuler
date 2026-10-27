@@ -670,3 +670,54 @@ button { cursor: pointer; }
 .cart-minimum { display: grid; gap: 2px; margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: #FFF4CC; color: var(--navy); font-size: .88rem; }
 .cart-minimum[hidden] { display: none; }
 .cart-minimum span { color: var(--ink-soft); font-size: .82rem; }
+
+/* ---------- Hero avec la photo du couple de face ----------
+   Les visages sont au centre de la photo : le titre passe en bas,
+   sur un dégradé, et les bulles restent sur les côtés. */
+.hero { place-items: end center; min-height: min(92vh, 820px); padding-bottom: 96px; }
+.hero-media .visual img { object-position: 50% 22%; }
+.hero-shade { background: linear-gradient(to top, rgba(13, 42, 73, .92) 0%, rgba(13, 42, 73, .55) 32%, rgba(13, 42, 73, 0) 58%), rgba(13, 42, 73, .12); }
+.hero-title { font-size: clamp(3rem, 7.4vw, 6.6rem); margin-bottom: 14px; }
+.hero-title span { display: inline; }
+.hero-lead { margin-bottom: 20px; }
+.b-1 { left: 4%; top: 14%; }
+.b-2 { right: 4%; top: 16%; }
+.b-3 { left: 6%; top: 34%; }
+.b-4 { right: 6%; top: 36%; }
+.b-5 { left: 3%; top: 54%; bottom: auto; }
+.b-6 { right: 3%; top: 56%; bottom: auto; }
+.spin-badge { bottom: 110px; }
+
+@media (max-width: 899px) {
+  /* Téléphone / tablette : la photo en haut, le texte en dessous sur bleu nuit */
+  .hero { display: block; min-height: 0; padding: 0 var(--gutter) 110px; background: var(--navy); }
+  .hero-media, .hero-shade { bottom: auto; height: 400px; }
+  .hero-shade { background: linear-gradient(to bottom, rgba(13, 42, 73, 0) 55%, var(--navy) 100%); }
+  .hero-media .visual img { object-position: 50% 25%; }
+  .hero-inner { padding-top: 360px; }
+  .hero-title span { display: block; }
+  .bubble { font-size: .78rem; padding: 6px 12px; }
+  .b-1 { left: 4%; top: 18px; } .b-2 { right: 4%; top: 22px; }
+  .b-3 { left: 3%; top: 300px; bottom: auto; } .b-4 { right: 3%; top: 306px; bottom: auto; }
+  .b-5, .b-6 { display: none; }
+  .spin-badge { width: 88px; right: 5%; top: 230px; bottom: auto; }
+}
+
+/* Mise en page unique : photo en haut (visages + cookies visibles), titre dessous sur bleu nuit */
+.hero { --photo-h: clamp(400px, 44vw, 660px); display: block; min-height: 0; padding: 0 var(--gutter) 110px; background: var(--navy); }
+.hero-media, .hero-shade { bottom: auto; height: var(--photo-h); }
+.hero-shade { background: linear-gradient(to bottom, rgba(13, 42, 73, .1) 0%, rgba(13, 42, 73, 0) 50%, var(--navy) 100%); }
+.hero-media .visual img { object-position: 50% 20%; }
+.hero-inner { margin: 0 auto; padding-top: calc(var(--photo-h) - 70px); }
+.b-1 { top: 10%; } .b-2 { top: 12%; } .b-3 { top: 30%; } .b-4 { top: 32%; } .b-5 { top: 50%; } .b-6 { top: 52%; }
+.spin-badge { top: calc(var(--photo-h) - 150px); bottom: auto; }
+@media (max-width: 899px) {
+  .hero { --photo-h: 400px; }
+  .b-3 { top: 250px; } .b-4 { display: none; }
+  .spin-badge { top: 230px; }
+}
+/* Bulles placées par rapport à la hauteur de la photo */
+.b-1 { top: calc(var(--photo-h) * .12); } .b-2 { top: calc(var(--photo-h) * .15); }
+.b-3 { top: calc(var(--photo-h) * .36); } .b-4 { top: calc(var(--photo-h) * .40); }
+.b-5 { top: calc(var(--photo-h) * .62); } .b-6 { top: calc(var(--photo-h) * .58); }
+@media (max-width: 899px) { .b-1 { top: 18px; } .b-2 { top: 22px; } .b-3 { top: 250px; } }
